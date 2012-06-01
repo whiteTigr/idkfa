@@ -1,0 +1,55 @@
+constant cmdNOP     : integer := 0;
+
+constant cmdNOT     : integer := 1;
+constant cmdFETCH   : integer := 2;
+constant cmdSHL     : integer := 3;
+constant cmdSHR     : integer := 4;
+constant cmdSHRA    : integer := 5;
+constant cmdINPORT  : integer := 6;
+
+constant cmdSWAP    : integer := 7;
+
+constant cmdDUP     : integer := 8;
+constant cmdOVER    : integer := 9;
+--constant cmdTEMP    : integer := 10;
+constant cmdFROMR   : integer := 10;
+--constant cmdNIP     : integer := 12;
+constant cmdDEPTH   : integer := 11;
+constant cmdRDEPTH  : integer := 12;
+
+constant cmdPLUS    : integer := 13;
+constant cmdMINUS   : integer := 14;
+constant cmdAND     : integer := 15;
+constant cmdOR      : integer := 16;
+constant cmdXOR     : integer := 17;
+constant cmdEQUAL   : integer := 18;
+constant cmdLESSER  : integer := 19;
+constant cmdGREATER : integer := 20;
+constant cmdMULT    : integer := 21;
+
+constant cmdDROP    : integer := 22;
+constant cmdJMP     : integer := 23;
+constant cmdCALL    : integer := 24;
+constant cmdRJMP    : integer := 25;
+constant cmdTOR     : integer := 26;
+
+constant cmdSTORE   : integer := 27;
+constant cmdOUTPORT : integer := 28;
+--constant cmdIF      : integer := 30;
+constant cmdRIF     : integer := 29;
+constant cmdUNTIL   : integer := 30;
+
+constant cmdRET     : integer := 31;
+
+ Hishnik (17:14:43 1/03/2011)
+0b1xxxxx - константа
+
+ white_tigr (17:15:07 1/03/2011)
+спасибо 
+
+ Hishnik (17:15:21 1/03/2011)
+константа загружается сдвигом. если несколько таких команд подряд, то это одно и то же число. когда между ними появляется другая команда, считается, что следующая константа - другое число
+
+ Hishnik (17:15:37 1/03/2011)
+то есть для 2 2 + надо
+0b100010 NOP 0b100010
