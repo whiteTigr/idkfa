@@ -160,12 +160,6 @@ object fMain: TfMain
       ImageIndex = 11
       Style = tbsSeparator
     end
-    object SpeedButton2: TSpeedButton
-      Left = 368
-      Top = 0
-      Width = 23
-      Height = 22
-    end
   end
   object Panel1: TPanel
     Left = 0

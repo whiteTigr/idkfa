@@ -79,7 +79,6 @@ type
     ToolButton1: TToolButton;
     CloseCurrentTab: TAction;
     SpeedButton1: TSpeedButton;
-    SpeedButton2: TSpeedButton;
     procedure CompileExecute(Sender: TObject);
     procedure GotoDownloadExecute(Sender: TObject);
     procedure ExportCoeExecute(Sender: TObject);
