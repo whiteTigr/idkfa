@@ -2,7 +2,7 @@
 		<PropertyGroup>
 			<ProjectGuid>{2A12D91B-8652-4A98-AEC4-C7E4880044AE}</ProjectGuid>
 			<MainSource>idKFa.dpr</MainSource>
-			<Config Condition="'$(Config)'==''">Release</Config>
+			<Config Condition="'$(Config)'==''">Debug</Config>
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
 			<ProjectVersion>12.0</ProjectVersion>
 		</PropertyGroup>

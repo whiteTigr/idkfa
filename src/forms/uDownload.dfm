@@ -547,7 +547,7 @@ object FormDownload: TFormDownload
     Width = 97
     Height = 21
     TabOrder = 20
-    Text = '16'
+    Text = '1'
   end
   object eWaitingCoef: TEdit
     Left = 376
@@ -555,7 +555,7 @@ object FormDownload: TFormDownload
     Width = 97
     Height = 21
     TabOrder = 21
-    Text = '5'
+    Text = '2'
   end
   object cbPrepareProc: TComboBox
     Left = 263
