@@ -383,6 +383,7 @@ var
   time: real;
   f: TextFile;
   i: integer;
+  needToWait: real;
   downloadCom: TDownloaderCom absolute downloader;
 label finishit;
 begin
@@ -435,7 +436,12 @@ begin
 
     downloader.Send(SendBuffer[SendPtr], SendCountPackage);
     Application.ProcessMessages;
-    sleep(round(SendCountPackage * 8 / 115200 * SendWaitingCoef * 1000));
+    needToWait := needToWait + SendCountPackage * 8 / 115200 * SendWaitingCoef * 1000;
+    if trunc(needToWait) > 0 then
+    begin
+      sleep(trunc(needToWait));
+      needToWait := frac(needToWait);
+    end;
     gauge.AddProgress(SendCountPackage);
     ProgressBar1.StepBy(SendCountPackage);
 
