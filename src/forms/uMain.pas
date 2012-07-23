@@ -1172,8 +1172,8 @@ begin
     Exit;
 
 //  CloseAllTabs;
-  if Length(mmCode) > 0 then
-    Exit;
+//  if Length(mmCode) > 0 then
+//    Exit;
 
   CloseCurrentCompiler;
 
