@@ -87,26 +87,43 @@ type
 
     constructor Create;
 
+    // * Получение кода по адресу
     function Code(pos: integer): integer; virtual;
+    // * Сколько скомпилировано кода
     function CodeCount: integer; virtual;
+    // Дизасемблирование отдельной команды, взятой по Code(i)
     function Dizasm(cmd: integer): string; virtual;
+    // Получение цвета команды (для симулятора)
     function GetCmdColor(cmd: integer): cardinal; virtual;
+    // Максимальный размер памяти кода
     function MaxCode: integer; virtual;
 
+    // Получение данных по адресу
     function Data(pos: integer): integer; virtual;
+    // Сколько скомпилировано данных
     function DataCount: integer; virtual;
+    // Максимальный размер памяти данных
     function MaxData: integer; virtual;
 
+    // Обработка строки
     procedure Evaluate(tib: string); virtual;
+    // Обработка всего файла
     procedure EvaluateFile(fileName: string); virtual;
+    // Вызывается перед компиляцией
     procedure BeginCompile; virtual;
+    // Вызывается после компиляции
     procedure EndCompile; virtual;
 
+    // Получение кода последней ошибки
     function LastError: integer; virtual;
+    // Получение последнего разбираемого слова
     function LastToken: string; virtual;
+    // Получение сообщения об ошибке
     function LastErrorMessage: string; virtual;
 
+    // Текст нового файла
     function NewFileText: string; virtual;
+    // Оптимизация
     procedure Optimize; virtual;
   end;
 
