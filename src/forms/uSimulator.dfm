@@ -2,8 +2,8 @@ object fSimulator: TfSimulator
   Left = 201
   Top = 185
   Caption = 'Simulate'
-  ClientHeight = 695
-  ClientWidth = 991
+  ClientHeight = 650
+  ClientWidth = 831
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -11,7 +11,7 @@ object fSimulator: TfSimulator
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   OldCreateOrder = False
-  Position = poDefault
+  Position = poDesigned
   OnCreate = FormCreate
   OnResize = FormResize
   OnShow = FormShow
@@ -19,19 +19,22 @@ object fSimulator: TfSimulator
   TextHeight = 13
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 676
-    Width = 991
+    Top = 631
+    Width = 831
     Height = 19
     Panels = <>
+    ExplicitTop = 676
+    ExplicitWidth = 991
   end
   object ToolBar1: TToolBar
     Left = 0
     Top = 0
-    Width = 991
+    Width = 831
     Height = 27
     Caption = 'ToolBar1'
     Images = ImageList1
     TabOrder = 1
+    ExplicitWidth = 991
     object cbDebuger: TComboBox
       Left = 0
       Top = 0
@@ -142,8 +145,8 @@ object fSimulator: TfSimulator
   end
   object mmConsole: TRichEdit
     Left = 0
-    Top = 587
-    Width = 991
+    Top = 542
+    Width = 831
     Height = 89
     Align = alBottom
     Font.Charset = RUSSIAN_CHARSET
@@ -157,29 +160,35 @@ object fSimulator: TfSimulator
     ReadOnly = True
     ScrollBars = ssBoth
     TabOrder = 2
+    ExplicitTop = 587
+    ExplicitWidth = 991
   end
   object WorkSpace: TPanel
     Left = 0
     Top = 27
-    Width = 991
-    Height = 560
+    Width = 831
+    Height = 515
     Align = alClient
     BevelOuter = bvLowered
     TabOrder = 3
+    ExplicitWidth = 991
+    ExplicitHeight = 560
     object Splitter2: TSplitter
       Left = 249
       Top = 1
-      Height = 558
+      Height = 513
       Beveled = True
+      ExplicitHeight = 558
     end
     object PanelLeft: TPanel
       Left = 1
       Top = 1
       Width = 248
-      Height = 558
+      Height = 513
       Align = alLeft
       BevelOuter = bvNone
       TabOrder = 0
+      ExplicitHeight = 558
       object PanelSystemInfo: TPanel
         Left = 0
         Top = 0
@@ -242,44 +251,52 @@ object fSimulator: TfSimulator
         Left = 0
         Top = 73
         Width = 248
-        Height = 485
+        Height = 440
         Align = alClient
         BevelOuter = bvNone
         Caption = 'Form DebugDevice'
         TabOrder = 1
+        ExplicitHeight = 485
       end
     end
     object PanelMemory: TPanel
       Left = 252
       Top = 1
-      Width = 738
-      Height = 558
+      Width = 578
+      Height = 513
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 1
+      ExplicitWidth = 738
+      ExplicitHeight = 558
       object Splitter3: TSplitter
         Left = 0
-        Top = 310
-        Width = 738
+        Top = 265
+        Width = 578
         Height = 3
         Cursor = crVSplit
         Align = alBottom
+        ExplicitTop = 310
+        ExplicitWidth = 738
       end
       object PanelCode: TPanel
         Left = 0
         Top = 0
-        Width = 738
-        Height = 310
+        Width = 578
+        Height = 265
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 0
+        ExplicitWidth = 738
+        ExplicitHeight = 310
         object PanelLeftside: TPanel
           Left = 0
           Top = 0
           Width = 96
-          Height = 310
+          Height = 265
           Align = alLeft
           TabOrder = 0
+          ExplicitHeight = 310
           object rgCodeBase: TRadioGroup
             Left = 1
             Top = 1
@@ -299,8 +316,8 @@ object fSimulator: TfSimulator
         object sgCode: TStringGrid
           Left = 96
           Top = 0
-          Width = 642
-          Height = 310
+          Width = 482
+          Height = 265
           Align = alClient
           Color = 16775924
           ColCount = 17
@@ -319,6 +336,8 @@ object fSimulator: TfSimulator
           TabOrder = 1
           OnKeyDown = sgCodeKeyDown
           OnKeyUp = sgCodeKeyUp
+          ExplicitWidth = 642
+          ExplicitHeight = 310
           RowHeights = (
             16
             16
@@ -341,12 +360,14 @@ object fSimulator: TfSimulator
       end
       object PanelData: TPanel
         Left = 0
-        Top = 313
-        Width = 738
+        Top = 268
+        Width = 578
         Height = 245
         Align = alBottom
         BevelOuter = bvNone
         TabOrder = 1
+        ExplicitTop = 313
+        ExplicitWidth = 738
         object PanelLeftside2: TPanel
           Left = 0
           Top = 0
@@ -373,7 +394,7 @@ object fSimulator: TfSimulator
         object sgData: TStringGrid
           Left = 96
           Top = 0
-          Width = 642
+          Width = 482
           Height = 245
           Align = alClient
           Color = 16252916
@@ -391,6 +412,7 @@ object fSimulator: TfSimulator
           ParentCtl3D = False
           ParentFont = False
           TabOrder = 1
+          ExplicitWidth = 642
         end
       end
     end

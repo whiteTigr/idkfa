@@ -454,6 +454,7 @@ begin
 
   if compiler <> nil then
   begin
+    // todo: неприкаеный MaxCode и MaxData.
     for i := 0 to MaxCode-1 do
       debuger.Code[i] := compiler.Code(i);
     for i := 0 to MaxData-1 do

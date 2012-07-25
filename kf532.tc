@@ -1,0 +1,887 @@
+FORTH
+
+DECIMAL
+65536 CONSTANT MAXCODE
+16384 CONSTANT MAXDATA
+
+CREATE CODE[] MAXCODE ALLOT
+CREATE DATA[] MAXDATA CELLS ALLOT
+0 VALUE CODE^
+0 VALUE DATA^
+
+: ZC,
+  CODE[] CODE^ + C!
+  CODE^ 1+ TO CODE^
+;
+
+: SAVE
+  " code.dat" NEWFILE TO HF-OUT
+  CODE^ 0 DO
+    CODE[] I + C@ .F CRF
+  LOOP
+  HF-OUT CLOSE
+  " data.dat" NEWFILE TO HF-OUT
+  DATA^ 0 DO
+    DATA[] I + C@ .F CRF
+  LOOP
+  HF-OUT CLOSE
+;
+
+: EXPORT
+  " code.vht" NEWFILE TO HF-OUT
+  CODE^ 0 DO
+    I .F "  => conv_std_logic_vector(" PRINTF CODE[] I + C@ .F " , 6)," PRINTF CRF
+
+  LOOP
+  " others => (others => '0')); " PRINTF CRF
+  HF-OUT CLOSE
+;
+
+// SIMULATE SECTION
+
+QUAN PC
+QUAN SDEPTH
+QUAN RDEPTH
+QUAN CMD
+QUAN CLOCK
+QUAN TEMPREG
+
+16 CONSTANT MAXSTACK
+16 CONSTANT MAXRSTACK
+
+VECT <INPORT>
+VECT <OUTPORT> ' 2DROP TO OUTPORT
+
+CREATE STACK[] MAXSTACK CELLS ALLOT
+CREATE RSTACK[] MAXRSTACK CELLS ALLOT
+
+9 CONSTANT XPROC
+42 CONSTANT YPROC
+
+80 CONSTANT XDUMP
+9 CONSTANT  YDUMP
+
+80 CONSTANT XDDUMP
+26 CONSTANT YDDUMP
+
+: DUMP // A
+
+  XDUMP 5 - 8 GOTOXY
+  GETBGCOLOR
+  GETCOLOR
+  0x3F3F3F SETBGCOLOR
+  0xFFFF00 SETCOLOR
+  "      0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F  " PRINT
+  SETCOLOR
+  SETBGCOLOR
+
+  BASE @ HEX SWAP
+  0x10 0 DO
+
+    GETBGCOLOR
+    0x3F3F3F SETBGCOLOR
+    I 2 MOD IF 0x1F1F1F SETBGCOLOR THEN
+    XDUMP 5 - I 9 + GOTOXY
+    0x35 0 DO 0x20 EMIT LOOP
+    XDUMP 5 - I 9 + GOTOXY
+    I .
+    SETBGCOLOR
+
+    0x10 0 DO
+      I 3 * XDUMP + J 9 + GOTOXY
+\      I 2 MOD IF 0x00FF00 ELSE 0x00C000 THEN SETCOLOR
+      DUP J 0x10 * I + + C@
+      GETBGCOLOR SWAP
+      0x3F3F3F SETBGCOLOR
+      J 2 MOD IF 0x1F1F1F SETBGCOLOR THEN
+      GETCOLOR SWAP
+      0xFFFFFF SETCOLOR
+      DUP 0x20 AND IF 0x00FFFF SETCOLOR THEN
+      DUP 23 25 WITHIN IF 0xFF00FF SETCOLOR THEN
+//      DUP 50 51 WITHIN IF 0xFF00FF SETCOLOR THEN
+      DUP 58 = IF 0xFF0000 SETCOLOR THEN
+      .
+      SETCOLOR
+      SETBGCOLOR
+    LOOP
+  LOOP
+  DROP
+  BASE !
+;
+
+: DDUMP // A
+
+  XDDUMP 5 - YDDUMP 1 - GOTOXY
+  GETBGCOLOR
+  GETCOLOR
+  0x3F3F3F SETBGCOLOR
+  0xFFFF00 SETCOLOR
+  "      0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F  " PRINT
+  SETCOLOR
+  SETBGCOLOR
+
+  BASE @ HEX SWAP
+  0x10 0 DO
+
+    GETBGCOLOR
+    0x3F3F3F SETBGCOLOR
+    I 2 MOD IF 0x1F1F1F SETBGCOLOR THEN
+    XDDUMP 5 - I YDDUMP + GOTOXY
+    0x35 0 DO 0x20 EMIT LOOP
+    XDDUMP 5 - I YDDUMP + GOTOXY
+    I .
+    SETBGCOLOR
+
+    0x10 0 DO
+      I 3 * XDUMP + J YDDUMP + GOTOXY
+\      I 2 MOD IF 0x00FF00 ELSE 0x00C000 THEN SETCOLOR
+      DUP J 0x10 * I + + C@
+      GETBGCOLOR SWAP
+      0x3F3F3F SETBGCOLOR
+      J 2 MOD IF 0x1F1F1F SETBGCOLOR THEN
+      GETCOLOR SWAP
+      0xFFFFFF SETCOLOR
+      .
+      SETCOLOR
+      SETBGCOLOR
+    LOOP
+  LOOP
+  DROP
+  BASE !
+;
+
+: SHOW-PROC
+  DATA[] DDUMP
+  XPROC YPROC GOTOXY 128 0 DO 32 EMIT LOOP
+  MAXSTACK 0 DO
+    I SDEPTH < IF 0x00FF00 ELSE 0x00B000 THEN SETCOLOR
+    XPROC I 8 * +
+    YPROC
+    GOTOXY
+    STACK[] I -TH @ .
+  LOOP
+  XPROC YPROC 1 - GOTOXY " PC= " PRINT PC . " (HEX):" PRINT BASE @ HEX PC . BASE !
+
+//  MAXRSTACK 0 DO
+//    I RDEPTH < IF 0x00FF00 ELSE 0x00B000 THEN SETCOLOR
+//    XPROC 12 +
+//    MAXRSTACK YPROC + I - GOTOXY
+//    RSTACK[] I -TH @ .
+//  LOOP
+;
+
+: RESET
+  0 TO SDEPTH
+  0 TO RDEPTH
+  0 TO PC
+  0 TO CLOCK
+  MAXSTACK 0 DO 0 STACK[] I -TH ! LOOP
+  SHOW-PROC
+;
+
+: MAKE-STEP
+  CODE[] PC + C@ TO CMD
+  CMD CASE
+    0 OF 1 +TO PC BREAK
+    128 191 <OF>
+      CMD 0x3F AND
+      STACK[] SDEPTH -TH !
+      1 +TO SDEPTH
+      1 +TO PC
+    BREAK
+
+    192 255 <OF>
+      CMD 0x3F AND
+      STACK[] SDEPTH 1- -TH @ 6 LSHIFT OR
+      STACK[] SDEPTH 1- -TH !
+      1 +TO PC
+    BREAK
+
+    1 OF // CMD NOT
+      SDEPTH 0 > IF
+        STACK[] SDEPTH 1- -TH @ NOT
+        STACK[] SDEPTH 1- -TH !
+      THEN
+      1 +TO PC
+    BREAK
+    2 OF // CMD2 @
+      SDEPTH 0 > IF
+        STACK[] SDEPTH 1- -TH @ MAXDATA MOD CELLS DATA[]  + @
+        STACK[] SDEPTH 1- -TH !
+      THEN
+      1 +TO PC
+    BREAK
+    3 OF // CMD SHL
+      SDEPTH 0 > IF
+        STACK[] SDEPTH 1- -TH @ SHL
+        STACK[] SDEPTH 1- -TH !
+      THEN
+      1 +TO PC
+    BREAK
+    4 OF // CMD SHR
+      SDEPTH 0 > IF
+        STACK[] SDEPTH 1- -TH @ SHR
+        STACK[] SDEPTH 1- -TH !
+      THEN
+      1 +TO PC
+    BREAK
+    5 OF // CMD SHRA
+      SDEPTH 0 > IF
+        STACK[] SDEPTH 1- -TH @ SHRA
+        STACK[] SDEPTH 1- -TH !
+      THEN
+      1 +TO PC
+    BREAK
+    6 OF // CMD INPORT
+      SDEPTH 0 > IF
+        STACK[] SDEPTH 1- -TH @ <INPORT>
+        STACK[] SDEPTH 1- -TH !
+      THEN
+      1 +TO PC
+    BREAK
+    7 OF // CMD SWAP
+      SDEPTH 1 > IF
+        STACK[] SDEPTH 1 - -TH @
+        STACK[] SDEPTH 2 - -TH @
+        STACK[] SDEPTH 1 - -TH !
+        STACK[] SDEPTH 2 - -TH !
+      THEN
+      1 +TO PC
+    BREAK
+    8 OF // CMD DUP
+      SDEPTH 0 > IF
+        STACK[] SDEPTH 1- -TH @
+        STACK[] SDEPTH -TH !
+	1 +TO SDEPTH
+      THEN
+      1 +TO PC
+    BREAK
+    9 OF // CMD OVER
+      SDEPTH 1 > IF
+        STACK[] SDEPTH 2 - -TH @
+        STACK[] SDEPTH -TH !
+	1 +TO SDEPTH
+      THEN
+      1 +TO PC
+    BREAK
+    10 OF // CMD TEMP>
+        TEMPREG
+        STACK[] SDEPTH -TH !
+	1 +TO SDEPTH
+      1 +TO PC
+    BREAK
+    11 OF // CMD R>
+        RSTACK[] RDEPTH 1- -TH @
+        STACK[] SDEPTH -TH !
+	1 +TO SDEPTH
+      1 +TO PC
+    BREAK
+    12 OF // CMD NIP
+      SDEPTH 1 > IF
+        STACK[] SDEPTH 2 - -TH @ TO TEMPREG
+        STACK[] SDEPTH 1 - -TH @
+        STACK[] SDEPTH 2 - -TH !
+	-1 +TO SDEPTH
+      THEN
+      1 +TO PC
+    BREAK
+    13 OF // CMD DEPTH
+        SDEPTH
+        STACK[] SDEPTH -TH !
+	1 +TO SDEPTH
+      1 +TO PC
+    BREAK
+    14 OF // CMD RDEPTH
+        RDEPTH
+        STACK[] SDEPTH -TH !
+	1 +TO SDEPTH
+      1 +TO PC
+    BREAK
+    16 OF // CMD +
+      SDEPTH 1 > IF
+        STACK[] SDEPTH 2 - -TH @
+        STACK[] SDEPTH 1 - -TH @ +
+        STACK[] SDEPTH 2 - -TH !
+	-1 +TO SDEPTH
+      THEN
+      1 +TO PC
+    BREAK
+    17 OF // CMD -
+      SDEPTH 1 > IF
+        STACK[] SDEPTH 2 - -TH @
+        STACK[] SDEPTH 1 - -TH @ -
+        STACK[] SDEPTH 2 - -TH !
+	-1 +TO SDEPTH
+      THEN
+      1 +TO PC
+    BREAK
+    18 OF // CMD AND
+      SDEPTH 1 > IF
+        STACK[] SDEPTH 2 - -TH @
+        STACK[] SDEPTH 1 - -TH @ AND
+        STACK[] SDEPTH 2 - -TH !
+	-1 +TO SDEPTH
+      THEN
+      1 +TO PC
+    BREAK
+    19 OF // CMD OR
+      SDEPTH 1 > IF
+        STACK[] SDEPTH 2 - -TH @
+        STACK[] SDEPTH 1 - -TH @ OR
+        STACK[] SDEPTH 2 - -TH !
+	-1 +TO SDEPTH
+      THEN
+      1 +TO PC
+    BREAK
+    20 OF // CMD XOR
+      SDEPTH 1 > IF
+        STACK[] SDEPTH 2 - -TH @
+        STACK[] SDEPTH 1 - -TH @ XOR
+        STACK[] SDEPTH 2 - -TH !
+	-1 +TO SDEPTH
+      THEN
+      1 +TO PC
+    BREAK
+    21 OF // CMD =
+      SDEPTH 1 > IF
+        STACK[] SDEPTH 2 - -TH @
+        STACK[] SDEPTH 1 - -TH @ =
+        STACK[] SDEPTH 2 - -TH !
+	-1 +TO SDEPTH
+      THEN
+      1 +TO PC
+    BREAK
+    22 OF // CMD <
+      SDEPTH 1 > IF
+        STACK[] SDEPTH 2 - -TH @
+        STACK[] SDEPTH 1 - -TH @ <
+        STACK[] SDEPTH 2 - -TH !
+	-1 +TO SDEPTH
+      THEN
+      1 +TO PC
+    BREAK
+    23 OF // CMD >
+      SDEPTH 1 > IF
+        STACK[] SDEPTH 2 - -TH @
+        STACK[] SDEPTH 2 - -TH !
+	-1 +TO SDEPTH
+      THEN
+      1 +TO PC
+    BREAK
+    24 OF // CMD *
+      SDEPTH 1 > IF
+        STACK[] SDEPTH 2 - -TH @
+        STACK[] SDEPTH 1 - -TH @ *
+        STACK[] SDEPTH 2 - -TH !
+	-1 +TO SDEPTH
+      THEN
+      1 +TO PC
+    BREAK
+    32 OF // CMD DROP
+      SDEPTH 0 > IF
+	-1 +TO SDEPTH
+      THEN
+      1 +TO PC
+    BREAK
+    33 OF // CMD cmdJMP
+      SDEPTH 0 > IF
+        STACK[] SDEPTH 1- -TH @ TO PC
+	-1 +TO SDEPTH
+      THEN
+    BREAK
+    34 OF // CMD cmdCALL
+      SDEPTH 0 > IF
+        PC 1+ RSTACK[] RDEPTH -TH !
+        STACK[] SDEPTH 1- -TH @ TO PC
+	-1 +TO SDEPTH
+        1 +TO RDEPTH
+      THEN
+    BREAK
+    35 OF // CMD cmdRJMP
+      SDEPTH 0 > IF
+        STACK[] SDEPTH 1- -TH @ +TO PC
+	-1 +TO SDEPTH
+      THEN
+    BREAK
+    36 OF // CMD cmdRCALL
+      SDEPTH 0 > IF
+        PC 1+ RSTACK[] RDEPTH -TH !
+        STACK[] SDEPTH 1- -TH @ +TO PC
+	-1 +TO SDEPTH
+        1 +TO RDEPTH
+      THEN
+    BREAK
+
+// 37 CMD >R
+
+    48 OF // !
+      SDEPTH 1 > IF
+        STACK[] SDEPTH 2 - -TH @
+        STACK[] SDEPTH 1 - -TH @ MAXDATA MOD CELLS DATA[] + !
+        -2 +TO SDEPTH
+      THEN
+      1 +TO PC
+    BREAK
+
+    49 OF // OUTPORT
+      SDEPTH 1 > IF
+        <OUTPORT> 1 +TO PC
+      THEN
+    BREAK
+
+    50 OF // CMD cmdIF
+      SDEPTH 1 > IF
+        STACK[] SDEPTH 2 - -TH @ IF 1 +TO PC ELSE STACK[] SDEPTH 1- -TH @ TO PC THEN
+	-2 +TO SDEPTH
+      THEN
+    BREAK
+    51 OF // CMD cmdRIF
+      SDEPTH 1 > IF
+        STACK[] SDEPTH 2 - -TH @ IF 1 +TO PC ELSE STACK[] SDEPTH 1- -TH @ +TO PC THEN
+	-2 +TO SDEPTH
+      THEN
+    BREAK
+
+    58 OF // CMD RET
+      RDEPTH 0 > IF
+        RSTACK[] RDEPTH 1- -TH @ TO PC
+	-1 +TO RDEPTH
+      THEN
+    BREAK
+
+  ENDCASE
+;
+
+: STEP
+  MAKE-STEP
+  1 +TO CLOCK
+  SHOW-PROC
+;
+
+// COMPILE SECTION
+
+0 CONSTANT cmdNOP
+
+: CMD CREATE , DOES> @ ZC, ;
+: CMD2 CREATE , DOES> cmdNOP ZC, @ ZC, ;
+
+
+100 CONSTANT FLOW-SIZE
+CREATE CF-ADDR[] FLOW-SIZE CELLS ALLOT
+CREATE CF-ID[] FLOW-SIZE CELLS ALLOT
+0 VALUE CFDEPTH
+
+: PUSH-CF // ID --
+  CF-ID[] CFDEPTH -TH !
+  CODE^ CF-ADDR[] CFDEPTH -TH !
+  1 +TO CFDEPTH
+;
+
+1 CONSTANT cfIF
+2 CONSTANT cfBEGIN
+3 CONSTANT cfDO
+4 CONSTANT cfWHILE
+
+CREATE DCB 128 ALLOT
+
+" kernel32.dll" LOADLIBRARY VALUE hKernel
+hKernel " BuildCommDCBA" GETPROCADDRESS VALUE BuildCommDCB
+hKernel " SetCommState" GETPROCADDRESS VALUE SetCommState
+
+
+CREATE COMNAME[] 6 ALLOT
+
+CREATE COMS[] 6 10 * ALLOT
+QUAN COMS
+
+CREATE RBCOM[] COMS CELLS ALLOT
+
+
+: ENUM-COMS
+  0 TO COMS
+  " COM" COMNAME[] 3 CMOVE
+  0 COMNAME[] 4 + C!
+  10 1 DO
+    I 48 + COMNAME[] 3 + C!
+    COMNAME[] OPENRW DUP -1 <> IF CLOSE COMNAME[] COMS[] COMS 6 * + 6 CMOVE 1 +TO COMS ELSE DROP THEN
+  LOOP
+;
+
+ENUM-COMS
+
+QUAN ACTIVE-COM
+COMNAME[] TO ACTIVE-COM
+
+" baud=115200 parity=N data=8 stop=1" DCB BuildCommDCB API2 DROP
+
+QUAN hCOM
+
+: INIT-COM
+  COMS 0 DO
+//    RBCOM[] I -TH @ OBJ-VALUE[] SWAP -TH @ IF COMNAME[] I 6 * + TO ACTIVE-COM THEN
+  LOOP
+  ACTIVE-COM OPENRW TO hCOM
+  hCOM DCB SetCommState API2
+;
+
+
+: WRITECOM hCOM SWAP WRITECHAR ;
+
+: PROGRAM-BYTE
+  DUP 0x0F AND WRITECOM
+  4 RSHIFT 0x0F AND 0x10 OR WRITECOM
+  241 WRITECOM
+  242 WRITECOM
+;
+
+: PROGRAM
+  INIT-COM
+  hCOM -1 = IF " Error opening COM " PRINT THEN
+  243 WRITECOM // RESET
+  240 WRITECOM // ADDR = 0
+  CODE^ 0 DO
+    CODE[] I + C@ PROGRAM-BYTE
+  LOOP
+  244 WRITECOM
+  " «аписано " PRINT CODE^ .
+  hCOM CLOSE
+;
+
+CREATE VSCREEN[] 256 ALLOT
+
+: GET-VIRTUALSCREEN
+  INIT-COM
+    239 WRITECOM
+    hCOM VSCREEN[] 32 READFILE
+  hCOM CLOSE
+;
+
+// USE PROGRAM TO K_F9
+
+: KF532-LIT // N --
+  CAN-DISPATCH OFF
+  
+  CODE[] CODE^ 1- + C@ 0x20 AND IF 0 ZC, THEN
+  
+  DUP 0xC0000000 AND IF
+    DUP 30 RSHIFT 3 AND 0x20 OR ZC,
+  THEN
+  DUP 0xFE000000 AND IF
+    DUP 25 RSHIFT 0x1F AND 0x20 OR ZC,
+  THEN
+  DUP 0xFFF00000 AND IF
+    DUP 20 RSHIFT 0x1F AND 0x20 OR ZC,
+  THEN
+  DUP 0xFFFF8000 AND IF
+    DUP 15 RSHIFT 0x1F AND 0x20 OR ZC,
+  THEN
+  DUP 0xFFFFFC00 AND IF
+    DUP 10 RSHIFT 0x1F AND 0x20 OR ZC,
+  THEN
+  DUP 0xFFFFFFE0 AND IF
+    DUP 5 RSHIFT 0x1F AND 0x20 OR ZC,
+  THEN
+  DUP 0x1F AND 0x20 OR ZC,
+  DROP
+  CAN-DISPATCH ON
+;
+
+: TEST-LIT CODE^ . ZC, ;
+
+VOCABULARY KF532
+
+: MAIN:
+  ['] KF532-LIT TO DISPATCH-NUMBER
+  CAN-DISPATCH ON
+  CODE^
+  0 TO CODE^
+  DUP KF532-LIT
+  TO CODE^
+  KF532
+;
+
+: START:
+  CAN-DISPATCH OFF
+  0 TO CODE^
+  1 TO DATA^
+
+  MAXCODE 0 DO
+    0 CODE[] I + C!
+  LOOP
+
+  MAXDATA 0 DO
+    0 DATA[] I -TH !
+  LOOP
+
+  0 ZC, 0 ZC, 0 ZC, 0 ZC, 23 ZC,
+
+//  0x11 TO DATA^  // not required with hardware loop stack
+  ['] KF532-LIT TO DISPATCH-NUMBER
+  CAN-DISPATCH ON
+  KF532
+;
+
+: END
+  ['] NOOP TO DISPATCH-NUMBER
+  CAN-DISPATCH OFF
+  FORTH
+;
+
+: [IF] [COMPILE] IF ; IMMEDIATE
+: [ELSE] [COMPILE] ELSE ; IMMEDIATE
+: [THEN] [COMPILE] THEN ; IMMEDIATE
+
+
+
+KF532 DEFINITIONS
+
+0  CMD NOP
+
+1 CMD NOT
+2 CMD2 @
+3 CMD SHL
+4 CMD SHR
+5 CMD SHRA
+6 CMD2 INPORT
+7 CMD SWAP
+8 CMD DUP
+9 CMD OVER
+10 CMD R>
+: LOOP 11 ZC, 0 ZC, ;
+12 CMD SYSREG@
+13 CMD +
+14 CMD -
+15 CMD AND
+16 CMD OR
+17 CMD XOR
+18 CMD =
+19 CMD <
+20 CMD >
+21 CMD2 *
+22 CMD DROP
+23 CMD cmdJMP
+24 CMD cmdCALL
+25 CMD cmdRJMP
+26 CMD >R
+27 CMD !
+28 CMD DO
+29 CMD cmdRIF
+30 CMD cmdUNTIL
+31 CMD RET
+
+: OUTPORT ! ;
+
+
+PROC IF
+  [ FORTH ]
+  CAN-DISPATCH @
+  CAN-DISPATCH OFF
+  0x0 ZC, // TODO: NOP должен ставитьс€ только когда предыдущий код - число
+  cfIF PUSH-CF
+  0x0 ZC,
+  0x0 ZC,
+  CAN-DISPATCH !
+  [ KF532 ]
+  cmdRIF
+ENDPROC
+
+PROC ELSE
+  [ FORTH ]
+  CAN-DISPATCH @
+  CAN-DISPATCH OFF
+  CF-ID[] CFDEPTH 1 - -TH @ cfIF = [IF]
+
+    CODE^ 4 + CF-ADDR[] CFDEPTH 1 - -TH @ - 1+ DUP 0x3FF >
+    [IF] " Error: relative jump is too long" PRINT [THEN]
+    DUP 5 RSHIFT 0x1F AND 0x20 OR CF-ADDR[] CFDEPTH 1 - -TH @ CODE[] + C!
+    DUP          0x1F AND 0x20 OR CF-ADDR[] CFDEPTH 1 - -TH @ CODE[] + 1 + C!
+    DROP
+
+    0x0 ZC, // TODO: NOP должен ставитьс€ только когда предыдущий код - число
+    CODE^ CF-ADDR[] CFDEPTH 1 - -TH !
+    0x0 ZC,
+    0x0 ZC,
+    [ KF532 ]
+    cmdRJMP 
+    [ FORTH ]
+  [THEN]
+
+  CAN-DISPATCH !
+  [ KF532 ]
+
+ENDPROC
+
+PROC THEN
+  [ FORTH ]
+  CAN-DISPATCH @
+  CAN-DISPATCH OFF
+  CF-ID[] CFDEPTH 1 - -TH @ cfIF = [IF]
+    CODE^ CF-ADDR[] CFDEPTH 1 - -TH @ - 2 - DUP 0x3FF >
+    [IF] " Error: relative jump is too long" PRINT [THEN]
+    
+    DUP 5 RSHIFT 0x1F AND 0x20 OR CF-ADDR[] CFDEPTH 1 - -TH @ CODE[] + C!
+    DUP          0x1F AND 0x20 OR CF-ADDR[] CFDEPTH 1 - -TH @ CODE[] + 1 + C!
+    DROP
+
+    -1 +TO CFDEPTH
+  [THEN]
+  CAN-DISPATCH !
+  [ KF532 ]
+ENDPROC
+
+
+PROC BEGIN
+  [ FORTH ]
+  cfBEGIN PUSH-CF
+  [ KF532 ]
+ENDPROC
+
+PROC UNTIL
+  [ FORTH ]
+  CAN-DISPATCH @
+  CAN-DISPATCH OFF
+  CF-ID[] CFDEPTH 1 - -TH @ cfBEGIN = [IF]
+    
+//    CODE[] CODE^ + 1- C@ 0x20 AND [IF] cmdNOP [THEN]
+
+    0 ZC,
+
+    CODE^ CF-ADDR[] CFDEPTH 1 - -TH @ - 2 +
+    DUP 5 RSHIFT 0x1F AND 0x20 OR ZC,
+    DUP 0x1F AND 0x20 OR  ZC,
+    DROP
+    -1 +TO CFDEPTH
+    [ KF532 ] cmdUNTIL [ FORTH ]
+  [THEN]
+  CAN-DISPATCH !
+  [ KF532 ]
+ENDPROC
+
+PROC AGAIN
+    [ FORTH ]
+    CAN-DISPATCH @
+    CAN-DISPATCH OFF
+    CF-ID[] CFDEPTH 1 - -TH @ cfBEGIN = [IF]
+
+    0 ZC,
+
+    CF-ADDR[] CFDEPTH 1 - -TH @ KF532-LIT
+    -1 +TO CFDEPTH
+    [ KF532 ] cmdJMP [ FORTH ]
+  [THEN]
+  CAN-DISPATCH !
+  [ KF532 ]
+ENDPROC
+
+
+PROC WHILE
+  [ FORTH ]
+  CAN-DISPATCH @
+  CAN-DISPATCH OFF
+  CF-ID[] CFDEPTH 1 - -TH @ cfBEGIN = [IF]
+    CODE[] CODE^ 1- -TH @ 0x20 AND IF 0x0 ZC, THEN // compile NOP, if last was literal
+    0x0 ZC,
+    cfWHILE PUSH-CF
+    0x0 ZC,
+    0x0 ZC,
+    CAN-DISPATCH !
+    [ KF532 ]
+    cmdRIF
+  [THEN]
+  CAN-DISPATCH !
+  [ KF532 ]
+ENDPROC
+
+
+PROC REPEAT
+  [ FORTH ]
+  CAN-DISPATCH @
+  CAN-DISPATCH OFF
+  CF-ID[] CFDEPTH 1 - -TH @ cfWHILE = 
+  CF-ID[] CFDEPTH 2 - -TH @ cfBEGIN = AND [IF]
+    CF-ADDR[] CFDEPTH 2 - -TH @ KF532-LIT
+    [ KF532 ] cmdJMP [ FORTH ]
+
+    CODE^ CF-ADDR[] CFDEPTH 1 - -TH @ - 2 -
+    DUP 5 RSHIFT 0x1F AND 0x20 OR CF-ADDR[] CFDEPTH 1 - -TH @ CODE[] + C!
+    DUP 0x1F AND 0x20 OR  CF-ADDR[] CFDEPTH 1 - -TH @ CODE[] + 1 + C!
+    DROP
+
+    -2 +TO CFDEPTH
+  [THEN]
+  CAN-DISPATCH !
+  [ KF532 ]
+ENDPROC
+
+
+PROC \\DO
+  [ FORTH ]
+    CAN-DISPATCH @
+    CAN-DISPATCH OFF
+
+    0x90 ZC, 0 ZC, 2 ZC, 0x81 ZC, 0x10 ZC, 0x90 ZC, 0x30 ZC,
+    0x90 ZC, 0 ZC, 2 ZC, 3 ZC, 0x30 ZC,
+    0x90 ZC, 0 ZC, 2 ZC, 3 ZC, 0x81 ZC, 0x10 ZC, 0x30 ZC,
+
+    cfDO PUSH-CF
+    CAN-DISPATCH !
+  [ KF532 ]
+ENDPROC
+
+PROC \\LOOP
+    [ FORTH ]
+    CAN-DISPATCH @
+    CAN-DISPATCH OFF
+    CF-ID[] CFDEPTH 1 - -TH @ cfDO = [IF]
+
+    0x90 ZC, 0 ZC, 2 ZC, 3 ZC, 0 ZC, 2 ZC, 0x81 ZC, 0x10 ZC, 0x90 ZC, 0 ZC, 2 ZC, 3 ZC, 0x30 ZC,
+    0x90 ZC, 0 ZC, 2 ZC, 3 ZC, 0 ZC, 2 ZC,
+    0x90 ZC, 0 ZC, 2 ZC, 3 ZC, 0x81 ZC,
+    0x10 ZC, 0 ZC, 2 ZC, 0x15 ZC,
+    CF-ADDR[] CFDEPTH 1 - -TH @ KF532-LIT
+    0x32 ZC,
+    0x90 ZC, 0 ZC, 2 ZC, 0x81 ZC, 0x11 ZC, 0x90 ZC, 0x30 ZC,
+
+    -1 +TO CFDEPTH
+  [THEN]
+  CAN-DISPATCH !
+  [ KF532 ]
+ENDPROC
+
+PROC \\I
+    [ FORTH ]
+    CAN-DISPATCH @
+    CAN-DISPATCH OFF
+
+    0x90 ZC, 0 ZC, 2 ZC, 3 ZC, 0 ZC, 2 ZC,
+
+  CAN-DISPATCH !
+  [ KF532 ]
+ENDPROC
+
+PROC VARIABLE
+  [ FORTH ]
+  CREATE DATA^ , DATA^ 1+ TO DATA^ DOES> @ KF532-LIT
+ 
+  [ KF532 ]
+ENDPROC
+
+PROC :
+  [ FORTH ]
+  CREATE CODE^ , DOES> @ KF532-LIT
+  [ KF532 ]
+  cmdCALL
+ENDPROC
+
+PROC ;
+  RET
+ENDPROC
+
+FORTH DEFINITIONS
+
+START:
+
+
+
+
+

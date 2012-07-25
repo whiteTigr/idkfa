@@ -83,10 +83,13 @@ type
   TTargetCompiler = class
   private
   public
+    // Необходимо установить в true, если переопределена процедура Evaluate
+    // Или переопределить EvaluateFile и установить в false
     hasEvaluate: boolean;
 
     constructor Create;
 
+    // * - обязательно для переопределения. Минимальный набор для своего компилятора.
     // * Получение кода по адресу
     function Code(pos: integer): integer; virtual;
     // * Сколько скомпилировано кода
@@ -105,16 +108,17 @@ type
     // Максимальный размер памяти данных
     function MaxData: integer; virtual;
 
-    // Обработка строки
+    // * Обработка строки
     procedure Evaluate(tib: string); virtual;
-    // Обработка всего файла
+    // or
+    // * Обработка всего файла
     procedure EvaluateFile(fileName: string); virtual;
     // Вызывается перед компиляцией
     procedure BeginCompile; virtual;
     // Вызывается после компиляции
     procedure EndCompile; virtual;
 
-    // Получение кода последней ошибки
+    // * Получение кода последней ошибки
     function LastError: integer; virtual;
     // Получение последнего разбираемого слова
     function LastToken: string; virtual;
@@ -127,6 +131,7 @@ type
     procedure Optimize; virtual;
   end;
 
+  // todo: переделать в TProtocol и пусть он сам заботится о том, по какому интерфейсу заливать код
   PDownloader = ^TDownloader;
   TDownloader = class
   private
