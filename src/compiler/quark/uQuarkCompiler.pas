@@ -9,7 +9,7 @@ type
   TQuarkCompiler = class(TTargetCompiler)
   private
     DLLHandle: THandle;
-    LastLine: string;
+    LastLine: AnsiString;
     FLastError: integer;
 
     function _Evaluate(const str: AnsiString): integer;
@@ -34,8 +34,12 @@ type
 
     procedure BeginCompile; override;
     procedure EndCompile; override;
-    procedure Evaluate(str: string); override;
-    procedure EvaluateFile(fileName: string); override;
+    procedure Evaluate(const str: string); override;
+    procedure EvaluateFile(const fileName: string); override;
+
+    function GetCmdColor(cmd: integer): cardinal; override;
+
+    function NewFileText: string; override;
   end;
 
 const
@@ -90,13 +94,24 @@ end;
 
 procedure TQuarkCompiler.BeginCompile;
 var
-  s: AnsiString;
-  tmp: integer;
+  f: TextFile;
+  s: string;
 begin
-  QuarkDone; QuarkInit;
-  _Evaluate('1 2 3 4 5 6');
-  _Evaluate('" ' + CompilerName + '.tc " L');
-  _Evaluate('START: ' + IntToStr(tmp));
+  QuarkDone;
+  QuarkInit;
+  FLastError := 0;
+
+  AssignFile(f, CompilerName + '.tc');
+  Reset(f);
+  while (not eof(f)) and (FLastError = 0) do
+  begin
+    readln(f, s);
+    Evaluate(s);
+  end;
+  CloseFile(f);
+
+//  Evaluate('" ' + CompilerName + '.tc " L');
+  Evaluate('START:');
 end;
 
 constructor TQuarkCompiler.Create;
@@ -118,21 +133,22 @@ end;
 
 procedure TQuarkCompiler.EndCompile;
 begin
-  _Evaluate('END');
+  if FLastError = 0 then
+    Evaluate('END');
 end;
 
 function TQuarkCompiler._Evaluate(const str: AnsiString): integer;
 begin
-  Result := QuarkEvaluate(integer(PAnsiChar(str + #0 + #0)));
+  Result := QuarkEvaluate(integer(str));
 end;
 
-procedure TQuarkCompiler.Evaluate(str: string);
+procedure TQuarkCompiler.Evaluate(const str: string);
 begin
   LastLine := str;
-  FLastError := _Evaluate(str);
+  FLastError := _Evaluate(str + #0#0);
 end;
 
-procedure TQuarkCompiler.EvaluateFile(fileName: string);
+procedure TQuarkCompiler.EvaluateFile(const fileName: string);
 begin
   ExecAndWait('quark.exe ' + string(fileName), SW_SHOW);
 end;
@@ -180,6 +196,11 @@ begin
   Result := Forth('MAXDATA DROP');
 end;
 
+function TQuarkCompiler.NewFileText: string;
+begin
+  Result := 'MAIN:'#13#10'2 2 +';
+end;
+
 function TQuarkCompiler.LastError: integer;
 begin
   Result := FLastError;
@@ -199,12 +220,6 @@ begin
       dec(pos);
       res := LastLine[pos] + res;
     end;
-    pos := FLastError;
-    while (pos <= Length(LastLine)) and (LastLine[pos] <> ' ') do
-    begin
-      res := res + LastLine[pos];
-      inc(pos);
-    end;
     Result := res;
   end;
 end;
@@ -215,6 +230,29 @@ begin
     Result := 'OK'
   else
     Result := 'что-то пошло не так';
+end;
+
+function TQuarkCompiler.GetCmdColor(cmd: integer): cardinal;
+// Скопипащено из uProteusDeviceCore
+const
+  cmdNOP     = 0;
+  cmdJMP     = 23;
+  cmdCALL    = 24;
+  cmdRJMP    = 25;
+  cmdTOR     = 26;
+  cmdRIF     = 29;
+  cmdRET     = 31;
+begin
+  case cmd of
+    cmdNOP: Result := $C0C0C0;
+    cmdRET: Result := $00B0FF;
+    cmdJMP, cmdRJMP: Result := $2090FF;
+    cmdRIF: Result := $4070FF;
+    cmdCALL: Result := $6050FF;
+    $20..$3F: Result := $FF6050;
+    else
+      Result := $000000;
+  end;
 end;
 
 end.

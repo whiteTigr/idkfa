@@ -1,9 +1,9 @@
 object fQuarkDevice: TfQuarkDevice
   Left = 192
   Top = 114
-  Width = 188
-  Height = 303
   Caption = 'fQuarkDevice'
+  ClientHeight = 372
+  ClientWidth = 227
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText

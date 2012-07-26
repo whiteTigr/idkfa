@@ -520,6 +520,8 @@ begin
 
   bDownload.Enabled := compiled;
   mmCode[PageIndex].SetFocus;
+
+  if compiled then
   uSimulator.Prepare;
 end;
 
@@ -1188,8 +1190,8 @@ begin
     compilerQuark: QuarkInit;
   end;
 
-//  if NeedCreateNewFile then
-//    NewExecute(fMain);
+  if NeedCreateNewFile then
+    NewExecute(fMain);
 end;
 
 procedure TfMain.changeCompilerToForthClick(Sender: TObject);
@@ -1227,8 +1229,8 @@ begin
   end;
 
 //  ChangeCompilerTo(compilerForth);
-  changeCompilerToProteus.Checked := true;
-  ChangeCompilerTo(compilerProteus, false);
+  changeCompilerToQuark.Checked := true;
+  ChangeCompilerTo(compilerQuark, true);
 
   if ParamCount > 0 then
     OpenKfFile(ParamStr(1));

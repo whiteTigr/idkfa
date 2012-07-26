@@ -109,10 +109,10 @@ type
     function MaxData: integer; virtual;
 
     // * Обработка строки
-    procedure Evaluate(tib: string); virtual;
+    procedure Evaluate(const tib: string); virtual;
     // or
     // * Обработка всего файла
-    procedure EvaluateFile(fileName: string); virtual;
+    procedure EvaluateFile(const fileName: string); virtual;
     // Вызывается перед компиляцией
     procedure BeginCompile; virtual;
     // Вызывается после компиляции
@@ -315,12 +315,12 @@ begin
   {do nothing}
 end;
 
-procedure TTargetCompiler.Evaluate(tib: string);
+procedure TTargetCompiler.Evaluate(const tib: string);
 begin
   {do nothing}
 end;
 
-procedure TTargetCompiler.EvaluateFile(fileName: string);
+procedure TTargetCompiler.EvaluateFile(const fileName: string);
 var
   inputFile: TextFile;
   str: string;
