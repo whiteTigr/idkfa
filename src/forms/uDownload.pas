@@ -436,10 +436,9 @@ begin
     if UserBreak then GOTO FinishIt;
   end;
   downloader.Send(SendBuffer[SendPtr], StopPtr - SendPtr);
-  Application.ProcessMessages;
-  sleep(round((StopPtr - SendPtr) * 8 / 115200 * SendWaitingCoef * 1000));
   gauge.AddProgress(StopPtr - SendPtr);
   ProgressBar1.StepBy(StopPtr - SendPtr);
+  Application.ProcessMessages;
 
   ClearReset;
 

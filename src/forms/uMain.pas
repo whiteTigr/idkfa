@@ -1190,8 +1190,8 @@ begin
     compilerQuark: QuarkInit;
   end;
 
-  if NeedCreateNewFile then
-    NewExecute(fMain);
+//  if NeedCreateNewFile then
+//    NewExecute(fMain);
 end;
 
 procedure TfMain.changeCompilerToForthClick(Sender: TObject);

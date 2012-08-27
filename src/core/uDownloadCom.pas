@@ -41,7 +41,7 @@ var
   DCB: _DCB;
   TimeOuts: COMMTIMEOUTS;
 begin
-  FHCom := CreateFile(pchar(ComName), GENERIC_READ + GENERIC_WRITE, 0, nil, OPEN_EXISTING, 0, 0);
+  FHCom := CreateFile(pchar('\.\\' + ComName), GENERIC_READ + GENERIC_WRITE, 0, nil, OPEN_EXISTING, 0, 0);
 
   GetCommState(FHCom, dcb);
   dcb.Parity:= NOPARITY;
