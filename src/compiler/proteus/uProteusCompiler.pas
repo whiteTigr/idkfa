@@ -730,8 +730,8 @@ end;
 
 procedure TProteusCompiler.WritePredefinedVariables;
 begin
-  CompileNumberTo(PredefinedVariablePos[0], DP); // HERE
-  CompileNumberTo(PredefinedVariablePos[1], CP); // [C]HERE
+  if FindToken('HERE') <> -1 then CompileNumberTo(PredefinedVariablePos[0], DP);
+  if FindToken('[C]HERE') <> -1 then CompileNumberTo(PredefinedVariablePos[1], CP);
 end;
 
 function TProteusCompiler.LastCmd(InTempCode: boolean = false): integer;
@@ -1024,7 +1024,7 @@ begin
       PredefinedVariablePos[i] := CP;
       ReserveCodeForNumber(integer($80000000)); // reserve code for max number
       Compile(cmdNOP);
-      CompileNumber(tmp);
+      CompileNumber(FVocabulary[tmp].tag);
       Compile(cmdStore);
     end;
   end;
