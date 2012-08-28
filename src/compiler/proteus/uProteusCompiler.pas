@@ -59,7 +59,7 @@ type
     TempCodeSize: integer;
     TCP: integer;
 
-    // todo: сделать загрузку служебного кода. upd: и что я тут имел в виду?
+    // todo: сделать загрузку служебного кода.
     FServiceCode: PCodeArray;
     ServiceCodeSize: integer;
     SCP: integer;
@@ -103,7 +103,6 @@ type
     function  CompileNumberTo(position: integer; _value: integer): integer;
 
     procedure ReserveCodeForJump;
-    procedure ReserveCodeForNumber(_value: integer);
     procedure CopyTempCode;
 
     procedure AddNopAfterLiteral(ToTempCode: boolean = false);
@@ -124,8 +123,7 @@ type
     procedure SetVocabularySize(newSize: integer);
 
     procedure InitBasicCommands;
-    procedure FindToken; overload;
-    function FindToken(const name: string): integer; overload;
+    procedure FindToken;
     procedure ClearVocabulary;
 
     procedure TryDispatchNumber;
@@ -135,8 +133,6 @@ type
     function LastCmdIsLiteral(InTempCode: boolean = false): boolean;
 
     function FindWord(tag: integer): integer;
-
-    procedure WritePredefinedVariables;
 
     procedure DeleteCode(fromPos, toPos: integer);
     procedure CorrectJumps(delPos, delCount: integer);
@@ -195,7 +191,7 @@ type
     function Dizasm(cmd: integer): string; override;
     function GetCmdColor(cmd: integer): cardinal; override;
 
-    procedure Evaluate(const tib: string); override;
+    procedure Evaluate(tib: string); override;
     procedure BeginCompile; override;
     procedure EndCompile; override;
 
@@ -248,12 +244,6 @@ function TokenWord(name: string; tag: integer; immediate: boolean; proc: TProc):
 function ControlStackCell(addr: integer; source: integer): TControlStackCell;
 
 implementation
-
-const
-  PredefinedVariable: array[0..1] of string = ('HERE', '[C]HERE');
-
-var
-  PredefinedVariablePos: array[Low(PredefinedVariable)..High(PredefinedVariable)] of integer;
 
 const
   sNone = 0;
@@ -362,17 +352,6 @@ begin
     Compile(buffer[i], ToTempCode);
 end;
 
-procedure TProteusCompiler.ReserveCodeForNumber(_value: integer);
-var
-  storeCP: integer;
-  i: integer;
-begin
-  storeCP := CP;
-  CompileNumber(_value);
-  for i := CP-1 downto storeCP do
-    Compile(cmdNop);
-end;
-
 // на выходе позиция CP _за_ скомпилированным числом
 function TProteusCompiler.CompileNumberTo(position: integer; _value: integer): integer;
 var
@@ -387,8 +366,8 @@ end;
 
 procedure TProteusCompiler.ReserveCodeForJump;
 begin
-  ReserveCodeForNumber(integer($80000000));
-  Compile(cmdNOP);
+  Compile([cmdNop, cmdNop, cmdNop, cmdNop,
+           cmdNop, cmdNop, cmdNop, cmdNop]);
 end;
 
 procedure TProteusCompiler.CopyTempCode;
@@ -631,25 +610,18 @@ begin
 end;
 
 procedure TProteusCompiler.FindToken;
-begin
-  TokenID := FindToken(Parser.token);
-  if TokenID <> -1 then
-    Token := @FVocabulary[TokenID]
-  else
-    Token := nil;
-end;
-
-function TProteusCompiler.FindToken(const name: string): integer;
 var
   i: integer;
 begin
   for i := VP-1 downto 0 do
-    if FVocabulary[i].name = ShortString(name) then
+    if FVocabulary[i].name = ShortString(Parser.token) then
     begin
-      Result := i;
+      TokenID := i;
+      Token := @FVocabulary[TokenID];
       Exit;
     end;
-  Result := -1;
+  Token := nil;
+  TokenID := -1;
 end;
 
 procedure TProteusCompiler.ClearVocabulary;
@@ -726,12 +698,6 @@ begin
   end;
 
   Number := sign * res;
-end;
-
-procedure TProteusCompiler.WritePredefinedVariables;
-begin
-  CompileNumberTo(PredefinedVariablePos[0], DP); // HERE
-  CompileNumberTo(PredefinedVariablePos[1], CP); // [C]HERE
 end;
 
 function TProteusCompiler.LastCmd(InTempCode: boolean = false): integer;
@@ -1010,25 +976,9 @@ end;
 procedure TProteusCompiler._MainDef;
 var
   _CP: integer;
-  i: integer;
-  tmp: integer;
 begin
   _CP := CompileNumberTo(0, CP);
   CompileTo(_CP, cmdJMP);
-
-  for i := Low(PredefinedVariable) to High(PredefinedVariable) do
-  begin
-    tmp := FindToken(PredefinedVariable[i]);
-    if tmp <> -1 then
-    begin
-      PredefinedVariablePos[i] := CP;
-      ReserveCodeForNumber(integer($80000000)); // reserve code for max number
-      Compile(cmdNOP);
-      CompileNumber(tmp);
-      Compile(cmdStore);
-    end;
-  end;
-
   CopyTempCode;
 end;
 
@@ -1265,7 +1215,7 @@ begin
   end;
 end;
 
-procedure TProteusCompiler.Evaluate(const tib: string);
+procedure TProteusCompiler.Evaluate(tib: string);
 begin
   inc(LineCount);
   Parser.tib := tib;
@@ -1393,7 +1343,6 @@ end;
 
 procedure TProteusCompiler.EndCompile;
 begin
-  WritePredefinedVariables;
   Compiled := FError = 0;
 end;
 
