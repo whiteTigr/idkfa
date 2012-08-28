@@ -370,7 +370,7 @@ begin
   storeCP := CP;
   CompileNumber(_value);
   for i := CP-1 downto storeCP do
-    Compile(cmdNop);
+    FCode[i].value := cmdNop;
 end;
 
 // на выходе позици€ CP _за_ скомпилированным числом
