@@ -520,6 +520,8 @@ begin
 
   bDownload.Enabled := compiled;
   mmCode[PageIndex].SetFocus;
+
+  if compiled then
   uSimulator.Prepare;
 end;
 
@@ -1228,7 +1230,7 @@ begin
 
 //  ChangeCompilerTo(compilerForth);
   changeCompilerToProteus.Checked := true;
-  ChangeCompilerTo(compilerProteus, false);
+  ChangeCompilerTo(compilerProteus, true);
 
   if ParamCount > 0 then
     OpenKfFile(ParamStr(1));

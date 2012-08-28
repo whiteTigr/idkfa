@@ -97,7 +97,7 @@ type
     function DataCount: integer; virtual;
     function MaxData: integer; virtual;
 
-    procedure Evaluate(tib: string); virtual;
+    procedure Evaluate(const tib: string); virtual;
     procedure EvaluateFile(fileName: string); virtual;
     procedure BeginCompile; virtual;
     procedure EndCompile; virtual;
@@ -293,7 +293,7 @@ begin
   {do nothing}
 end;
 
-procedure TTargetCompiler.Evaluate(tib: string);
+procedure TTargetCompiler.Evaluate(const tib: string);
 begin
   {do nothing}
 end;

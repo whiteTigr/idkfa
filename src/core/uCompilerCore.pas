@@ -132,7 +132,7 @@ type
     function DataCount: integer; override;
     function MaxData: integer; override;
 
-    procedure Evaluate(tib: string); override;
+    procedure Evaluate(const tib: string); override;
     procedure BeginCompile; override;
     procedure EndCompile; override;
 
@@ -380,7 +380,7 @@ begin
   FError := code;
 end;
 
-procedure TCompilerCore.Evaluate(tib: string);
+procedure TCompilerCore.Evaluate(const tib: string);
 begin
   inc(LineCount);
   Parser.tib := tib;

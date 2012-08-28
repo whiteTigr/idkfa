@@ -419,6 +419,7 @@ begin
   SendPtr := 0;
   gauge.Progress := 0;
   ProgressBar1.Position := 0;
+  needToWait := 0;
   if fMain.Downloaddatamemory1.Checked then
     StopPtr := SendBufferPtr
   else
