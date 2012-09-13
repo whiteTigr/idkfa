@@ -9,6 +9,7 @@ uses
 type
   TfSimVga = class(TForm)
     imageMain: TImage;
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
   private
     { Private declarations }
   public
@@ -156,7 +157,7 @@ begin
         DrawSymbol(ScreenAddr);
         inc(ScreenAddr);
       end;
-    { ... }
+    { ... cursor operations not implemented ... }
     30: PalleteAddr := data and $1F;
     31: Pallete[PalleteAddr] := data and $FFFFFF;
     35: SymbolAddr := data and $FF;
@@ -181,6 +182,12 @@ begin
   case addr of
     0: Result := Screen[ScreenAddr];
   end;
+end;
+
+procedure TfSimVga.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+begin
+  CanClose := false;
+  Hide;
 end;
 
 initialization

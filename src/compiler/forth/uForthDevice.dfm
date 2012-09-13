@@ -1,10 +1,10 @@
 object fForthDevice: TfForthDevice
   Left = 390
   Top = 344
-  Width = 238
-  Height = 440
   Align = alClient
   Caption = 'fForthDevice'
+  ClientHeight = 406
+  ClientWidth = 230
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -30,8 +30,32 @@ object fForthDevice: TfForthDevice
     Width = 230
     Height = 159
     Align = alBottom
-    Caption = 'inout'
     TabOrder = 0
+    ExplicitTop = 246
+    object SpeedButton1: TSpeedButton
+      Left = 5
+      Top = 6
+      Width = 108
+      Height = 33
+      Caption = 'COM-'#1087#1086#1088#1090
+      OnClick = SpeedButton1Click
+    end
+    object SpeedButton2: TSpeedButton
+      Left = 119
+      Top = 6
+      Width = 108
+      Height = 33
+      Caption = #1044#1080#1086#1076#1080#1082#1080
+      OnClick = SpeedButton2Click
+    end
+    object SpeedButton3: TSpeedButton
+      Left = 5
+      Top = 45
+      Width = 108
+      Height = 33
+      Caption = #1058#1077#1082#1089#1090#1086#1074#1099#1081' '#1084#1086#1085#1080#1090#1086#1088
+      OnClick = SpeedButton3Click
+    end
   end
   object tabStacks: TTabControl
     Left = 0

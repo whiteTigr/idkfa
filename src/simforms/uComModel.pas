@@ -13,6 +13,7 @@ type
     StaticText1: TStaticText;
     eReceivedByte: TEdit;
     procedure bSendClick(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
   private
     { Private declarations }
   public
@@ -73,6 +74,12 @@ begin
 
   comData := value;
   inc(comCount);
+end;
+
+procedure TfComModel.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+begin
+  CanClose := false;
+  Hide;
 end;
 
 end.

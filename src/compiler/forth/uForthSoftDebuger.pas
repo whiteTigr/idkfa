@@ -318,8 +318,6 @@ begin
     PC := MaxCode-1;
     MessageBox(0, 'PC > MaxCode. Установлено в MaxCode.', 'Ошибка', MB_OK or MB_ICONWARNING);
   end;
-
-  Application.ProcessMessages;
 end;
 
 procedure TForthSoftDebug.AddPeriferal(startAddr, endAddr: integer; inport,

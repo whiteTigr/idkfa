@@ -4,7 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, uGlobal, StdCtrls, ExtCtrls, Grids, ComCtrls, uProteusDeviceCore, uCommonFunctions;
+  Dialogs, uGlobal, StdCtrls, ExtCtrls, Grids, ComCtrls, uProteusDeviceCore, uCommonFunctions,
+  uComModel, uLed, uSimVga, Buttons;
 
 type
   TfProteusDevice = class(TForm)
@@ -13,9 +14,15 @@ type
     tabStacks: TTabControl;
     sgStack: TStringGrid;
     rgStackBase: TRadioGroup;
+    SpeedButton2: TSpeedButton;
+    SpeedButton1: TSpeedButton;
+    SpeedButton3: TSpeedButton;
     procedure tabStacksChange(Sender: TObject);
     procedure rgStackBaseClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure SpeedButton1Click(Sender: TObject);
+    procedure SpeedButton2Click(Sender: TObject);
+    procedure SpeedButton3Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -70,6 +77,30 @@ end;
 procedure TfProteusDevice.ShowDevice;
 begin
   ShowStack;
+end;
+
+procedure TfProteusDevice.SpeedButton1Click(Sender: TObject);
+begin
+  if fComModel.Visible then
+    fComModel.Hide
+  else
+    fComModel.Show;
+end;
+
+procedure TfProteusDevice.SpeedButton2Click(Sender: TObject);
+begin
+  if fLed.Visible then
+    fLed.Hide
+  else
+    fLed.Show;
+end;
+
+procedure TfProteusDevice.SpeedButton3Click(Sender: TObject);
+begin
+  if fSimVga.Visible then
+    fSimVga.Hide
+  else
+    fSimVga.Show;
 end;
 
 procedure TfProteusDevice.FormCreate(Sender: TObject);

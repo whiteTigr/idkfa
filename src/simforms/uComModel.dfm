@@ -15,6 +15,7 @@ object fComModel: TfComModel
   FormStyle = fsStayOnTop
   OldCreateOrder = False
   Position = poDefault
+  OnCloseQuery = FormCloseQuery
   PixelsPerInch = 96
   TextHeight = 13
   object eByteToSend: TEdit
@@ -37,6 +38,8 @@ object fComModel: TfComModel
     Width = 75
     Height = 25
     Caption = 'Send'
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
     TabOrder = 1
     OnClick = bSendClick
   end

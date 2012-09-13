@@ -9,6 +9,7 @@ uses
 type
   TfLed = class(TForm)
     procedure FormCreate(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
   private
 
   public
@@ -26,6 +27,12 @@ procedure Outport(addr, data: integer);
 implementation
 
 {$R *.dfm}
+
+procedure TfLed.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+begin
+  CanClose := false;
+  Hide;
+end;
 
 procedure TfLed.FormCreate(Sender: TObject);
 var

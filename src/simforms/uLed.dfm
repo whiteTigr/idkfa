@@ -14,6 +14,7 @@ object fLed: TfLed
   Font.Style = []
   FormStyle = fsStayOnTop
   OldCreateOrder = False
+  OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13

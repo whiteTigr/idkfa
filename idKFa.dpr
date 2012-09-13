@@ -44,10 +44,9 @@ begin
   Application.CreateForm(TfAbout, fAbout);
   Application.CreateForm(TfStyleEditor, fStyleEditor);
   Application.CreateForm(TfSimulator, fSimulator);
-  Application.CreateForm(TfBrainfuckDevice, fBrainfuckDevice);
-  Application.CreateForm(TfProteusDevice, fProteusDevice);
-  Application.CreateForm(TfQuarkDevice, fQuarkDevice);
   Application.CreateForm(TfSimVga, fSimVga);
+  Application.CreateForm(TfComModel, fComModel);
+  Application.CreateForm(TfLed, fLed);
   Application.Run;
 end.
 

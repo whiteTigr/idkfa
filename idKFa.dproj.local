@@ -12,24 +12,18 @@
     <File Path="src\compiler\brainfuck\uBrainfuckDevice.dfm"/>
     <File Path="src\compiler\brainfuck\uBrainfuckDeviceCore.pas"/>
     <File Path="src\compiler\forth"/>
-    <File Path="src\compiler\forth\uComModel.pas"/>
-    <File Path="src\compiler\forth\uComModel.dfm"/>
     <File Path="src\compiler\forth\uForthCompiler.pas"/>
     <File Path="src\compiler\forth\uForthDevice.pas"/>
     <File Path="src\compiler\forth\uForthDevice.dfm"/>
     <File Path="src\compiler\forth\uForthDeviceCore.pas"/>
     <File Path="src\compiler\forth\uForthHardDebuger.pas"/>
     <File Path="src\compiler\forth\uForthSoftDebuger.pas"/>
-    <File Path="src\compiler\forth\uLed.pas"/>
-    <File Path="src\compiler\forth\uLed.dfm"/>
     <File Path="src\compiler\proteus"/>
     <File Path="src\compiler\proteus\uProteusCompiler.pas"/>
     <File Path="src\compiler\proteus\uProteusDevice.pas"/>
     <File Path="src\compiler\proteus\uProteusDevice.dfm"/>
     <File Path="src\compiler\proteus\uProteusDeviceCore.pas"/>
     <File Path="src\compiler\proteus\uProteusSoftDebuger.pas"/>
-    <File Path="src\compiler\proteus\uSimVga.pas"/>
-    <File Path="src\compiler\proteus\uSimVga.dfm"/>
     <File Path="src\compiler\quark"/>
     <File Path="src\compiler\quark\uQuarkCompiler.pas"/>
     <File Path="src\compiler\quark\uQuarkDevice.pas"/>
@@ -55,6 +49,13 @@
     <File Path="src\forms\uStyleEditor.dfm"/>
     <File Path="src\other"/>
     <File Path="src\other\symbols.bin"/>
+    <File Path="src\simforms"/>
+    <File Path="src\simforms\uComModel.pas"/>
+    <File Path="src\simforms\uComModel.dfm"/>
+    <File Path="src\simforms\uLed.pas"/>
+    <File Path="src\simforms\uLed.dfm"/>
+    <File Path="src\simforms\uSimVga.pas"/>
+    <File Path="src\simforms\uSimVga.dfm"/>
   </ProjectSortOrder>
 	<Transactions>
     <Transaction>2012.09.11 11:38:29.609.pas,D:\projects\git\idkfa\Unit1.pas=D:\projects\git\idkfa\src\compiler\proteus\uSimVga.pas</Transaction>

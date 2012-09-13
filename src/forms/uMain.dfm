@@ -160,13 +160,6 @@ object fMain: TfMain
       ImageIndex = 11
       Style = tbsSeparator
     end
-    object ToolButton2: TToolButton
-      Left = 368
-      Top = 0
-      Caption = 'ToolButton2'
-      ImageIndex = 11
-      OnClick = ToolButton2Click
-    end
   end
   object Panel1: TPanel
     Left = 0

@@ -4,7 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, Grids, ComCtrls, uForthDeviceCore, uRecordList, uGlobal, uCommonFunctions;
+  Dialogs, StdCtrls, ExtCtrls, Grids, ComCtrls, uForthDeviceCore, uRecordList, uGlobal, uCommonFunctions,
+  Buttons, uComModel, uLed, uSimVga;
 
 type
   TfForthDevice = class(TForm)
@@ -13,9 +14,15 @@ type
     tabStacks: TTabControl;
     sgStack: TStringGrid;
     rgStackBase: TRadioGroup;
+    SpeedButton1: TSpeedButton;
+    SpeedButton2: TSpeedButton;
+    SpeedButton3: TSpeedButton;
     procedure FormCreate(Sender: TObject);
     procedure tabStacksChange(Sender: TObject);
     procedure rgStackBaseClick(Sender: TObject);
+    procedure SpeedButton1Click(Sender: TObject);
+    procedure SpeedButton2Click(Sender: TObject);
+    procedure SpeedButton3Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -112,6 +119,30 @@ end;
 procedure TfForthDevice.ShowDevice;
 begin
   ShowStack;
+end;
+
+procedure TfForthDevice.SpeedButton1Click(Sender: TObject);
+begin
+  if fComModel.Visible then
+    fComModel.Hide
+  else
+    fComModel.Show;
+end;
+
+procedure TfForthDevice.SpeedButton2Click(Sender: TObject);
+begin
+  if fLed.Visible then
+    fLed.Hide
+  else
+    fLed.Show;
+end;
+
+procedure TfForthDevice.SpeedButton3Click(Sender: TObject);
+begin
+  if fSimVga.Visible then
+    fSimVga.Hide
+  else
+    fSimVga.Show;
 end;
 
 end.
