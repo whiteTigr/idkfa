@@ -1046,39 +1046,29 @@ begin
   eFindWhat.SetFocus;
 end;
 
-// todo: некрасивый код (но работающий)
 procedure TfMain.ActFindExecute(Sender: TObject);
 var
   FoundAt: integer;
-  StartPos, ToEnd: integer;
-  tmpRich: TRichEdit;
+  StartPos: integer;
 begin
-  tmpRich := TRichEdit.Create(fMain);
-  tmpRich.Visible := false;
-  tmpRich.Parent := fMain;
-  with tmpRich do
+  if (Length(mmCode) = 0) or (Tabs.PageIndex < 0) then
+    Exit;
+
+  if mmCode[Tabs.PageIndex].Range.SelLength <> 0 then
+    StartPos := mmCode[Tabs.PageIndex].Range.Position + mmCode[Tabs.PageIndex].Range.SelLength
+  else
+    StartPos := 1;
+
+  FoundAt := UniPos(eFindWhat.Text, mmCode[Tabs.PageIndex].Lines.Text, StartPos);
+  if FoundAt <> -1 then
   begin
-    tmpRich.Lines.Assign(mmCode[Tabs.PageIndex].Lines);
-
-    if mmCode[Tabs.PageIndex].Range.SelLength <> 0 then
-      StartPos := mmCode[Tabs.PageIndex].Range.Position + mmCode[Tabs.PageIndex].Range.SelLength
-    else
-      StartPos := 0;
-
-    ToEnd := Length(Text) - StartPos;
-
-    FoundAt := FindText(eFindWhat.Text, StartPos, ToEnd, [stMatchCase]);
-    if FoundAt <> -1 then
-    begin
-      mmCode[Tabs.PageIndex].Range.Position := FoundAt;
-      mmCode[Tabs.PageIndex].Range.SelLength := Length(eFindWhat.Text)
-    end
-    else
-    begin
-      Windows.Beep(250, 100);
-    end;
+    mmCode[Tabs.PageIndex].Range.Position := FoundAt;
+    mmCode[Tabs.PageIndex].Range.SelLength := Length(eFindWhat.Text)
+  end
+  else
+  begin
+    Windows.Beep(250, 100);
   end;
-  tmpRich.Destroy;
 end;
 
 procedure TfMain.mmCodeWordInfo(Sender: TMPCustomSyntaxMemo; const X, Y,
