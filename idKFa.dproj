@@ -60,10 +60,10 @@
 			<DCCReference Include="src\forms\uSimulator.pas">
 				<Form>fSimulator</Form>
 			</DCCReference>
-			<DCCReference Include="src\compiler\forth\uLed.pas">
+			<DCCReference Include="src\simforms\uLed.pas">
 				<Form>fLed</Form>
 			</DCCReference>
-			<DCCReference Include="src\compiler\forth\uComModel.pas">
+			<DCCReference Include="src\simforms\uComModel.pas">
 				<Form>fComModel</Form>
 			</DCCReference>
 			<DCCReference Include="src\core\uGlobal.pas"/>
@@ -95,6 +95,9 @@
 			<DCCReference Include="src\compiler\quark\uQuarkDevice.pas">
 				<Form>fQuarkDevice</Form>
 			</DCCReference>
+			<DCCReference Include="src\simforms\uSimVga.pas">
+				<Form>fSimVga</Form>
+			</DCCReference>
 			<RcItem Include="bmp\CloseBtn.bmp">
 				<ResourceType>Bitmap</ResourceType>
 				<ResourceId>CloseBtnBmp</ResourceId>
@@ -102,6 +105,11 @@
 			<RcItem Include="bmp\CloseBtnFocused.bmp">
 				<ResourceType>Bitmap</ResourceType>
 				<ResourceId>CloseBtnFocusedBmp</ResourceId>
+			</RcItem>
+			<RcItem Include="src\other\symbols.bin">
+				<ContainerId>ResourceItem</ContainerId>
+				<ResourceType>RCData</ResourceType>
+				<ResourceId>SimVgaSymbols</ResourceId>
 			</RcItem>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

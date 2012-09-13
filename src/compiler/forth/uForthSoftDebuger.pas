@@ -3,7 +3,7 @@ unit uForthSoftDebuger;
 interface
 
 uses
-  Windows, SysUtils, Messages, DateUtils, uForthDeviceCore, uRecordList, uGlobal;
+  Windows, SysUtils, Messages, DateUtils, uForthDeviceCore, uRecordList, uGlobal, Forms;
 
 type
   PForthSoftDebug = ^TForthSoftDebug;
@@ -66,7 +66,7 @@ begin
     begin
       int1 := cmd and $FFFF;
       if (int1 and $8000) <> 0 then
-        int1 := $FFFF0000 or int1;
+        int1 := integer($FFFF0000) or int1;
       DStack.Push(int1);
     end;
 
@@ -126,7 +126,7 @@ begin
     57: // shra
     begin
       int1 := DStack.Pop;
-      DStack.Push((int1 shr 1) or (int1 and $80000000));
+      DStack.Push((int1 shr 1) or (int1 and integer($80000000)));
     end;
 
     58: // inport
@@ -252,6 +252,14 @@ begin
       int2 := DStack.Pop;
       DStack.Push(int1 * int2);
     end;
+
+    127: // /MOD
+    begin
+      int1 := DStack.Pop;
+      int2 := DStack.Pop;
+      DStack.Push(int2 div int1);
+      DStack.Push(int2 mod int1);
+    end;
   end;
 
   // переходы
@@ -310,6 +318,8 @@ begin
     PC := MaxCode-1;
     MessageBox(0, 'PC > MaxCode. Установлено в MaxCode.', 'Ошибка', MB_OK or MB_ICONWARNING);
   end;
+
+  Application.ProcessMessages;
 end;
 
 procedure TForthSoftDebug.AddPeriferal(startAddr, endAddr: integer; inport,

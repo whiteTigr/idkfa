@@ -7,7 +7,7 @@ uses
   Dialogs, ActnList, ComCtrls, Menus, Grids, StdCtrls, ExtCtrls,
   ToolWin, ImgList, uForthCompiler, Gauges, UnitSyntaxMemo, uStyleEditor, Buttons, uRecordList, uSimulator, uGlobal,
   ShellAPI, uBrainfuckCompiler, uDownloadCom, uCommonFunctions, uProteusCompiler, uQuarkCompiler,
-  TabNotBk;
+  TabNotBk, uSimVga;
 
 type
   TfMain = class(TForm)
@@ -79,6 +79,7 @@ type
     ToolButton1: TToolButton;
     CloseCurrentTab: TAction;
     SpeedButton1: TSpeedButton;
+    ToolButton2: TToolButton;
     procedure CompileExecute(Sender: TObject);
     procedure GotoDownloadExecute(Sender: TObject);
     procedure ExportCoeExecute(Sender: TObject);
@@ -118,6 +119,7 @@ type
     procedure ExportRawExecute(Sender: TObject);
     procedure CloseBtnMouseEnter(Sender: TObject);
     procedure CloseBtnMouseLeave(Sender: TObject);
+    procedure ToolButton2Click(Sender: TObject);
   private
     procedure ForthCom;
     procedure ForthPackSize;
@@ -1021,6 +1023,11 @@ procedure TfMain.ToLog(Sender: TObject; LogStr: string);
 begin
   writeln(fLog, LogStr);
   Flush(fLog);
+end;
+
+procedure TfMain.ToolButton2Click(Sender: TObject);
+begin
+  fSimVga.Show;
 end;
 
 procedure TfMain.CloseCurrentTabExecute(Sender: TObject);
