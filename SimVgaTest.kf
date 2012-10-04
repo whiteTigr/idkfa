@@ -1,0 +1,234 @@
+CmdFile: kf332.cmd
+                // Запись программы
+#COM 1          // по нужному COM-порту
+#PACKSIZE= 1    // пакетами по PACKSIZE байт
+#WAITCOEF= 2    // с задержкой, вычисляемой по формуле
+                // (PackSize * 8 / BaudRate) * WaitCoef секунд
+// Если программа не зашивается, попробуйте уменьшить размер пакетов
+// и увеличить задержку
+
+// подгрузка библиотек
+// " proteus.lib" L
+
+: 0<
+ 2147483648 AND IF -1 ELSE 0 THEN
+;
+: SWAP NIP TEMP> ;
+
+Cmd: /MOD 127
+: /   /MOD DROP ;
+: MOD /MOD NIP ;
+
+: NEGATE // ( x -- -x )
+ 0 SWAP -
+;
+
+: ABS // ( x -- u )
+ DUP 0x80000000 AND IF NEGATE THEN
+;
+
+: GetTickCount 400 INPORT ;
+VARIABLE RND
+: RANDOMIZE GetTickCount RND ! ;
+
+: NextRandom //  ( -- u )
+ RND @ 69069 * 31415 + 278720333 MOD DUP RND !
+;
+
+: RANDOM  \ ( u1 -- u2 )
+ 278720333 SWAP /
+ NextRandom ABS SWAP /
+;
+
+: BLACK  0 ;
+: RED    1 ;
+: GREEN  2 ;
+: YELLOW 3 ;
+: BLUE   4 ;
+: PURPLE 5 ;
+: CYAN   6 ;
+: WHITE  7 ;
+
+: VGA_SetData 300 OUTPORT ;
+: VGA_GetData 300 INPORT ;
+: VGA_SetData(A++) 309 OUTPORT ;
+: VGA_SetAddr 301 OUTPORT ;
+: VGA_SetLowLevel 307 OUTPORT ;
+
+: GOTOX 302 OUTPORT ;
+: GOTOY 303 OUTPORT ;
+: GOTOXY GOTOY GOTOX ;
+: SETCOLOR 304 OUTPORT ;
+: SETBGCOLOR 305 OUTPORT ;
+: EMIT 306 OUTPORT ;
+: CR 777 308 OUTPORT ;
+
+: CLS
+ 1 VGA_SetLowLevel
+ 0 VGA_SetAddr
+ 2000 0 DO
+  0 VGA_SetData(A++)
+ LOOP
+ 0 VGA_SetLowLevel
+;
+
+: SCREEN_UP
+ 1 VGA_SetLowLevel
+ 1920 0 DO
+  I 80 + VGA_SetAddr
+  VGA_GetData
+  I VGA_SetAddr
+  VGA_SetData
+ LOOP
+ 1920 VGA_SetAddr
+ 2000 1920 DO
+  0 VGA_SetData(A++)
+ LOOP
+ 0 VGA_SetLowLevel
+;
+
+: PRINT
+ BEGIN
+  DUP @ 0 = IF DROP ; THEN
+  DUP @ EMIT
+  1 +
+ AGAIN
+;
+
+: BIGPRINT // n mask -->
+ BEGIN
+  DUP 0 = IF DROP DROP ; THEN
+  OVER OVER AND IF 0xAB ELSE 0x00 THEN EMIT
+  SHR
+ AGAIN
+;
+
+: FORTH_PRINT // :)
+ GREEN SETCOLOR
+ BLACK SETBGCOLOR
+ 23 1 GOTOXY 0b11111101111110111111011111101100 0b10000000000000000000000000000000 BIGPRINT 0xAB EMIT 0xAB EMIT
+ 23 2 GOTOXY 0b11000001100110110011000110001100 0b10000000000000000000000000000000 BIGPRINT 0xAB EMIT 0xAB EMIT
+ 23 3 GOTOXY 0b11110001100110111100000110001111 0b10000000000000000000000000000000 BIGPRINT 0xAB EMIT 0xAB EMIT
+ 23 4 GOTOXY 0b11000001100110110011000110001100 0b10000000000000000000000000000000 BIGPRINT 0xAB EMIT 0xAB EMIT
+ 23 5 GOTOXY 0b11000001111110110011000110001100 0b10000000000000000000000000000000 BIGPRINT 0xAB EMIT 0xAB EMIT
+ 32 6 GOTOXY " Tiger Forth (TiF v1.2.0)" PRINT
+;
+
+: welcome
+ CLS
+ FORTH_PRINT
+ 0 24 GOTOXY " > " PRINT
+;
+
+ARRAY Matrix 512
+VARIABLE HeightLine
+// x 8bit y 8bit
+: MatrixInit
+ 512 0 DO
+  0xFFFFFFFF Matrix I + !
+ LOOP
+ 10 HeightLine !
+;
+
+VARIABLE curx
+VARIABLE cury
+VARIABLE curlen
+: GetSym // ix -->
+ DUP 0< NOT OVER 512 < AND IF
+  Matrix + @
+  DUP 0x000000FF AND cury !
+  DUP 0x0000FF00 AND 8 0 DO SHR LOOP curx !
+  DUP 0x00FF0000 AND 16 0 DO SHR LOOP curlen !
+  DROP
+ ELSE
+  DROP
+ THEN
+;
+
+VARIABLE curaddr
+: PutSym // len x y ix -->
+ DUP 0< NOT OVER 512 < AND IF
+  Matrix + curaddr ! // len x y
+  0xFF AND SWAP
+  0xFF AND 8 0 DO SHL LOOP OR SWAP
+  0xFF AND 16 0 DO SHL LOOP OR
+  curaddr @ !
+ ELSE
+  DROP DROP DROP
+ THEN
+;
+
+VARIABLE res
+: InScreen // x y --> 0|-1
+ DUP 0< NOT SWAP 25 < AND IF -1 ELSE 0 THEN SWAP
+ DUP 0< NOT SWAP 80 < AND IF -1 ELSE 0 THEN AND
+;
+
+: MatrixShow
+ 256 0 DO
+  I GetSym
+  curx @ 0xFF = NOT IF
+   curlen @ 0 OVER OVER > IF DO
+    curx @ cury @ I - InScreen IF
+     I IF GREEN ELSE WHITE THEN SETCOLOR
+     I IF BLACK ELSE GREEN THEN SETBGCOLOR
+     curx @ cury @ I - GOTOXY
+     256 RANDOM EMIT
+    THEN
+   LOOP ELSE DROP DROP THEN
+   curx @ cury @ curlen @ - InScreen IF
+    BLACK SETBGCOLOR
+    curx @ cury @ curlen @ - GOTOXY
+    32 EMIT
+   THEN
+  THEN
+ LOOP
+;
+
+: MatrixNewborn
+ 80 0 DO
+  1000 RANDOM 10 < IF
+   -1
+   BEGIN
+    1 +
+    DUP GetSym curx @ 0xFF =
+    OVER 256 = OR UNTIL
+   DUP 256 = IF
+    DROP
+   ELSE
+    5 15 RANDOM + SWAP I SWAP 0 SWAP PutSym
+   THEN
+  THEN
+ LOOP
+;
+
+: MatrixDown
+ 256 0 DO
+  I GetSym
+  curx @ 0xFFFF = NOT IF
+   1000 RANDOM 330 < IF // 33%
+    cury @ 1 + cury !
+    cury @ 80 curlen @ + > IF 0xFF curx ! THEN
+    curlen @ curx @ cury @ I PutSym
+   THEN
+  THEN
+ LOOP
+;
+
+: MATRIX
+ 0 310 OUTPORT
+ MatrixInit
+ BEGIN
+  MatrixNewborn
+  MatrixDown
+  MatrixShow
+ AGAIN
+;
+
+MAIN:
+
+welcome
+MATRIX
+BEGIN
+
+AGAIN

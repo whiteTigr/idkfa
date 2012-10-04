@@ -1,10 +1,10 @@
 object fProteusDevice: TfProteusDevice
   Left = 192
   Top = 114
-  Width = 203
-  Height = 504
   Align = alClient
   Caption = 'fProteusDevice'
+  ClientHeight = 470
+  ClientWidth = 234
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,25 +18,51 @@ object fProteusDevice: TfProteusDevice
   object Splitter1: TSplitter
     Left = 0
     Top = 308
-    Width = 195
+    Width = 234
     Height = 3
     Cursor = crVSplit
     Align = alBottom
     Beveled = True
+    ExplicitWidth = 195
   end
   object PanelInout: TPanel
     Left = 0
     Top = 311
-    Width = 195
+    Width = 234
     Height = 159
     Align = alBottom
-    Caption = 'inout'
     TabOrder = 0
+    ExplicitTop = 310
+    ExplicitWidth = 195
+    object SpeedButton2: TSpeedButton
+      Left = 119
+      Top = 6
+      Width = 108
+      Height = 33
+      Caption = #1044#1080#1086#1076#1080#1082#1080
+      OnClick = SpeedButton2Click
+    end
+    object SpeedButton1: TSpeedButton
+      Left = 5
+      Top = 6
+      Width = 108
+      Height = 33
+      Caption = 'COM-'#1087#1086#1088#1090
+      OnClick = SpeedButton1Click
+    end
+    object SpeedButton3: TSpeedButton
+      Left = 5
+      Top = 45
+      Width = 108
+      Height = 33
+      Caption = #1058#1077#1082#1089#1090#1086#1074#1099#1081' '#1084#1086#1085#1080#1090#1086#1088
+      OnClick = SpeedButton3Click
+    end
   end
   object tabStacks: TTabControl
     Left = 0
     Top = 0
-    Width = 195
+    Width = 234
     Height = 308
     Align = alClient
     MultiLine = True
@@ -48,10 +74,11 @@ object fProteusDevice: TfProteusDevice
       'Ret')
     TabIndex = 0
     OnChange = tabStacksChange
+    ExplicitWidth = 195
     object sgStack: TStringGrid
       Left = 4
       Top = 24
-      Width = 187
+      Width = 226
       Height = 209
       Align = alClient
       Color = 16774388
@@ -69,6 +96,7 @@ object fProteusDevice: TfProteusDevice
       ParentCtl3D = False
       ParentFont = False
       TabOrder = 0
+      ExplicitWidth = 187
       RowHeights = (
         16
         16
@@ -91,7 +119,7 @@ object fProteusDevice: TfProteusDevice
     object rgStackBase: TRadioGroup
       Left = 4
       Top = 233
-      Width = 187
+      Width = 226
       Height = 71
       Align = alBottom
       Caption = #1056#1072#1079#1088#1103#1076#1085#1086#1089#1090#1100
@@ -102,6 +130,7 @@ object fProteusDevice: TfProteusDevice
         'Char')
       TabOrder = 1
       OnClick = rgStackBaseClick
+      ExplicitWidth = 187
     end
   end
 end

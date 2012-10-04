@@ -198,6 +198,8 @@ object fMain: TfMain
       TabFont.Style = []
       TabOrder = 0
       OnChange = TabsChange
+      ExplicitLeft = 2
+      ExplicitTop = -1
       object TTabPage
         Left = 4
         Top = 24

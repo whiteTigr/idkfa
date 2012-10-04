@@ -113,6 +113,7 @@ type
     // or
     // * Обработка всего файла
     procedure EvaluateFile(const fileName: string); virtual;
+
     // Вызывается перед компиляцией
     procedure BeginCompile; virtual;
     // Вызывается после компиляции
@@ -403,7 +404,6 @@ begin
       SendByte(buf[Low(buf)+i]);
   except
     {$WARNINGS OFF}
-    // todo: задолбало предупреждение о специфичной для платформы функции
     on EAbstractError do
       Assert(false, 'TDownloader.Send: Ошибка при вызове SendByte.'+#13#10+
                     'Необходимо определить SendByte в наследуемом классе.');
@@ -442,7 +442,6 @@ begin
       GetByte(buf[Low(buf)+i]);
   except
     {$WARNINGS OFF}
-    // todo: задолбало предупреждение о специфичной для платформы функции
     on EAbstractError do
       Assert(false, 'TDownloader.Get: Ошибка при вызове GetByte.'+#13#10+
                     'Необходимо определить GetByte в наследуемом классе.');

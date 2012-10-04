@@ -165,7 +165,7 @@ type
     procedure LoadCommandSystem(fileName: string);
     procedure BeginCompile; override;
     procedure EndCompile; override;
-    procedure Evaluate(s: string); override;
+    procedure Evaluate(const s: string); override;
     function LastError: integer; override;
     function LastToken: string; override;
     function LastErrorMessage: string; override;
@@ -857,7 +857,7 @@ begin
   end;
 end;
 
-procedure TForthCompiler.Evaluate(s: string);
+procedure TForthCompiler.Evaluate(const s: string);
 var
   Index : integer;
 begin

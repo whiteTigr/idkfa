@@ -1,2 +1,65 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<BorlandProject/>
+<BorlandProject>
+	<ProjectSortOrder AutoSort="0" SortType="0">
+    <File Path="bmp"/>
+    <File Path="bmp\CloseBtn.bmp"/>
+    <File Path="bmp\CloseBtnFocused.bmp"/>
+    <File Path="src"/>
+    <File Path="src\compiler"/>
+    <File Path="src\compiler\brainfuck"/>
+    <File Path="src\compiler\brainfuck\uBrainfuckCompiler.pas"/>
+    <File Path="src\compiler\brainfuck\uBrainfuckDevice.pas"/>
+    <File Path="src\compiler\brainfuck\uBrainfuckDevice.dfm"/>
+    <File Path="src\compiler\brainfuck\uBrainfuckDeviceCore.pas"/>
+    <File Path="src\compiler\forth"/>
+    <File Path="src\compiler\forth\uForthCompiler.pas"/>
+    <File Path="src\compiler\forth\uForthDevice.pas"/>
+    <File Path="src\compiler\forth\uForthDevice.dfm"/>
+    <File Path="src\compiler\forth\uForthDeviceCore.pas"/>
+    <File Path="src\compiler\forth\uForthHardDebuger.pas"/>
+    <File Path="src\compiler\forth\uForthSoftDebuger.pas"/>
+    <File Path="src\compiler\proteus"/>
+    <File Path="src\compiler\proteus\uProteusCompiler.pas"/>
+    <File Path="src\compiler\proteus\uProteusDevice.pas"/>
+    <File Path="src\compiler\proteus\uProteusDevice.dfm"/>
+    <File Path="src\compiler\proteus\uProteusDeviceCore.pas"/>
+    <File Path="src\compiler\proteus\uProteusSoftDebuger.pas"/>
+    <File Path="src\compiler\quark"/>
+    <File Path="src\compiler\quark\uQuarkCompiler.pas"/>
+    <File Path="src\compiler\quark\uQuarkDevice.pas"/>
+    <File Path="src\compiler\quark\uQuarkDevice.dfm"/>
+    <File Path="src\compiler\quark\uQuarkDeviceCore.pas"/>
+    <File Path="src\core"/>
+    <File Path="src\core\uCommonFunctions.pas"/>
+    <File Path="src\core\uCompilerCore.pas"/>
+    <File Path="src\core\uDownloadCom.pas"/>
+    <File Path="src\core\uGlobal.pas"/>
+    <File Path="src\core\UnitSyntaxMemo.pas"/>
+    <File Path="src\core\uRecordList.pas"/>
+    <File Path="src\forms"/>
+    <File Path="src\forms\AboutWindow.pas"/>
+    <File Path="src\forms\AboutWindow.dfm"/>
+    <File Path="src\forms\uDownload.pas"/>
+    <File Path="src\forms\uDownload.dfm"/>
+    <File Path="src\forms\uMain.pas"/>
+    <File Path="src\forms\uMain.dfm"/>
+    <File Path="src\forms\uSimulator.pas"/>
+    <File Path="src\forms\uSimulator.dfm"/>
+    <File Path="src\forms\uStyleEditor.pas"/>
+    <File Path="src\forms\uStyleEditor.dfm"/>
+    <File Path="src\other"/>
+    <File Path="src\other\symbols.bin"/>
+    <File Path="src\simforms"/>
+    <File Path="src\simforms\uComModel.pas"/>
+    <File Path="src\simforms\uComModel.dfm"/>
+    <File Path="src\simforms\uLed.pas"/>
+    <File Path="src\simforms\uLed.dfm"/>
+    <File Path="src\simforms\uSimVga.pas"/>
+    <File Path="src\simforms\uSimVga.dfm"/>
+  </ProjectSortOrder>
+	<Transactions>
+    <Transaction>2012.09.11 11:38:29.609.pas,D:\projects\git\idkfa\Unit1.pas=D:\projects\git\idkfa\src\compiler\proteus\uSimVga.pas</Transaction>
+    <Transaction>2012.09.11 11:38:29.609.dfm,D:\projects\git\idkfa\Unit1.dfm=D:\projects\git\idkfa\src\compiler\proteus\uSimVga.dfm</Transaction>
+    <Transaction>2012.09.12 10:17:28.593.coe,D:\projects\git\idkfa\src\compiler\proteus\symbols.coe=</Transaction>
+  </Transactions>
+</BorlandProject>

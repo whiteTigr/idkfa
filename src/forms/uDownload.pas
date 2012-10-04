@@ -123,9 +123,10 @@ var
   Rez: int64;
   tmpBin: string;
 begin
+  tmpBin := ReverseString(bin);
   Rez := 0;
   for i := 1 to Length(tmpBin) do
-    Rez := Rez * 2 + StrToInt(bin[i]);
+    Rez := Rez + round(StrToInt(tmpBin[i])*IntPower(2, i-1));
 
   Result := Rez;
 end;
@@ -136,6 +137,7 @@ begin
 end;
 
 var
+  sleeptime: real;
   gauge: TGauge;
   DownloadLog: TextFile;
 
@@ -310,6 +312,17 @@ begin
   downloader.SendByte(ClearResetCmd[FormDownload.cbCore.ItemIndex]);
 end;
 
+procedure AntiBug;
+var
+  i: integer;
+begin
+  for i := 0 to 9 do
+  begin
+    SetReset;
+    ClearReset;
+  end;
+end;
+
 procedure PrepareVisualElements;
 begin
   FormDownload.mLog.Clear;
@@ -375,6 +388,7 @@ var
 label finishit;
 begin
   time := Now;
+  sleeptime := 0;
 
   PrepareVisualElements;
   ReadSendCountPackage;
@@ -405,6 +419,7 @@ begin
   SendPtr := 0;
   gauge.Progress := 0;
   ProgressBar1.Position := 0;
+  needToWait := 0;
   if fMain.Downloaddatamemory1.Checked then
     StopPtr := SendBufferPtr
   else
@@ -496,6 +511,7 @@ begin
     read(FileSend, SendBuf[i]);
   CloseFile(FileSend);
 
+  // todo: разные уровни абстракции, нарушение концепции загрузчика
   downloadCom.ComName := cbComName.Text;
   downloadCom.baudrate := StrToInt(cbBaudrate.Text);
   downloader.Open;
