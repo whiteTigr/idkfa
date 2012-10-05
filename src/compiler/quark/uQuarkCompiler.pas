@@ -198,7 +198,8 @@ end;
 
 function TQuarkCompiler.NewFileText: string;
 begin
-  Result := 'MAIN:'#13#10'2 2 +';
+  Result := 'MAIN:'#13#10 +
+    '2 2 +';
 end;
 
 function TQuarkCompiler.LastError: integer;

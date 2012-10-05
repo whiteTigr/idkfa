@@ -7,7 +7,7 @@ uses
   Dialogs, ActnList, ComCtrls, Menus, Grids, StdCtrls, ExtCtrls,
   ToolWin, ImgList, uForthCompiler, Gauges, UnitSyntaxMemo, uStyleEditor, Buttons, uRecordList, uSimulator, uGlobal,
   ShellAPI, uBrainfuckCompiler, uDownloadCom, uCommonFunctions, uProteusCompiler, uQuarkCompiler,
-  TabNotBk, uSimVga;
+  TabNotBk;
 
 type
   TfMain = class(TForm)
@@ -107,7 +107,7 @@ type
     procedure changeCompilerToBrainfuckClick(Sender: TObject);
     procedure changeCompilerToProteusClick(Sender: TObject);
 
-    procedure ChangeCompilerTo(newCompiler: TCompilerType; NeedCreateNewFile: boolean = true);
+    procedure ChangeCompilerTo(newCompiler: TCompilerType; NeedCreateNewFile: boolean = false);
     procedure changeCompilerToQuarkClick(Sender: TObject);
 
     procedure ToLog(Sender: TObject; LogStr: string);
@@ -1158,7 +1158,7 @@ begin
   end;
 end;
 
-procedure TfMain.ChangeCompilerTo(newCompiler: TCompilerType; NeedCreateNewFile: boolean = true);
+procedure TfMain.ChangeCompilerTo(newCompiler: TCompilerType; NeedCreateNewFile: boolean = false);
 begin
   if newCompiler = currentCompiler then
     Exit;
@@ -1180,8 +1180,8 @@ begin
     compilerQuark: QuarkInit;
   end;
 
-//  if NeedCreateNewFile then
-//    NewExecute(fMain);
+  if NeedCreateNewFile then
+    NewExecute(fMain);
 end;
 
 procedure TfMain.changeCompilerToForthClick(Sender: TObject);
@@ -1218,9 +1218,8 @@ begin
     TimerInit := nil;
   end;
 
-//  ChangeCompilerTo(compilerForth);
-  changeCompilerToProteus.Checked := true;
-  ChangeCompilerTo(compilerProteus, true);
+  changeCompilerToQuark.Checked := true;
+  ChangeCompilerTo(compilerQuark, true);
 
   if ParamCount > 0 then
     OpenKfFile(ParamStr(1));

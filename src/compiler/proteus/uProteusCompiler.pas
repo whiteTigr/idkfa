@@ -59,11 +59,6 @@ type
     TempCodeSize: integer;
     TCP: integer;
 
-    // todo: сделать загрузку служебного кода. upd: и что я тут имел в виду?
-    FServiceCode: PCodeArray;
-    ServiceCodeSize: integer;
-    SCP: integer;
-
     FData: PDataArray;
     DataSize: integer;
     DP: integer;
@@ -126,7 +121,6 @@ type
     procedure InitBasicCommands;
     procedure FindToken; overload;
     function FindToken(const name: string): integer; overload;
-    procedure ClearVocabulary;
 
     procedure TryDispatchNumber;
 
@@ -492,7 +486,6 @@ procedure TProteusCompiler.SetCodeSize(newSize: integer);
 begin
   MemoryAlloc(newSize, sizeof(TCodeCell), pointer(FCode), CodeSize);
   MemoryAlloc(newSize, sizeof(TCodeCell), pointer(FTempCode), TempCodeSize);
-  MemoryAlloc(newSize, sizeof(TCodeCell), pointer(FServiceCode), ServiceCodeSize);
 end;
 
 procedure TProteusCompiler.SetControlStackSize(newSize: integer);
@@ -650,11 +643,6 @@ begin
       Exit;
     end;
   Result := -1;
-end;
-
-procedure TProteusCompiler.ClearVocabulary;
-begin
-  VP := 0;
 end;
 
 procedure TProteusCompiler.TryDispatchNumber;

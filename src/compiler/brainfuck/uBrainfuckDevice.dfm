@@ -1,10 +1,10 @@
 object fBrainfuckDevice: TfBrainfuckDevice
   Left = 192
   Top = 114
-  Width = 205
-  Height = 351
   Align = alClient
   Caption = 'Brainfuck device'
+  ClientHeight = 317
+  ClientWidth = 197
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,17 +14,16 @@ object fBrainfuckDevice: TfBrainfuckDevice
   OldCreateOrder = False
   PixelsPerInch = 96
   TextHeight = 13
-  object Label1: TLabel
-    Left = 24
-    Top = 16
-    Width = 150
-    Height = 24
-    Caption = 'Under creating'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -19
-    Font.Name = 'MS Sans Serif'
-    Font.Style = [fsBold, fsItalic, fsUnderline]
-    ParentFont = False
+  object Panel1: TPanel
+    Left = 0
+    Top = 0
+    Width = 197
+    Height = 317
+    Align = alClient
+    TabOrder = 0
+    ExplicitLeft = 112
+    ExplicitTop = 120
+    ExplicitWidth = 185
+    ExplicitHeight = 41
   end
 end

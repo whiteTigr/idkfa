@@ -4,11 +4,11 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls;
+  Dialogs, StdCtrls, ExtCtrls;
 
 type
   TfBrainfuckDevice = class(TForm)
-    Label1: TLabel;
+    Panel1: TPanel;
   private
     { Private declarations }
   public

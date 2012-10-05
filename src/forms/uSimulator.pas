@@ -304,7 +304,7 @@ end;
 
 procedure ResizeGrid(grid: TStringGrid);
 const
-  rightWidth = 38;
+  rightWidth = 38; // todo: магическое число
 var
   i: integer;
   dw: real;
@@ -345,14 +345,18 @@ end;
 
 procedure SelectCellToScreen(grid: TStringGrid);
 begin
-  if grid.Selection.Top - grid.TopRow < 0 then
-    grid.TopRow := grid.Selection.Top
-  else if grid.Selection.Top - grid.TopRow > grid.VisibleRowCount - 2 then
-    grid.TopRow := grid.Selection.Top - grid.VisibleColCount + 3;
-  if grid.Selection.Left - grid.LeftCol < 0 then
-    grid.LeftCol := grid.Selection.Left
-  else if grid.Selection.Left - grid.LeftCol > grid.VisibleColCount - 1 then
-    grid.LeftCol := grid.Selection.Left - grid.VisibleRowCount + 2;
+  with grid do
+  begin
+    if Selection.Top - TopRow < 0 then
+      TopRow := Selection.Top
+    else if Selection.Top - TopRow > VisibleRowCount - 2 then
+      TopRow := Selection.Top - VisibleColCount + 3;
+
+    if Selection.Left - LeftCol < 0 then
+      LeftCol := Selection.Left
+    else if Selection.Left - LeftCol > VisibleColCount - 1 then
+      LeftCol := Selection.Left - VisibleRowCount + 2;
+  end;
 end;
 
 procedure SelectCell(grid: TStringGrid; x, y: integer);

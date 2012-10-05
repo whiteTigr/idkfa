@@ -23,8 +23,6 @@ object fSimulator: TfSimulator
     Width = 831
     Height = 19
     Panels = <>
-    ExplicitTop = 676
-    ExplicitWidth = 991
   end
   object ToolBar1: TToolBar
     Left = 0
@@ -34,7 +32,6 @@ object fSimulator: TfSimulator
     Caption = 'ToolBar1'
     Images = ImageList1
     TabOrder = 1
-    ExplicitWidth = 991
     object cbDebuger: TComboBox
       Left = 0
       Top = 0
@@ -160,8 +157,6 @@ object fSimulator: TfSimulator
     ReadOnly = True
     ScrollBars = ssBoth
     TabOrder = 2
-    ExplicitTop = 587
-    ExplicitWidth = 991
   end
   object WorkSpace: TPanel
     Left = 0
@@ -171,8 +166,6 @@ object fSimulator: TfSimulator
     Align = alClient
     BevelOuter = bvLowered
     TabOrder = 3
-    ExplicitWidth = 991
-    ExplicitHeight = 560
     object Splitter2: TSplitter
       Left = 249
       Top = 1
@@ -188,7 +181,6 @@ object fSimulator: TfSimulator
       Align = alLeft
       BevelOuter = bvNone
       TabOrder = 0
-      ExplicitHeight = 558
       object PanelSystemInfo: TPanel
         Left = 0
         Top = 0
@@ -256,7 +248,6 @@ object fSimulator: TfSimulator
         BevelOuter = bvNone
         Caption = 'Form DebugDevice'
         TabOrder = 1
-        ExplicitHeight = 485
       end
     end
     object PanelMemory: TPanel
@@ -267,8 +258,6 @@ object fSimulator: TfSimulator
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 1
-      ExplicitWidth = 738
-      ExplicitHeight = 558
       object Splitter3: TSplitter
         Left = 0
         Top = 265
@@ -287,8 +276,6 @@ object fSimulator: TfSimulator
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 0
-        ExplicitWidth = 738
-        ExplicitHeight = 310
         object PanelLeftside: TPanel
           Left = 0
           Top = 0
@@ -296,7 +283,6 @@ object fSimulator: TfSimulator
           Height = 265
           Align = alLeft
           TabOrder = 0
-          ExplicitHeight = 310
           object rgCodeBase: TRadioGroup
             Left = 1
             Top = 1
@@ -336,8 +322,6 @@ object fSimulator: TfSimulator
           TabOrder = 1
           OnKeyDown = sgCodeKeyDown
           OnKeyUp = sgCodeKeyUp
-          ExplicitWidth = 642
-          ExplicitHeight = 310
           RowHeights = (
             16
             16
@@ -366,8 +350,6 @@ object fSimulator: TfSimulator
         Align = alBottom
         BevelOuter = bvNone
         TabOrder = 1
-        ExplicitTop = 313
-        ExplicitWidth = 738
         object PanelLeftside2: TPanel
           Left = 0
           Top = 0
@@ -412,7 +394,6 @@ object fSimulator: TfSimulator
           ParentCtl3D = False
           ParentFont = False
           TabOrder = 1
-          ExplicitWidth = 642
         end
       end
     end
