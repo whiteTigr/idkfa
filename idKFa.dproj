@@ -82,6 +82,7 @@
 			<DCCReference Include="src\core\uCommonFunctions.pas"/>
 			<DCCReference Include="src\compiler\proteus\uProteusSoftDebuger.pas"/>
 			<DCCReference Include="src\compiler\proteus\uProteusCompiler.pas"/>
+			<DCCReference Include="src\compiler\proteus\uProteusComModel.pas"/>
 			<DCCReference Include="src\core\UnitSyntaxMemo.pas"/>
 			<DCCReference Include="src\core\uRecordList.pas"/>
 			<DCCReference Include="src\compiler\quark\uQuarkCompiler.pas"/>
@@ -97,6 +98,9 @@
 			</DCCReference>
 			<DCCReference Include="src\simforms\uComModel.pas">
 				<Form>fComModel</Form>
+			</DCCReference>
+			<DCCReference Include="src\compiler\proteus\uProteusComModel.pas">
+				<Form>fProteusComModel</Form>
 			</DCCReference>
 			<RcItem Include="bmp\CloseBtn.bmp">
 				<ResourceType>Bitmap</ResourceType>

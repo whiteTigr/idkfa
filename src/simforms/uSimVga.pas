@@ -149,7 +149,11 @@ begin
           inc(CaretPos.X);
       end;
     7: LowLevel := (data and $1) <> 0;
-    8: if CaretPos.Y = 24 then CaretPos.Y := 0 else inc(CaretPos.Y);
+    8:
+     begin
+       if CaretPos.Y = 24 then CaretPos.Y := 0 else inc(CaretPos.Y);
+       CaretPos.X := 0;
+     end;
     9:
       if LowLevel then
       begin

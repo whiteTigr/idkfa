@@ -32,8 +32,6 @@ object fProteusDevice: TfProteusDevice
     Height = 159
     Align = alBottom
     TabOrder = 0
-    ExplicitTop = 310
-    ExplicitWidth = 195
     object SpeedButton2: TSpeedButton
       Left = 119
       Top = 6
@@ -42,14 +40,6 @@ object fProteusDevice: TfProteusDevice
       Caption = #1044#1080#1086#1076#1080#1082#1080
       OnClick = SpeedButton2Click
     end
-    object SpeedButton1: TSpeedButton
-      Left = 5
-      Top = 6
-      Width = 108
-      Height = 33
-      Caption = 'COM-'#1087#1086#1088#1090
-      OnClick = SpeedButton1Click
-    end
     object SpeedButton3: TSpeedButton
       Left = 5
       Top = 45
@@ -57,6 +47,14 @@ object fProteusDevice: TfProteusDevice
       Height = 33
       Caption = #1058#1077#1082#1089#1090#1086#1074#1099#1081' '#1084#1086#1085#1080#1090#1086#1088
       OnClick = SpeedButton3Click
+    end
+    object SpeedButton1: TSpeedButton
+      Left = 5
+      Top = 6
+      Width = 108
+      Height = 33
+      Caption = 'COM-'#1087#1086#1088#1090
+      OnClick = SpeedButton1Click
     end
   end
   object tabStacks: TTabControl
@@ -74,7 +72,6 @@ object fProteusDevice: TfProteusDevice
       'Ret')
     TabIndex = 0
     OnChange = tabStacksChange
-    ExplicitWidth = 195
     object sgStack: TStringGrid
       Left = 4
       Top = 24
@@ -96,7 +93,6 @@ object fProteusDevice: TfProteusDevice
       ParentCtl3D = False
       ParentFont = False
       TabOrder = 0
-      ExplicitWidth = 187
       RowHeights = (
         16
         16
@@ -130,7 +126,6 @@ object fProteusDevice: TfProteusDevice
         'Char')
       TabOrder = 1
       OnClick = rgStackBaseClick
-      ExplicitWidth = 187
     end
   end
 end

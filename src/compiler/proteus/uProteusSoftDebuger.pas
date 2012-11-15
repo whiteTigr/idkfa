@@ -35,6 +35,9 @@ type
     procedure RunForTime(milliSeconds: integer); override;
     procedure RunForCommands(commandCount: integer); override;
     procedure RunForStepOverCommands(commandCount: integer); override;
+
+    procedure SetDataToCom(value: byte);
+    function GetDataFromCom: byte;
   end;
 
 implementation
@@ -75,6 +78,11 @@ begin
       Exit;
     end;
   Result := -1;
+end;
+
+function TProteusSoftDebuger.GetDataFromCom: byte;
+begin
+
 end;
 
 function TProteusSoftDebuger.Inport(addr: integer): integer;
@@ -178,8 +186,18 @@ begin
         sysDEPTH: DStack.Push(DStack.Top);
         sysRDEPTH: DStack.Push(RStack.Top);
         sysI: DStack.Push(LStack.ReadTop.cur);
-        sysDIV: DStack.Push(int1);
-        sysMOD: DStack.Push(int1);
+        sysDIV: begin
+          int1 := DStack.Pop;
+          int2 := DStack.ReadTop;
+          DStack.Push(int1);
+          DStack.Push(int2 div int1);
+        end;
+        sysMOD: begin
+          int1 := DStack.Pop;
+          int2 := DStack.ReadTop;
+          DStack.Push(int1);
+          DStack.Push(int2 mod int1);
+        end;
         sysTXSTATE: DStack.Push(int1);
         sysRECEIVED: DStack.Push(int1);
         sysRXCOUNTER: DStack.Push(int1);
@@ -438,6 +456,11 @@ begin
   time := Now;
   while (Code[PC] <> cmdRET) and (SecondOf(Now - time) < MaxWaitingTime) do
     StepOver;
+end;
+
+procedure TProteusSoftDebuger.SetDataToCom(value: byte);
+begin
+
 end;
 
 procedure TProteusSoftDebuger.StepOver;

@@ -25,6 +25,7 @@ uses
   uCommonFunctions in 'src\core\uCommonFunctions.pas',
   uProteusSoftDebuger in 'src\compiler\proteus\uProteusSoftDebuger.pas',
   uProteusCompiler in 'src\compiler\proteus\uProteusCompiler.pas',
+  uProteusComModel in 'src\compiler\proteus\uProteusComModel.pas', {fProteusComModel}
   UnitSyntaxMemo in 'src\core\UnitSyntaxMemo.pas',
   uRecordList in 'src\core\uRecordList.pas',
   uQuarkCompiler in 'src\compiler\quark\uQuarkCompiler.pas',
