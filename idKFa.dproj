@@ -82,7 +82,9 @@
 			<DCCReference Include="src\core\uCommonFunctions.pas"/>
 			<DCCReference Include="src\compiler\proteus\uProteusSoftDebuger.pas"/>
 			<DCCReference Include="src\compiler\proteus\uProteusCompiler.pas"/>
-			<DCCReference Include="src\compiler\proteus\uProteusComModel.pas"/>
+			<DCCReference Include="src\compiler\proteus\uProteusComModel.pas">
+				<Form>fProteusComModel</Form>
+			</DCCReference>
 			<DCCReference Include="src\core\UnitSyntaxMemo.pas"/>
 			<DCCReference Include="src\core\uRecordList.pas"/>
 			<DCCReference Include="src\compiler\quark\uQuarkCompiler.pas"/>
@@ -98,9 +100,6 @@
 			</DCCReference>
 			<DCCReference Include="src\simforms\uComModel.pas">
 				<Form>fComModel</Form>
-			</DCCReference>
-			<DCCReference Include="src\compiler\proteus\uProteusComModel.pas">
-				<Form>fProteusComModel</Form>
 			</DCCReference>
 			<RcItem Include="bmp\CloseBtn.bmp">
 				<ResourceType>Bitmap</ResourceType>
@@ -147,7 +146,7 @@
 						<VersionInfo Name="MajorVer">1</VersionInfo>
 						<VersionInfo Name="MinorVer">0</VersionInfo>
 						<VersionInfo Name="Release">1</VersionInfo>
-						<VersionInfo Name="Build">92</VersionInfo>
+						<VersionInfo Name="Build">93</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">False</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -159,7 +158,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">Measurement systems</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">1.0.1.92</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">1.0.1.93</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>

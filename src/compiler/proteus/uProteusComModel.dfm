@@ -1,9 +1,9 @@
-object fComModel: TfComModel
+object fProteusComModel: TfProteusComModel
   Left = 192
   Top = 114
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
-  Caption = 'fComModel'
+  Caption = 'fProteusComModel'
   ClientHeight = 87
   ClientWidth = 179
   Color = clBtnFace

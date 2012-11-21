@@ -15,6 +15,13 @@ type
     PeriferalComponents: array[0..MaxPeriferal-1] of TPeriferalComponent;
     PeriferalCount: integer;
 
+    RXCounter: integer;
+    Received: byte;
+
+    DivSt: integer;
+    DivA, DivB: integer;
+    RDiv, RRem: integer;
+
     function FindPeriferal(addr: integer): integer;
     procedure Outport(addr, data: integer);
     function Inport(addr: integer): integer;
@@ -36,8 +43,7 @@ type
     procedure RunForCommands(commandCount: integer); override;
     procedure RunForStepOverCommands(commandCount: integer); override;
 
-    procedure SetDataToCom(value: byte);
-    function GetDataFromCom: byte;
+    procedure TransmitToCom(value: byte);
   end;
 
 implementation
@@ -49,6 +55,8 @@ begin
   inherited;
   PeriferalCount := 0;
   MaxWaitingTime := 10;
+  RXCounter := 0;
+  DivSt := 0;
 end;
 
 destructor TProteusSoftDebuger.Destroy;
@@ -78,11 +86,6 @@ begin
       Exit;
     end;
   Result := -1;
-end;
-
-function TProteusSoftDebuger.GetDataFromCom: byte;
-begin
-
 end;
 
 function TProteusSoftDebuger.Inport(addr: integer): integer;
@@ -131,6 +134,7 @@ var
   cmd: integer;
   int1, int2: integer;
   LCell: TLoopCell;
+  time64: int64;
 begin
   cmd := Code[PC];
 
@@ -186,23 +190,19 @@ begin
         sysDEPTH: DStack.Push(DStack.Top);
         sysRDEPTH: DStack.Push(RStack.Top);
         sysI: DStack.Push(LStack.ReadTop.cur);
-        sysDIV: begin
-          int1 := DStack.Pop;
-          int2 := DStack.ReadTop;
-          DStack.Push(int1);
-          DStack.Push(int2 div int1);
+        sysDIV: DStack.Push(RDiv);
+        sysMOD: DStack.Push(RRem);
+        sysTXSTATE: DStack.Push(0); // always ready for transmit
+        sysRECEIVED: DStack.Push(Received);
+        sysRXCOUNTER: DStack.Push(RXCounter);
+        sysSYSTIMER_LOW: begin
+          QueryPerformanceCounter(time64);
+          DStack.Push(time64);
         end;
-        sysMOD: begin
-          int1 := DStack.Pop;
-          int2 := DStack.ReadTop;
-          DStack.Push(int1);
-          DStack.Push(int2 mod int1);
+        sysSYSTIMER_HI: begin
+          QueryPerformanceCounter(time64);
+          DStack.Push(time64 shr 32);
         end;
-        sysTXSTATE: DStack.Push(int1);
-        sysRECEIVED: DStack.Push(int1);
-        sysRXCOUNTER: DStack.Push(int1);
-        sysSYSTIMER_LOW: DStack.Push(int1);
-        sysSYSTIMER_HI: DStack.Push(int1);
         sysUSEC: DStack.Push(int1);
         sysMSEC: DStack.Push(int1);
         sysSEC: DStack.Push(int1);
@@ -298,6 +298,10 @@ begin
         Data[int1] := int2;
         OnDataChange(int1, int2);
       end
+      else if (int1 = -1) then // ->COM
+      begin
+        Outport(-1, int2); // Forward to fProteusComModel
+      end
       else
       begin
         Outport(int1, int2);
@@ -334,6 +338,71 @@ begin
       DStack.Push(int1);
     end;
   end;
+
+  // деление
+  if cmd <> cmdNOP then
+  begin
+    DivSt := 1;
+  end
+  else if DivSt = 1 then
+  begin
+    // получение двух верхних чисел на стеке без проверки на границы
+    int1 := cardinal(DStack.Top - 1) mod cardinal(DStack.Size);
+    DivA := integer(DStack.Item(int1)^);
+    int1 := cardinal(DStack.Top - 2) mod cardinal(DStack.Size);
+    DivB := integer(DStack.Item(int1)^);
+    inc(DivSt);
+  end
+  else if DivSt = 34 then
+  begin
+    if DivA <> 0 then
+    begin
+      RDiv := DivB div DivA;
+      RRem := DivB mod DivA;
+    end
+    else
+    begin
+      RDiv := -1;
+      RRem := -1;
+    end;
+  end
+  else
+  begin
+    inc(DivSt);
+  end;
+//
+//
+//
+//
+//  case DivSt of
+//    0: begin
+//      // получение двух верхних чисел на стеке без проверки на границы
+//      int1 := cardinal(DStack.Top - 1) mod DStack.Size;
+//      DivA := integer(DStack.Item(int1)^);
+//      int1 := cardinal(DStack.Top - 2) mod DStack.Size;
+//      DivB := integer(DStack.Item(int1)^);
+//      DivSt := 1;
+//    end;
+//    1..33: begin
+//      if cmd = cmdNOP then
+//        inc(DivSt)
+//      else
+//        DivSt := 0;
+//    end;
+//    34: begin
+//      if DivA <> 0 then
+//      begin
+//        RDiv := DivB div DivA;
+//        RRem := DivB mod DivA;
+//      end
+//      else
+//      begin
+//        RDiv := -1;
+//        RRem := -1;
+//      end;
+//      DivSt := 0;
+//    end;
+//  end;
 
   // переходы
   case cmd of
@@ -458,11 +527,6 @@ begin
     StepOver;
 end;
 
-procedure TProteusSoftDebuger.SetDataToCom(value: byte);
-begin
-
-end;
-
 procedure TProteusSoftDebuger.StepOver;
 var
   RTop: integer;
@@ -482,6 +546,12 @@ end;
 procedure TProteusSoftDebuger.TraceInto;
 begin
   ExecuteCommand;
+end;
+
+procedure TProteusSoftDebuger.TransmitToCom(value: byte);
+begin
+  Received := value;
+  inc(RXCounter);
 end;
 
 end.

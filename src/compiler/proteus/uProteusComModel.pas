@@ -1,10 +1,10 @@
-unit uComModel;
+unit uProteusComModel;
 
 interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons;
+  Dialogs, StdCtrls, Buttons, uGlobal, uProteusSoftDebuger;
 
 type
   TfProteusComModel = class(TForm)
@@ -30,35 +30,16 @@ implementation
 
 {$R *.dfm}
 
-var
-  comData: integer;
-  comCount: integer = 0;
-  lastComCount: integer = 0;
-
-procedure DoNothing;
-begin
-end;
-
 procedure Outport(addr, data: integer);
 begin
-  case addr of
-    1100: fProteusComModel.eReceivedByte.Text := IntToStr(data and $FF);
-    1101: DoNothing; // we=data; не требуется в модели
-    1102: inc(lastComCount);
-    1104: lastComCount := comCount;
-  else
-    DoNothing;
-  end;
+  if addr = -1 then
+    fProteusComModel.eReceivedByte.Text := IntToStr(data and $FF);
 end;
 
 function Inport(addr: integer): integer;
 begin
-  case addr of
-    1101: Result := comData;
-    1102: Result := integer(comCount <> lastComCount);
-  else
-    Result := not addr;
-  end;
+  // состояние ком-порта в Proteus'е завязано на системных регистрах
+  Result := not addr;
 end;
 
 procedure TfProteusComModel.bSendClick(Sender: TObject);
@@ -72,8 +53,7 @@ begin
     Exit;
   end;
 
-  comData := value;
-  inc(comCount);
+  (debuger as TProteusSoftDebuger).TransmitToCom(value);
 end;
 
 procedure TfProteusComModel.FormCloseQuery(Sender: TObject; var CanClose: Boolean);

@@ -8,7 +8,7 @@ uses
   Gauges, uRecordList, ActnList, ImgList, Buttons,
   uLed, uComModel, uGlobal, TabNotBk, uForthDevice,
   uForthSoftDebuger, uForthHardDebuger, uBrainfuckDevice, uProteusDevice,
-  uProteusSoftDebuger, uQuarkDevice, uSimVga;
+  uProteusSoftDebuger, uQuarkDevice, uSimVga, uProteusComModel;
 
 type
   TfSimulator = class(TForm)
@@ -521,6 +521,7 @@ begin
   ProteusSoftDebuger := TProteusSoftDebuger.Create;
   uSimVga.BaseAddr := 120000;
   ProteusSoftDebuger.AddPeriferal(120000, 120999, @uSimVga.Inport, @uSimVga.Outport);
+  ProteusSoftDebuger.AddPeriferal(-1, -1, @uProteusComModel.Inport, @uProteusComModel.Outport);
 end;
 
 procedure Init;
