@@ -3,7 +3,7 @@ unit uQuarkCompiler;
 interface
 
 uses
-  Forms, Windows, Messages, Sysutils, uGlobal;
+  Forms, Windows, Messages, Sysutils, uGlobal, uQuarkDeviceCore;
 
 type
   TQuarkCompiler = class(TTargetCompiler)
@@ -46,6 +46,9 @@ const
   QuarkDll = 'quark.dll';
 
 implementation
+
+var
+  eval_str: AnsiString;
 
 function QuarkEvaluate(s : integer): integer; external QuarkDll name 'Evaluate';
 function QuarkEvaluateC(s : integer): integer; external QuarkDll name 'EvaluateC';
@@ -96,22 +99,26 @@ procedure TQuarkCompiler.BeginCompile;
 var
   f: TextFile;
   s: string;
+  DataStack: PIntegerArray;
 begin
-  QuarkDone;
-  QuarkInit;
+//  QuarkDone;
+//  QuarkInit;
   FLastError := 0;
+  DataStack := PIntegerArray(QuarkGetStack());
 
-  AssignFile(f, CompilerName + '.tc');
-  Reset(f);
-  while (not eof(f)) and (FLastError = 0) do
-  begin
-    readln(f, s);
-    Evaluate(s);
-  end;
-  CloseFile(f);
+//  AssignFile(f, CompilerName + '.tc');
+//  Reset(f);
+//  while (not eof(f)) and (FLastError = 0) do
+//  begin
+//    readln(f, s);
+//    Evaluate(s);
+//  end;
+//  CloseFile(f);
 
-//  Evaluate('" ' + CompilerName + '.tc " L');
-  Evaluate('START:');
+  Evaluate('1 DROP " test.tc" L');
+
+//  Evaluate('" ' + CompilerName + '.tc" L');
+//  Evaluate('START:');
 end;
 
 constructor TQuarkCompiler.Create;
@@ -127,7 +134,7 @@ end;
 destructor TQuarkCompiler.Destroy;
 begin
   QuarkDone;
-  FreeLibrary(DLLHandle);
+//  FreeLibrary(DLLHandle);
   inherited;
 end;
 
@@ -198,7 +205,8 @@ end;
 
 function TQuarkCompiler.NewFileText: string;
 begin
-  Result := 'MAIN:'#13#10 +
+  Result :=
+    'MAIN:'#13#10 +
     '2 2 +';
 end;
 
@@ -234,15 +242,6 @@ begin
 end;
 
 function TQuarkCompiler.GetCmdColor(cmd: integer): cardinal;
-// Скопипащено из uProteusDeviceCore
-const
-  cmdNOP     = 0;
-  cmdJMP     = 23;
-  cmdCALL    = 24;
-  cmdRJMP    = 25;
-  cmdTOR     = 26;
-  cmdRIF     = 29;
-  cmdRET     = 31;
 begin
   case cmd of
     cmdNOP: Result := $C0C0C0;
