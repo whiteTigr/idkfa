@@ -60,6 +60,7 @@ function QuarkGetStack(): integer; external QuarkDll name 'GetStack';
 function QuarkGetDepth(): integer; external QuarkDll name 'GetDepth';
 function QuarkGetScreen(): integer; external QuarkDll name 'GetScreen';
 function QuarkSetHWindow(hwnd : integer): integer; external QuarkDll name 'SetHWindow';
+function QuarkForthInfo(): integer; external QuarkDll name 'ForthInfo';
 
 function ExecAndWait(const FileName: string;
                      const WinState: Word): boolean; export;
@@ -100,11 +101,16 @@ var
   f: TextFile;
   s: string;
   DataStack: PIntegerArray;
+  Tibs: PByteArray;
+  Curios: PByteArray;
+  tmp: integer;
 begin
 //  QuarkDone;
 //  QuarkInit;
   FLastError := 0;
   DataStack := PIntegerArray(QuarkGetStack());
+  Tibs := PByteArray(integer(DataStack) - 27904);
+  Curios := PByteArray(integer(Tibs) - 8192);
 
 //  AssignFile(f, CompilerName + '.tc');
 //  Reset(f);
@@ -115,7 +121,9 @@ begin
 //  end;
 //  CloseFile(f);
 
-  Evaluate('1 DROP " test.tc" L');
+  tmp := QuarkForthInfo();
+  Evaluate('');
+  Evaluate('" test.tc"');
 
 //  Evaluate('" ' + CompilerName + '.tc" L');
 //  Evaluate('START:');
