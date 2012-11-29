@@ -5271,7 +5271,7 @@ begin
             // end;
             Range.SetTextEx(#13#10 + Copy(Lines.Strings[X], 1,
                 System.Pos(Trim(Lines.Strings[X]), Lines.Strings[X]) - 1),
-              ukLetterTyped);
+                ukLetterTyped);
           end;
         end;
 
