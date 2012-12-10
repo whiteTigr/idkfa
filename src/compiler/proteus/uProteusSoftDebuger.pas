@@ -147,7 +147,10 @@ begin
   // стек
   case cmd of
     cmdNOT:
-      DStack.Push(not DStack.Pop);
+      if DStack.Pop = 0 then
+        DStack.Push(-1)
+      else
+        DStack.Push(0);
 
     cmdFETCH:
       DStack.Push(Data[DStack.Pop]);
