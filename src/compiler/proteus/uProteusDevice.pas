@@ -17,6 +17,7 @@ type
     SpeedButton2: TSpeedButton;
     SpeedButton3: TSpeedButton;
     SpeedButton1: TSpeedButton;
+    eCommandsCount: TLabeledEdit;
     procedure tabStacksChange(Sender: TObject);
     procedure rgStackBaseClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -74,9 +75,15 @@ begin
   ShowStack;
 end;
 
+procedure ShowCommandAtLastStepOver;
+begin
+  fProteusDevice.eCommandsCount.Text := IntToStr(CommandsAtLastStepOver);
+end;
+
 procedure TfProteusDevice.ShowDevice;
 begin
   ShowStack;
+  ShowCommandAtLastStepOver;
 end;
 
 procedure TfProteusDevice.SpeedButton1Click(Sender: TObject);

@@ -9,6 +9,8 @@ type
   PProtuesSoftDebuger = ^TProteusSoftDebuger;
   TProteusSoftDebuger = class(TProteusDevice)
   private
+    FCommandsCount: integer;
+
     MaxWaitingTime: integer;
 
     isPutNewNumber: boolean;
@@ -44,6 +46,8 @@ type
     procedure RunForStepOverCommands(commandCount: integer); override;
 
     procedure TransmitToCom(value: byte);
+
+    property CommandsCount: integer read FCommandsCount;
   end;
 
 implementation
@@ -114,6 +118,7 @@ begin
   DStack.Reset;
   RStack.Reset;
   PC := 0;
+  FCommandsCount := 0;
   isPutNewNumber := true;
 end;
 
@@ -136,6 +141,7 @@ var
   LCell: TLoopCell;
   time64: int64;
 begin
+  inc(FCommandsCount);
   cmd := Code[PC];
 
   // стек
@@ -531,7 +537,9 @@ procedure TProteusSoftDebuger.StepOver;
 var
   RTop: integer;
   time: real;
+  StartCommandsCount: integer;
 begin
+  StartCommandsCount := CommandsCount;
   RTop := RStack.Top;
   time := Now;
   repeat
@@ -541,6 +549,7 @@ begin
       dec(RTop);
     ExecuteCommand;
   until (RStack.Top <= RTop) or (SecondOf(Now - time) > MaxWaitingTime);
+  CommandsAtLastStepOver := CommandsCount - StartCommandsCount;
 end;
 
 procedure TProteusSoftDebuger.TraceInto;

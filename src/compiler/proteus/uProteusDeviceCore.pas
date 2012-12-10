@@ -109,6 +109,9 @@ type
     Outport: procedure(addr, data: integer);
   end;
 
+var
+  CommandsAtLastStepOver: integer;
+
 function LoopCell(cur, max, jmp: integer): TLoopCell;
 
 implementation
