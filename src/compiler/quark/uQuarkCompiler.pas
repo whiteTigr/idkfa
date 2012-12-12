@@ -11,6 +11,8 @@ type
     DLLHandle: THandle;
     LastLine: AnsiString;
     FLastError: integer;
+    FCode: PByteArray;
+    FData: PIntegerArray;
 
     function _Evaluate(const str: AnsiString): integer;
     function Forth(str:string): integer;
@@ -98,40 +100,25 @@ end;
 
 procedure TQuarkCompiler.BeginCompile;
 var
-  f: TextFile;
-  s: string;
-  DataStack: PIntegerArray;
-  Tibs: PByteArray;
-  Curios: PByteArray;
   tmp: integer;
 begin
-//  QuarkDone;
-//  QuarkInit;
-  FLastError := 0;
-  DataStack := PIntegerArray(QuarkGetStack());
-  Tibs := PByteArray(integer(DataStack) - 27904);
-  Curios := PByteArray(integer(Tibs) - 8192);
+  QuarkDone;
+  QuarkInit;
 
-//  AssignFile(f, CompilerName + '.tc');
-//  Reset(f);
-//  while (not eof(f)) and (FLastError = 0) do
-//  begin
-//    readln(f, s);
-//    Evaluate(s);
-//  end;
-//  CloseFile(f);
-
-  tmp := QuarkForthInfo();
-  Evaluate('');
-  Evaluate('" test.tc"');
-
-//  Evaluate('" ' + CompilerName + '.tc" L');
-//  Evaluate('START:');
+  Evaluate('1 DROP'); // clearing NumError
+  Evaluate('" ' + CompilerName + '.tc" L');
+  Evaluate('END');
+  FCode := PByteArray(Forth('CODE[] DROP'));
+  FData := PIntegerArray(Forth('DATA[] DROP'));
+  Evaluate('START:');
 end;
 
 constructor TQuarkCompiler.Create;
 begin
   inherited;
+
+  FCode := 0;
+  FData := 0;
 
   QuarkInit;
 
@@ -172,7 +159,7 @@ function TQuarkCompiler.Forth(str: string): integer;
 var
   Ptr: pointer;
 begin
-  if _Evaluate(str) = 0 then
+  if _Evaluate(str + #0#0) = 0 then
   begin
     Ptr := pointer(QuarkGetStack + QuarkGetDepth*4);
     Result := integer(Ptr^);
@@ -183,7 +170,10 @@ end;
 
 function TQuarkCompiler.Code(pos: integer): integer;
 begin
-  Result := Forth('CODE[] ' + IntToStr(pos) + ' + C@ DROP');
+  if integer(FCode) > 0 then
+    Result := PByte(integer(FCode) + pos)^
+  else
+    Result := 0;
 end;
 
 function TQuarkCompiler.CodeCount: integer;
@@ -198,7 +188,10 @@ end;
 
 function TQuarkCompiler.Data(pos: integer): integer;
 begin
-  Result := Forth('DATA[] ' + IntToStr(pos) + ' + C@ DROP');
+  if integer(FData) > 0 then
+    Result := PByte(integer(FData) + pos)^
+  else
+    Result := 0;
 end;
 
 function TQuarkCompiler.DataCount: integer;

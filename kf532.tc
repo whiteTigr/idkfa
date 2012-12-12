@@ -8,12 +8,9 @@ ALIGNMEM
 " user32.dll" LOADLIBRARY
 " MessageBoxA" GETPROCADDRESS VALUE MBAddress
 
-
 : MESSAGE
   0 SWAP " Информация" 0 MBAddress API4 DROP
 ;
-
-" kf532 start" MESSAGE
 
 FORTH
 
