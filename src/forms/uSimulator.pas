@@ -8,7 +8,7 @@ uses
   Gauges, uRecordList, ActnList, ImgList, Buttons,
   uLed, uComModel, uGlobal, TabNotBk, uForthDevice,
   uForthSoftDebuger, uForthHardDebuger, uBrainfuckDevice, uProteusDevice,
-  uProteusSoftDebuger, uQuarkDevice, uSimVga;
+  uProteusSoftDebuger, uQuarkDevice, uSimVga, uProteusComModel;
 
 type
   TfSimulator = class(TForm)
@@ -304,7 +304,7 @@ end;
 
 procedure ResizeGrid(grid: TStringGrid);
 const
-  rightWidth = 38; // todo: магическое число
+  rightWidth = 38;
 var
   i: integer;
   dw: real;
@@ -345,18 +345,14 @@ end;
 
 procedure SelectCellToScreen(grid: TStringGrid);
 begin
-  with grid do
-  begin
-    if Selection.Top - TopRow < 0 then
-      TopRow := Selection.Top
-    else if Selection.Top - TopRow > VisibleRowCount - 2 then
-      TopRow := Selection.Top - VisibleColCount + 3;
-
-    if Selection.Left - LeftCol < 0 then
-      LeftCol := Selection.Left
-    else if Selection.Left - LeftCol > VisibleColCount - 1 then
-      LeftCol := Selection.Left - VisibleRowCount + 2;
-  end;
+  if grid.Selection.Top - grid.TopRow < 0 then
+    grid.TopRow := grid.Selection.Top
+  else if grid.Selection.Top - grid.TopRow > grid.VisibleRowCount - 2 then
+    grid.TopRow := grid.Selection.Top - grid.VisibleColCount + 3;
+  if grid.Selection.Left - grid.LeftCol < 0 then
+    grid.LeftCol := grid.Selection.Left
+  else if grid.Selection.Left - grid.LeftCol > grid.VisibleColCount - 1 then
+    grid.LeftCol := grid.Selection.Left - grid.VisibleRowCount + 2;
 end;
 
 procedure SelectCell(grid: TStringGrid; x, y: integer);
@@ -525,6 +521,7 @@ begin
   ProteusSoftDebuger := TProteusSoftDebuger.Create;
   uSimVga.BaseAddr := 120000;
   ProteusSoftDebuger.AddPeriferal(120000, 120999, @uSimVga.Inport, @uSimVga.Outport);
+  ProteusSoftDebuger.AddPeriferal(-1, -1, @uProteusComModel.Inport, @uProteusComModel.Outport);
 end;
 
 procedure Init;
@@ -735,3 +732,5 @@ end;
 initialization
   Init;
 end.
+
+>>>>>>> master

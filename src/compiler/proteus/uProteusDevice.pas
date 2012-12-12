@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, uGlobal, StdCtrls, ExtCtrls, Grids, ComCtrls, uProteusDeviceCore, uCommonFunctions,
-  uComModel, uLed, uSimVga, Buttons;
+  uProteusComModel, uLed, uSimVga, Buttons;
 
 type
   TfProteusDevice = class(TForm)
@@ -15,8 +15,9 @@ type
     sgStack: TStringGrid;
     rgStackBase: TRadioGroup;
     SpeedButton2: TSpeedButton;
-    SpeedButton1: TSpeedButton;
     SpeedButton3: TSpeedButton;
+    SpeedButton1: TSpeedButton;
+    eCommandsCount: TLabeledEdit;
     procedure tabStacksChange(Sender: TObject);
     procedure rgStackBaseClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -74,17 +75,23 @@ begin
   ShowStack;
 end;
 
+procedure ShowCommandAtLastStepOver;
+begin
+  fProteusDevice.eCommandsCount.Text := IntToStr(CommandsAtLastStepOver);
+end;
+
 procedure TfProteusDevice.ShowDevice;
 begin
   ShowStack;
+  ShowCommandAtLastStepOver;
 end;
 
 procedure TfProteusDevice.SpeedButton1Click(Sender: TObject);
 begin
-  if fComModel.Visible then
-    fComModel.Hide
+  if fProteusComModel.Visible then
+    fProteusComModel.Hide
   else
-    fComModel.Show;
+    fProteusComModel.Show;
 end;
 
 procedure TfProteusDevice.SpeedButton2Click(Sender: TObject);

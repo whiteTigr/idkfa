@@ -70,6 +70,7 @@ type
     procedure Push(int: integer);
     function  Pop: integer;
     function ReadTop: integer;
+    function ReadUnderTop: integer;
   end;
 
 const
@@ -250,9 +251,9 @@ end;
 procedure TStack.Push(p: pointer);
 begin
   Edit(FStackTop, p);
-  FStackTop := FStackTop + 1;
-  if FStackTop >= FSize then
+  if FStackTop = FSize - 1 then
     raise Exception.Create(STACK_OVERFLOW);
+  FStackTop := FStackTop + 1;
 end;
 
 function TStack.ReadTop: pointer;
@@ -293,6 +294,13 @@ end;
 function TStackInt.ReadTop: integer;
 begin
   Result := integer(inherited ReadTop^);
+end;
+
+function TStackInt.ReadUnderTop: integer;
+begin
+  if FStackTop <= 1 then
+    raise Exception.Create(STACK_UNDERFLOW);
+  Result := integer(Item(FStackTop - 2)^);
 end;
 
 { module test}

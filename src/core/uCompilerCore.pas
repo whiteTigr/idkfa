@@ -36,6 +36,8 @@ type
     FToken: string;
   public
     property tib: string read FTib write SetTib;
+    property tibPos: integer read FTibPos;
+    function IncTibPos: boolean;
     property separators: string read FSeparators write SetSeparators;
     property token: string read FToken;
     constructor Create; virtual;
@@ -209,6 +211,12 @@ begin
   end;
   if (FTibPos <= FTibLength) then
     inc(FTibPos);
+end;
+
+function TParserCore.IncTibPos: boolean;
+begin
+  inc(FTibPos);
+  Result := FTibPos <= FTibLength;
 end;
 
 function TParserCore.isSeparator(symbol: char): boolean;

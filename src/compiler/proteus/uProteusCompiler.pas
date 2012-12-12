@@ -164,10 +164,10 @@ type
     procedure _Loop;
     procedure _AddCmd;
     procedure _Inline;
-    procedure _Quote;
     procedure _LoadFile;
     procedure _Interpret;
     procedure _Z;
+    procedure _String;
   public
     procedure BeginInitCommandSystem;
     procedure EndInitCommandSystem;
@@ -599,12 +599,13 @@ begin
   AddImmToken('ARRAY', _Array);
   AddImmToken('CMD', _AddCmd);
   AddImmToken('INLINE', _Inline);
-  AddImmToken('"', _Quote);
   AddImmToken('L', _LoadFile);
   AddImmToken(',Z', _Z);
 
   AddImmToken('{', _Interpret);
   AddForthToken('}', cmdRET);
+
+  AddImmToken('"', _String);
 
   AddVarChange('#MaxCode=', @UserMaxCode);
   AddVarChange('#MaxData=', @UserMaxData);
@@ -1085,6 +1086,31 @@ begin
   _THEN;
 end;
 
+procedure TProteusCompiler._String;
+var
+  addr: integer;
+begin
+  with Parser do
+  begin
+    addr := DP;
+    LastString := '';
+    repeat
+      CompileNumber(integer(tib[tibPos]), true);
+      CompileNumber(DP, true);
+      Compile(cmdSTORE, true);
+      inc(DP);
+      LastString := LastString + tib[tibPos];
+    until (not IncTibPos) or (tib[tibPos] = '"');
+    CompileNumber(0, true);
+    CompileNumber(DP, true);
+    Compile(cmdSTORE, true);
+    inc(DP);
+    IncTibPos;
+
+    CompileNumber(addr);
+  end;
+end;
+
 procedure TProteusCompiler._Create;
 begin
   ParseToken;
@@ -1178,17 +1204,6 @@ end;
 procedure TProteusCompiler._Inline;
 begin
   FVocabulary[VP-1].proc := _CompileInline;
-end;
-
-procedure TProteusCompiler._Quote;
-var
-  storeSeparators: string;
-begin
-  storeSeparators := Parser.separators;
-  Parser.separators := '"';
-  Parser.NextWord;
-  LastString := Parser.token;
-  Parser.separators := storeSeparators;
 end;
 
 procedure TProteusCompiler._LoadFile;

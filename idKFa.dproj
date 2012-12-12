@@ -1,4 +1,4 @@
-﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 		<PropertyGroup>
 			<ProjectGuid>{2A12D91B-8652-4A98-AEC4-C7E4880044AE}</ProjectGuid>
 			<MainSource>idKFa.dpr</MainSource>
@@ -20,7 +20,6 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_Optimize>false</DCC_Optimize>
 			<DCC_UsePackage>vcl;rtl;vclx;vclimg;vclactnband;dbrtl;vcldb;vcldbx;bdertl;vcltouch;xmlrtl;dsnap;dsnapcon;TeeUI;TeeDB;Tee;vclib;ibxpress;adortl;IndyCore;IndySystem;IndyProtocols;inet;intrawebdb_100_140;Intraweb_100_140;VclSmp;vclie;websnap;webdsnap;inetdb;inetdbbde;inetdbxpress;soaprtl;vclribbon;dbexpress;DbxCommonDriver;DataSnapIndy10ServerTransport;DataSnapProviderClient;DbxClientDriver;DataSnapServer;DBXInterBaseDriver;DBXMySQLDriver;dbxcds;DBXFirebirdDriver;DBXSybaseASEDriver;DBXSybaseASADriver;DBXOracleDriver;DBXMSSQLDriver;DBXInformixDriver;DBXDb2Driver</DCC_UsePackage>
 			<DCC_DependencyCheckOutputName>idKFa.exe</DCC_DependencyCheckOutputName>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
@@ -83,6 +82,9 @@
 			<DCCReference Include="src\core\uCommonFunctions.pas"/>
 			<DCCReference Include="src\compiler\proteus\uProteusSoftDebuger.pas"/>
 			<DCCReference Include="src\compiler\proteus\uProteusCompiler.pas"/>
+			<DCCReference Include="src\compiler\proteus\uProteusComModel.pas">
+				<Form>fProteusComModel</Form>
+			</DCCReference>
 			<DCCReference Include="src\core\UnitSyntaxMemo.pas"/>
 			<DCCReference Include="src\core\uRecordList.pas"/>
 			<DCCReference Include="src\compiler\quark\uQuarkCompiler.pas"/>
@@ -144,7 +146,7 @@
 						<VersionInfo Name="MajorVer">1</VersionInfo>
 						<VersionInfo Name="MinorVer">0</VersionInfo>
 						<VersionInfo Name="Release">1</VersionInfo>
-						<VersionInfo Name="Build">92</VersionInfo>
+						<VersionInfo Name="Build">95</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">False</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -156,7 +158,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">Measurement systems</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">1.0.1.92</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">1.0.1.95</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>
@@ -175,3 +177,4 @@
 			<ProjectFileVersion>12</ProjectFileVersion>
 		</ProjectExtensions>
 	</Project>
+>>>>>>> master
