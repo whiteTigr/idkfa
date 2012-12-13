@@ -99,13 +99,10 @@ end;
 { TQuarkCompiler }
 
 procedure TQuarkCompiler.BeginCompile;
-var
-  tmp: integer;
 begin
   QuarkDone;
   QuarkInit;
 
-  Evaluate('1 DROP'); // clearing NumError
   Evaluate('" ' + CompilerName + '.tc" L');
   Evaluate('END');
   FCode := PByteArray(Forth('CODE[] DROP'));
