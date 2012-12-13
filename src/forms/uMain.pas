@@ -870,7 +870,8 @@ begin
     if FileChanged[Index] then
     begin
       res := MessageBox(0,
-        pchar('Файл "' + _FileName + '" уже открыт.' +#13#10+ 'Повторно открыть его (изменения будут утеряны)?'),
+        pchar('Файл "' + _FileName + '" уже открыт.' +#13#10+
+              'Повторно открыть его (изменения будут утеряны)?'),
         'Вопрос',
         MB_ICONQUESTION or MB_YESNO);
       if res = mrYes then
