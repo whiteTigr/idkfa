@@ -1218,8 +1218,8 @@ begin
     TimerInit := nil;
   end;
 
-  changeCompilerToQuark.Checked := true;
-  ChangeCompilerTo(compilerQuark, true);
+  changeCompilerToProteus.Checked := true;
+  ChangeCompilerTo(compilerProteus, false);
 
   if ParamCount > 0 then
     OpenKfFile(ParamStr(1));
