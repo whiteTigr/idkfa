@@ -3304,7 +3304,7 @@ begin
     fRichMemo.Lines.BeginUpdate;
     for i := StartY to EndY do
       if Copy(fRichMemo.Lines[i], 1, Length(LitILComment)) <> LitILComment then
-        fRichMemo.Lines[i] := LitILComment + fRichMemo.Lines[i];
+        fRichMemo.Lines[i] := LitILComment + ' ' + fRichMemo.Lines[i]; // wt: адаптация для форта
     fRichMemo.Lines.EndUpdate;
   end
   else
@@ -3313,7 +3313,7 @@ begin
     for i := StartY to EndY do
       if Copy(fRichMemo.Lines[i], 1, Length(LitILComment)) = LitILComment then
         fRichMemo.Lines[i] := Copy(fRichMemo.Lines[i],
-          Length(LitILComment) + 1,
+          Length(LitILComment) + 2, // wt: адаптация для форта. Было + 1
           Length(fRichMemo.Lines[i]) - Length(LitILComment));
     fRichMemo.Lines.EndUpdate;
   end;
@@ -4048,6 +4048,9 @@ begin
     NewSelEnd.Y := fStart.Y + n2 - 1;
     Sl[0] := LeftStr(fLines[fStart.Y], fStart.X) + Sl[0];
     NewSelEnd.X := Length(Sl[n2 - 1]);
+    // wt: добавлена реакция на опцию Overwrite
+    if (Length(Value) = 1) and (smoOverwrite in fOptions) then
+      inc(fEnd.X);
     Sl[n2 - 1] := Sl[n2 - 1] + RightStr(fLines[fEnd.Y],
       Length(fLines[fEnd.Y]) - fEnd.X);
 
@@ -4064,10 +4067,15 @@ begin
         begin
           uiCaretPos := fPos;
           uiSelEnd := NewSelEnd;
+          // wt: добавлена реакция на опцию Overwrite
+          if (Length(Value) = 1) and (smoOverwrite in fOptions) then
+            dec(uiSelEnd.X);
           { Сохраняем текст отката }
           uiText := Copy(fLines[fStart.Y], fStart.X + 1, MAXINT);
+          s := uiText;
           for n := fStart.Y + 1 to fEnd.Y do
             uiText := uiText + #13#10 + fLines[n];
+          s := uiText;
           System.SetLength(uiText,
             Length(uiText) - Length(fLines[fEnd.Y]) + fEnd.X);
           uiKind := ActionKind;
@@ -5264,6 +5272,7 @@ begin
             // текущей строке, и при добавлении новой строки
             // вставляем их
             X := PosY; // Не удивляйтесь - не хочу вводить новую переменную
+            // wt: оказалось, что это неудобно
             // while Length(Trim(Lines.Strings[x]))=0 do
             // begin
             // if x=0 then break;
@@ -5280,9 +5289,9 @@ begin
         begin
           if not(smoReadOnly in fOptions) then
             if smoOverwrite in fOptions then
-              SetOptions(fOptions + [smoOverwrite])
+              SetOptions(fOptions - [smoOverwrite])
             else
-              SetOptions(fOptions - [smoOverwrite]);
+              SetOptions(fOptions + [smoOverwrite]);
         end
         else
         begin
