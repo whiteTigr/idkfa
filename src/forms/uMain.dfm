@@ -198,9 +198,7 @@ object fMain: TfMain
       TabFont.Style = []
       TabOrder = 0
       OnChange = TabsChange
-      ExplicitLeft = 2
-      ExplicitTop = 0
-  object TTabPage
+      object TTabPage
         Left = 4
         Top = 24
         Caption = 'Default'
@@ -408,7 +406,7 @@ object fMain: TfMain
   object SaveDialog1: TSaveDialog
     Filter = 
       #1048#1089#1093#1086#1076#1085#1099#1077' '#1090#1077#1082#1089#1090#1099' (*.kf)|*.kf|Coe-'#1092#1072#1081#1083#1099' (*.coe)|*.coe|'#1060#1072#1081#1083#1099' '#1082#1086#1084#1084#1072#1085 +
-      #1076' (*.cmd)|*.cmd|'#1042#1089#1077' '#1092#1072#1081#1083#1099' (*.*)|*.*'
+      #1076' (*.cmd)|*.cmd|Lib-'#1092#1072#1081#1083#1099' (*.lib)|*.lib|'#1042#1089#1077' '#1092#1072#1081#1083#1099' (*.*)|*.*'
     Options = [ofHideReadOnly, ofNoValidate, ofEnableSizing]
     Left = 192
     Top = 416

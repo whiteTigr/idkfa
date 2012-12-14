@@ -136,6 +136,8 @@ type
   end;
 
 const
+  FilterExt: array[0..4] of string = ('.kf', '.coe', '.cmd', '.lib', '');
+
   StyleConsts: array[0..21] of record
     id: integer;
     str: string;
@@ -965,9 +967,36 @@ begin
   CanClose := Length(mmCode) = 0;
 end;
 
+procedure PrepareFileName(var fileName: string; defaultExt: string);
+var
+  ext: string;
+  i: integer;
+begin
+  ext := ExtractFileExt(fileName);
+  fileName := LeftStr(fileName, Length(fileName) - Length(ext));
+  repeat
+    i := 0;
+    while i < Length(FilterExt) - 1 do
+    begin
+      if RightStr(fileName, Length(FilterExt[i])) = FilterExt[i] then
+      begin
+        fileName := LeftStr(fileName, Length(fileName) - Length(FilterExt[i]));
+        break;
+      end;
+      inc(i);
+    end;
+  until i >= Length(FilterExt) - 1;
+
+  if ext = '' then
+    ext := defaultExt;
+
+  fileName := fileName + ext;
+end;
+
 procedure TfMain.SaveAsExecute(Sender: TObject);
 var
   fn: string;
+  ext: string;
 begin
   // нет ни одной вкладки
   if Length(mmCode) = 0 then
@@ -977,9 +1006,8 @@ begin
   if SaveDialog1.Execute then
   begin
     fn := SaveDialog1.FileName;
+    PrepareFileName(fn, FilterExt[SaveDialog1.FilterIndex - 1]);
     SetFileChanged(Tabs.PageIndex, false);
-    if RightStr(fn, 4) = '.coe' then fn := LeftStr(fn, length(fn)-4);
-    if RightStr(fn, 3) <> '.kf' then fn := fn + '.kf';
     if FileExists(fn) then
       if MessageBox(0, pchar('Файл "' + fn + '" уже существует. Заменить?'), pchar(fMain.Caption), MB_YESNO or MB_ICONQUESTION) = mrNo then
         Exit;
@@ -1219,8 +1247,8 @@ begin
     TimerInit := nil;
   end;
 
-  changeCompilerToQuark.Checked := true;
-  ChangeCompilerTo(compilerQuark, true);
+  changeCompilerToProteus.Checked := true;
+  ChangeCompilerTo(compilerProteus, false);
 
   if ParamCount > 0 then
     OpenKfFile(ParamStr(1));
