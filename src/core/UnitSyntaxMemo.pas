@@ -3277,7 +3277,7 @@ var
 begin
   fRichMemo.Lines.BeginUpdate;
   for i := StartY to EndY do
-    fRichMemo.Lines[i] := '    ' + fRichMemo.Lines[i];
+    fRichMemo.Lines[i] := '  ' + fRichMemo.Lines[i];
   fRichMemo.Lines.EndUpdate;
 end;
 
@@ -3288,9 +3288,9 @@ var
 begin
   fRichMemo.Lines.BeginUpdate;
   for i := StartY to EndY do
-    if Copy(fRichMemo.Lines[i], 1, 4) = '    ' then
-      fRichMemo.Lines[i] := Copy(fRichMemo.Lines[i], 5,
-        Length(fRichMemo.Lines[i]) - 4);
+    if Copy(fRichMemo.Lines[i], 1, 2) = '  ' then
+      fRichMemo.Lines[i] := Copy(fRichMemo.Lines[i], 3,
+        Length(fRichMemo.Lines[i]) - 2);
   fRichMemo.Lines.EndUpdate;
 end;
 
@@ -5237,8 +5237,15 @@ begin
           Range.Delete;
 
       VK_TAB:
-        if not(smoReadOnly in fOptions) then
-          Range.SetTextEx(StringOfChar(' ', 4 - PosX mod 4), ukLetterTyped);
+        if Range.EndY - Range.StartY <> 0 then
+        begin
+          if ssShift in Shift then
+            MakeUnIndent
+          else
+            MakeIndent;
+        end
+        else if not(smoReadOnly in fOptions) then
+          Range.SetTextEx(StringOfChar(' ', 2 - PosX mod 2), ukLetterTyped); // wt: а я хочу 2 пробела, а не 4 :)
 
       VK_BACK:
         if not(smoReadOnly in fOptions) then
