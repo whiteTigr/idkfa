@@ -51,6 +51,8 @@ type
   private
     Parser: TParserCore;
 
+    State: integer;
+
     FCode: PCodeArray;
     CodeSize: integer;
     CP: integer;
@@ -82,6 +84,8 @@ type
 
     HardwiredWords: TStringList;
     HardwiredWordsCount: integer;
+    HardwiredCodeCount: integer;
+    HardwiredDataCount: integer;
     UserMaxCode: integer;
     UserMaxData: integer;
 
@@ -90,9 +94,13 @@ type
 
     LastString: string;
 
+    FHere: integer;
+    FCHere: integer;
+
     procedure Compile(code: integer; ToTempCode: boolean = false); overload;
     procedure Compile(code: array of integer; ToTempCode: boolean = false); overload;
     procedure CompileTo(position: integer; value: integer);
+    procedure CompileCallTo(name: string);
     procedure CompileRJmpTo(position: integer; _value: integer);
     procedure CompileNumber(_value: integer; ToTempCode: boolean = false);
     function  CompileNumberTo(position: integer; _value: integer): integer;
@@ -132,6 +140,11 @@ type
 
     procedure WritePredefinedVariables;
 
+    function isCompiling: boolean;
+    function isInterpreting: boolean;
+
+    function GetLastNumber: integer;
+
     procedure DeleteCode(fromPos, toPos: integer);
     procedure CorrectJumps(delPos, delCount: integer);
     function FindJump(from: integer): integer;
@@ -153,6 +166,7 @@ type
     procedure _WHILE;
     procedure _REPEAT;
     procedure _CREATE;
+    procedure _RET;
     procedure _CompileCall;
     procedure _CompileInline;
     procedure _VARIABLE;
@@ -168,6 +182,9 @@ type
     procedure _Interpret;
     procedure _Z;
     procedure _String;
+
+    procedure _WriteData;
+    procedure _WriteCode;
   public
     procedure BeginInitCommandSystem;
     procedure EndInitCommandSystem;
@@ -176,6 +193,7 @@ type
     procedure AddForthToken(name: string; tag: integer);
     procedure AddCmd2Token(name: string; tag: integer);
     procedure AddCmd3Token(name: string; tag: integer);
+    function AddVariable(name: string): integer;
     procedure AddVarChange(name: string; _var: pointer);
 
     function Code(pos: integer): integer; override;
@@ -293,6 +311,31 @@ var
 begin
   for i := Low(code) to High(code) do
     Compile(code[i], ToTempCode);
+end;
+
+var
+  CompileCallToCacheWord: string;
+  CompileCallToCacheResult: integer;
+procedure TProteusCompiler.CompileCallTo(name: string);
+var
+  addr: integer;
+begin
+  if name = CompileCallToCacheWord then
+    addr := CompileCallToCacheResult
+  else
+  begin
+    addr := FindToken(name);
+    if addr = -1 then
+    begin
+      Error(errUnknownToken);
+      Exit;
+    end;
+    CompileCallToCacheWord := name;
+    CompileCallToCacheResult := addr;
+  end;
+
+  CompileNumber(FVocabulary[addr].tag);
+  Compile(cmdCALL);
 end;
 
 procedure TProteusCompiler.CompileTo(position: integer; value: integer);
@@ -545,6 +588,14 @@ begin
   AddSynlightWord(name, tokDict);
 end;
 
+function TProteusCompiler.AddVariable(name: string): integer;
+begin
+  AddToken(TokenWord(name, DP, true, _VariableProc));
+  AddSynlightWord(name, tokVar);
+  Result := DP;
+  inc(DP);
+end;
+
 procedure TProteusCompiler.InitBasicCommands;
 begin
   AddForthToken('NOP', cmdNOP);
@@ -579,7 +630,7 @@ begin
   AddForthToken('DO', cmdDO);
   AddForthToken('RIF', cmdRIF);
   AddForthToken('UNTIL', cmdUNTIL);
-  AddForthToken(';', cmdRET);
+  AddImmToken(';', _RET);
   AddForthToken('EXIT', cmdRET);
   AddForthToken('RET', cmdRET);
 
@@ -601,18 +652,43 @@ begin
   AddImmToken('INLINE', _Inline);
   AddImmToken('L', _LoadFile);
   AddImmToken(',Z', _Z);
+  AddImmToken(',', _WriteData);
+  AddImmToken('[C],', _WriteCode);
 
   AddImmToken('{', _Interpret);
   AddForthToken('}', cmdRET);
 
   AddImmToken('"', _String);
 
+  FHere := AddVariable('HERE');
+  FCHere := AddVariable('[C]HERE');
+
   AddVarChange('#MaxCode=', @UserMaxCode);
   AddVarChange('#MaxData=', @UserMaxData);
+
+  ReserveCodeForJump;
+  Evaluate(': DP++ HERE @ 1 + HERE ! ;');
+  Evaluate(': CP++ [C]HERE @ 1 + [C]HERE ! ;');
+  Evaluate(': ALLOT HERE @ + HERE ! ;');
+  Evaluate(': [C]ALLOT [C]HERE @ + [C]HERE ! ;');
+  Evaluate(': _, HERE @ ! DP++ ;');
+//  Evaluate(': _[C], [C]HERE @ [C]! CP++ ;'); // нет команды [C]!
+end;
+
+function TProteusCompiler.isCompiling: boolean;
+begin
+  Result := State <> 0;
+end;
+
+function TProteusCompiler.isInterpreting: boolean;
+begin
+  Result := not isCompiling;
 end;
 
 procedure TProteusCompiler.BeginInitCommandSystem;
 begin
+  CP := 0;
+  DP := 0;
   VP := 0;
   SynLightWords.Clear;
   InitBasicCommands;
@@ -620,6 +696,8 @@ end;
 
 procedure TProteusCompiler.EndInitCommandSystem;
 begin
+  HardwiredCodeCount := CP;
+  HardwiredDataCount := DP;
   HardwiredWordsCount := VP;
   HardwiredWords.AddStrings(SynLightWords);
 end;
@@ -756,7 +834,7 @@ var
   i: integer;
 begin
   Result := -1;
-  for i := HardwiredWordsCount-1 downto 0 do
+  for i := 0 to HardwiredWordsCount-1 do
     if (FVocabulary[i].tag = tag) then
     begin
       Result := i;
@@ -844,6 +922,12 @@ begin
       Result := i;
       Exit;
     end;
+end;
+
+function TProteusCompiler.GetLastNumber: integer;
+begin
+  dec(CP, LastNumberSize);
+  Result := LastNumber;
 end;
 
 function TProteusCompiler.GetLiteralPos(from: integer): integer;
@@ -1089,22 +1173,24 @@ end;
 procedure TProteusCompiler._String;
 var
   addr: integer;
+  procedure CompileCharacter(value: char);
+  begin
+    CompileNumber(integer(value), true);
+    CompileNumber(DP, true);
+    Compile(cmdSTORE, true);
+    FData[DP].value := integer(value);
+    inc(DP);
+  end;
 begin
   with Parser do
   begin
     addr := DP;
     LastString := '';
     repeat
-      CompileNumber(integer(tib[tibPos]), true);
-      CompileNumber(DP, true);
-      Compile(cmdSTORE, true);
-      inc(DP);
+      CompileCharacter(tib[tibPos]);
       LastString := LastString + tib[tibPos];
     until (not IncTibPos) or (tib[tibPos] = '"');
-    CompileNumber(0, true);
-    CompileNumber(DP, true);
-    Compile(cmdSTORE, true);
-    inc(DP);
+    CompileCharacter(#0);
     IncTibPos;
 
     CompileNumber(addr);
@@ -1116,6 +1202,13 @@ begin
   ParseToken;
   AddToken(TokenWord(Parser.token, CP, true, _CompileCall));
   AddSynlightWord(Parser.token, tokDict);
+  State := 1; // compiling
+end;
+
+procedure TProteusCompiler._RET;
+begin
+  State := 0; // interpreting
+  Compile(cmdRet);
 end;
 
 procedure TProteusCompiler._CompileCall;
@@ -1142,9 +1235,7 @@ end;
 procedure TProteusCompiler._VARIABLE;
 begin
   ParseToken;
-  AddToken(TokenWord(Parser.token, DP, true, _VariableProc));
-  AddSynlightWord(Parser.token, tokVar);
-  inc(DP);
+  AddVariable(Parser.token);
 end;
 
 procedure TProteusCompiler._ARRAY;
@@ -1246,6 +1337,34 @@ procedure TProteusCompiler._Z;
 begin
   dec(CP, LastNumberSize);
   Compile(LastNumber and $3F);
+end;
+
+procedure TProteusCompiler._WriteCode;
+var
+  tokenID: integer;
+begin
+  if isInterpreting then
+  begin
+    FCode[CP].value := GetLastNumber;
+    inc(CP);
+  end
+  else
+  begin
+    CompileCallTo('_[C],');
+  end;
+end;
+
+procedure TProteusCompiler._WriteData;
+begin
+  if isInterpreting then
+  begin
+    FData[DP].value := GetLastNumber;
+    inc(DP);
+  end
+  else
+  begin
+    CompileCallTo('_,');
+  end;
 end;
 
 function TProteusCompiler.GetCmdColor(cmd: integer): cardinal;
@@ -1380,9 +1499,10 @@ begin
   FError := 0;
   LineCount := 0;
 
+  State := 0;
   TCP := 0;
-  CP := 0;
-  DP := 0;
+  CP := HardwiredCodeCount;
+  DP := HardwiredDataCount;
   ControlStackTop := 0;
   VP := HardwiredWordsCount;
   SynLightWords.Clear;
@@ -1390,8 +1510,6 @@ begin
 
   UserMaxCode := CodeSize;
   UserMaxData := DataSize;
-
-  ReserveCodeForJump;
 end;
 
 procedure TProteusCompiler.EndCompile;

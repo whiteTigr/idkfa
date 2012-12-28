@@ -1,0 +1,1590 @@
+// for proteus compiler
+#PACKSIZE= 1024
+#WAITCOEF= 1
+#MaxData= 8192
+
+" proteus.lib" L
+
+VARIABLE HERE
+VARIABLE [C]HERE
+
+// заглушка
+: [C]! 123 ,Z ; INLINE
+: ' 124 ,Z ; INLINE
+: ERROR 125 ,Z ; INLINE
+: NewMAIN: 126 ,Z ; INLINE
+
+: @HERE HERE ;
+: @[C]HERE [C]HERE ;
+: ALLOT HERE @ + HERE ! ;
+: [C]ALLOT [C]HERE @ + [C]HERE ! ;
+: , HERE @ ! 1 ALLOT ;
+: [C], [C]HERE @ [C]! 1 [C]ALLOT ;
+: INVERT IF 0 ELSE -1 THEN ;
+: WAIT 20000000 0 DO LOOP ;
+
+: BLACK  0 ;
+: RED    1 ;
+: GREEN  2 ;
+: YELLOW 3 ;
+: BLUE   4 ;
+: PURPLE 5 ;
+: CYAN   6 ;
+: WHITE  7 ;
+
+\ ******* KEY *******
+ARRAY eng 128
+: INIT_eng
+ HERE @
+ eng HERE !
+\   0     1     2     3     4     5     6     7     8     9     A     B     C     D     E     F   \
+    0 , 265 ,   0 , 261 , 259 , 257 , 258 , 268 ,   0 , 266 , 264 , 262 , 260 ,   0 ,  96 ,   0 , \ 0
+    0 ,   0 ,   0 ,   0 ,   0 , 113 ,  49 ,   0 ,   0 ,   0 , 122 , 115 ,  97 , 119 ,  50 ,   0 , \ 1
+    0 ,  99 , 120 , 100 , 101 ,  52 ,  51 ,   0 ,   0 ,  32 , 118 , 102 , 116 , 114 ,  53 ,   0 , \ 2
+    0 , 110 ,  98 , 104 , 103 , 121 ,  54 ,   0 ,   0 ,   0 , 109 , 106 , 117 ,  55 ,  56 ,   0 , \ 3
+    0 ,  44 , 107 , 105 , 111 ,  48 ,  57 ,   0 ,   0 ,  46 ,  47 , 108 ,  59 , 112 ,  45 ,   0 , \ 4
+    0 ,   0 ,  39 ,   0 ,  91 ,  61 ,   0 ,   0 ,   0 ,   0 ,  13 ,  93 ,   0 ,  92 ,   0 ,   0 , \ 5
+    0 ,   0 ,   0 ,   0 ,   0 ,   0 ,   8 ,   0 ,   0 ,  49 ,   0 ,  52 ,  55 ,   0 ,   0 ,   0 , \ 6
+   48 ,  46 ,  50 ,  53 ,  54 ,  56 ,  27 ,   0 , 267 ,  43 ,  51 ,  45 ,  42 ,  57 ,   0 ,   0 , \ 7
+ HERE !
+;
+
+ARRAY eng_shift 128
+: INIT_eng_shift
+ HERE @
+ eng_shift HERE !
+\   0     1     2     3     4     5     6     7     8     9     A     B     C     D     E     F   \
+    0 , 265 ,   0 , 261 , 259 , 257 , 258 , 268 ,   0 , 266 , 264 , 262 , 260 ,   0 , 126 ,   0 , \ 0
+    0 ,   0 ,   0 ,   0 ,   0 ,  81 ,  33 ,   0 ,   0 ,   0 ,  90 ,  83 ,  65 ,  87 ,  64 ,   0 , \ 1
+    0 ,  67 ,  88 ,  68 ,  69 ,  36 ,  35 ,   0 ,   0 ,  32 ,  86 ,  70 ,  84 ,  82 ,  37 ,   0 , \ 2
+    0 ,  78 ,  66 ,  72 ,  71 ,  89 ,  94 ,   0 ,   0 ,   0 ,  77 ,  74 ,  85 ,  38 ,  42 ,   0 , \ 3
+    0 ,  60 ,  75 ,  73 ,  79 ,  41 ,  40 ,   0 ,   0 ,  62 ,  63 ,  76 ,  58 ,  80 ,  95 ,   0 , \ 4
+    0 ,   0 ,  34 ,   0 , 123 ,  43 ,   0 ,   0 ,   0 ,   0 ,  13 , 125 ,   0 , 124 ,   0 ,   0 , \ 5
+    0 ,   0 ,   0 ,   0 ,   0 ,   0 ,   8 ,   0 ,   0 ,  49 ,   0 ,  52 ,  55 ,   0 ,   0 ,   0 , \ 6
+   48 ,  46 ,  50 ,  53 ,  54 ,  56 ,  27 ,   0 , 267 ,  43 ,  51 ,  45 ,  42 ,  57 ,   0 ,   0 , \ 7
+ HERE !
+;
+
+ARRAY rus 128
+: INIT_rus
+ HERE @
+ rus HERE !
+\   0     1     2     3     4     5     6     7     8     9     A     B     C     D     E     F   \
+    0 , 265 ,   0 , 261 , 259 , 257 , 258 , 268 ,   0 , 266 , 264 , 262 , 260 ,   0 , 184 ,   0 , \ 0
+    0 ,   0 ,   0 ,   0 ,   0 , 233 ,  49 ,   0 ,   0 ,   0 , 255 , 251 , 244 , 246 ,  50 ,   0 , \ 1
+    0 , 241 , 247 , 226 , 243 ,  52 ,  51 ,   0 ,   0 ,  32 , 236 , 224 , 229 , 234 ,  53 ,   0 , \ 2
+    0 , 242 , 232 , 240 , 239 , 237 ,  54 ,   0 ,   0 ,   0 , 252 , 238 , 227 ,  55 ,  56 ,   0 , \ 3
+    0 , 225 , 235 , 248 , 249 ,  48 ,  57 ,   0 ,   0 , 254 ,  46 , 228 , 230 , 231 ,  45 ,   0 , \ 4
+    0 ,   0 , 253 ,   0 , 245 ,  61 ,   0 ,   0 ,   0 ,   0 ,  13 , 250 ,   0 ,  92 ,   0 ,   0 , \ 5
+    0 ,   0 ,   0 ,   0 ,   0 ,   0 ,   8 ,   0 ,   0 ,  49 ,   0 ,  52 ,  55 ,   0 ,   0 ,   0 , \ 6
+   48 ,  46 ,  50 ,  53 ,  54 ,  56 ,  27 ,   0 , 267 ,  43 ,  51 ,  45 ,  42 ,  57 ,   0 ,   0 , \ 7
+ HERE !
+;
+
+ARRAY rus_shift 128
+: INIT_rus_shift
+ HERE @
+ rus_shift HERE !
+\   0     1     2     3     4     5     6     7     8     9     A     B     C     D     E     F   \
+    0 , 265 ,   0 , 261 , 259 , 257 , 258 , 268 ,   0 , 266 , 264 , 262 , 260 ,   0 , 168 ,   0 , \ 0
+    0 ,   0 ,   0 ,   0 ,   0 , 201 ,  33 ,   0 ,   0 ,   0 , 223 , 219 , 212 , 214 ,  34 ,   0 , \ 1
+    0 , 209 , 215 , 194 , 211 ,  59 , 185 ,   0 ,   0 ,  32 , 204 , 192 , 197 , 202 ,  37 ,   0 , \ 2
+    0 , 210 , 200 , 208 , 207 , 205 ,  58 ,   0 ,   0 ,   0 , 220 , 206 , 195 ,  63 ,  42 ,   0 , \ 3
+    0 , 193 , 203 , 216 , 217 ,  41 ,  40 ,   0 ,   0 , 222 ,  44 , 196 , 198 , 199 ,  95 ,   0 , \ 4
+    0 ,   0 , 221 ,   0 , 213 ,  43 ,   0 ,   0 ,   0 ,   0 ,  13 , 218 ,   0 ,  47 ,   0 ,   0 , \ 5
+    0 ,   0 ,   0 ,   0 ,   0 ,   0 ,   8 ,   0 ,   0 ,  49 ,   0 ,  52 ,  55 ,   0 ,   0 ,   0 , \ 6
+   48 ,  46 ,  50 ,  53 ,  54 ,  56 ,  27 ,   0 , 267 ,  43 ,  51 ,  45 ,  42 ,  57 ,   0 ,   0 , \ 7
+ HERE !
+;
+
+ARRAY E0symScan 15
+ARRAY E0sym 15
+: INIT_E0sym
+ HERE @
+ E0symScan HERE !  0x75 ,  0x74 ,  0x72 ,  0x6B ,  0x1F ,  0x27 ,  0x2F ,  0x70 ,  0x6C ,  0x7D ,  0x71 ,  0x69 ,  0x7A ,  0x4A ,  0x5A , 
+     E0sym HERE ! 0x11A , 0x119 , 0x11B , 0x118 , 0x110 , 0x111 , 0x112 , 0x120 , 0x121 , 0x122 , 0x123 , 0x124 , 0x125 , 0x128 ,    13 , 
+ HERE !
+;
+
+ARRAY NumberScan 14
+: INIT_NumberScan
+ HERE @
+ NumberScan HERE ! 0x0E , 0x16 , 0x1E , 0x26 , 0x25 , 0x2E , 0x36 , 0x3D , 0x3E , 0x46 , 0x45 , 0x4E , 0x55 , 0x5D ,
+ HERE !
+;
+
+ARRAY EngSymbols 7
+: INIT_EngSymbols
+ HERE @
+ EngSymbols HERE ! 0x54 , 0x5B , 0x4C , 0x52 , 0x41 , 0x49 , 0x4A ,
+ HERE !
+;
+
+ARRAY NumScan 11
+ARRAY NumData 11
+: INIT_NumScan
+ HERE @
+ NumScan HERE !  0x70 ,  0x71 ,  0x69 ,  0x72 ,  0x7A ,  0x6B ,  0x73 ,  0x74 ,  0x6C ,  0x75 ,  0x7D ,
+ NumData HERE ! 0x120 , 0x123 , 0x124 , 0x11B , 0x125 , 0x118 , 0x11B , 0x119 , 0x121 , 0x11A , 0x122 ,
+ HERE !
+;
+
+VARIABLE LastScanCode
+VARIABLE ScanCode
+VARIABLE KEYDATA
+
+VARIABLE lShift
+VARIABLE rShift
+VARIABLE lAlt
+VARIABLE rAlt
+VARIABLE lCtrl
+VARIABLE rCtrl
+VARIABLE CapsLock
+VARIABLE ScrollLock
+VARIABLE NumLock
+
+VARIABLE isEng
+VARIABLE KeyDown
+VARIABLE KeyUp
+
+: isNewData 203 INPORT ;
+: addrb+1 0 202 OUTPORT ;
+: readScanCode 202 INPORT ;
+: addrb=addra 0 204 OUTPORT ;
+
+: INIT_KEYBOARD
+ INIT_eng
+ INIT_eng_shift
+ INIT_rus
+ INIT_rus_shift
+ INIT_E0sym
+ INIT_NumberScan
+ INIT_EngSymbols
+ addrb=addra
+ 1 isEng !
+ 0 lShift !
+ 0 rShift !
+ 0 lCtrl !
+ 0 rCtrl !
+ 0 lAlt !
+ 0 rAlt !
+ 0 CapsLock !
+ 0 ScrollLock !
+ 0 NumLock !
+;
+
+ARRAY ScanCodes 8
+: GetScanCode
+ readScanCode
+ addrb+1
+ 8 0 DO
+  ScanCodes I + @ SWAP
+  ScanCodes I + !
+ LOOP
+ DROP
+;
+
+: isPause
+ ScanCodes     @ 0x77 =
+ ScanCodes 1 + @ 0xF0 = AND
+ ScanCodes 2 + @ 0x14 = AND
+ ScanCodes 3 + @ 0xF0 = AND
+ ScanCodes 4 + @ 0xE1 = AND
+ ScanCodes 5 + @ 0x77 = AND
+ ScanCodes 6 + @ 0x14 = AND
+ ScanCodes 7 + @ 0xE1 = AND
+  IF
+   0x114 KEYDATA !
+   1 KeyDown !
+   1
+  ELSE
+   0
+  THEN
+;
+
+: isPrtScrDown
+ ScanCodes     @ 0x7C =
+ ScanCodes 1 + @ 0xE0 = AND
+ ScanCodes 2 + @ 0x12 = AND
+ ScanCodes 3 + @ 0xE0 = AND
+  IF
+   0x113 KEYDATA !
+   1 KeyDown !
+   1
+  ELSE
+   0
+  THEN 
+;
+
+: isPrtScrUp
+ ScanCodes     @ 0x7C =
+ ScanCodes 1 + @ 0xF0 = AND
+ ScanCodes 2 + @ 0xE0 = AND
+ ScanCodes 3 + @ 0x12 = AND
+ ScanCodes 4 + @ 0xF0 = AND
+ ScanCodes 5 + @ 0xE0 = AND
+  IF
+   0x113 KEYDATA !
+   1 KeyUp !
+   1
+  ELSE
+   0
+  THEN 
+;
+
+VARIABLE tmpCount
+: isE0Up
+ ScanCodes 1 + @ 0xF0 =
+ ScanCodes 2 + @ 0xE0 = AND
+  IF
+   1
+   ScanCodes @ 0x11 = IF 0  rAlt ! ; THEN
+   ScanCodes @ 0x14 = IF 0 rCtrl ! ; THEN
+   0 tmpCount !
+   0 KEYDATA !
+   BEGIN
+    E0symScan tmpCount @ + @ ScanCodes @ = IF
+        E0sym tmpCount @ + @ KEYDATA !
+    THEN
+    tmpCount @ 1 + tmpCount !
+   KEYDATA @ tmpCount @ 15 > OR UNTIL
+   KEYDATA @ 0 = IF DROP 0 ; THEN
+   1 KeyUp !
+  ELSE
+   0
+  THEN 
+; 
+
+: isE0Down
+ ScanCodes 1 + @ 0xE0 =
+  IF
+   1
+   ScanCodes @ 0x11 = IF 1  rAlt ! ; THEN
+   ScanCodes @ 0x14 = IF 1 rCtrl ! ; THEN
+   0 tmpCount !
+   0 KEYDATA !
+   BEGIN
+    E0symScan tmpCount @ + @ ScanCodes @ = IF
+        E0sym tmpCount @ + @ KEYDATA !
+    THEN
+    tmpCount @ 1 + tmpCount !
+   KEYDATA @ tmpCount @ 15 > OR UNTIL
+   KEYDATA @ 0 = IF DROP 0 ; THEN
+   1 KeyDown !   
+  ELSE
+   0
+  THEN 
+;
+
+: isSpecUp
+ ScanCodes 1 + @ 0xF0 = NOT IF 0 ; THEN
+ 1
+ ScanCodes @ 0x12 = IF 
+  0 lShift ! 
+  lAlt @ lCtrl @ OR IF isEng @ INVERT isEng ! THEN
+ ; THEN
+ ScanCodes @ 0x59 = IF 0 rShift ! ; THEN
+ ScanCodes @ 0x14 = IF 0  lCtrl ! ; THEN
+ ScanCodes @ 0x59 = IF 0  rCtrl ! ; THEN
+ ScanCodes @ 0x11 = IF 0   lAlt ! ; THEN
+ ScanCodes @ 0x59 = IF 0   rAlt ! ; THEN
+
+ ScanCodes @ 0x7E = IF 
+  ScrollLock @ INVERT DUP
+  IF 1023 ELSE 0 THEN 3000 OUTPORT
+  ScrollLock ! 
+ ; THEN
+
+ ScanCodes @ 0x58 = IF   
+  CapsLock @ INVERT DUP
+  IF 1023 ELSE 0 THEN 3001 OUTPORT
+  CapsLock ! 
+ ; THEN
+
+ ScanCodes @ 0x77 = IF    
+  NumLock @ INVERT DUP
+  IF 1023 ELSE 0 THEN 3002 OUTPORT
+  NumLock ! 
+ ; THEN 
+
+ DROP 0
+;
+
+: isSpecDown
+ 1
+ ScanCodes @ 0x12 = IF 1 lShift ! ; THEN
+ ScanCodes @ 0x59 = IF 1 rShift ! ; THEN
+ ScanCodes @ 0x14 = IF 1  lCtrl ! ; THEN
+ ScanCodes @ 0x59 = IF 1  rCtrl ! ; THEN
+ ScanCodes @ 0x11 = IF 1   lAlt ! ; THEN
+ ScanCodes @ 0x59 = IF 1   rAlt ! ; THEN
+ DROP 0
+;
+
+: isShifted
+ CapsLock @ IF
+  lShift @ rShift @ OR IF 0 ELSE 1 THEN
+ ELSE
+  lShift @ rShift @ OR IF 1 ELSE 0 THEN
+ THEN
+;
+
+: isNumber
+ 0 tmpCount !
+ BEGIN
+  NumberScan tmpCount @ + @ ScanCodes @ = 
+  tmpCount @ 1 + tmpCount !
+ tmpCount @ 14 > OR UNTIL
+ tmpCount @ 15 < 
+;
+
+: isEngSymbols
+ isEng @ IF
+  0 tmpCount !
+  BEGIN
+   EngSymbols tmpCount @ + @ ScanCodes @ = 
+   tmpCount @ 1 + tmpCount !
+  tmpCount @ 7 > OR UNTIL
+  tmpCount @ 8 < 
+ ELSE
+  0
+ THEN
+;
+
+: isNum
+ NumLock @ 0 = IF 0 ; THEN
+ lShift @ rShift @ OR 0 = IF 0 ; THEN 
+
+ 0 tmpCount !
+ 0 KEYDATA !
+ BEGIN
+  NumScan tmpCount @ + @ ScanCodes @ = IF
+   NumData tmpCount @ + @ KEYDATA !
+  THEN
+  tmpCount @ 1 + tmpCount !
+ KEYDATA @ tmpCount @ 11 > OR UNTIL
+ KEYDATA @
+;
+
+VARIABLE Shifted
+: ToKeyData
+ isNumber isEngSymbols OR IF
+  lShift @ rShift @ OR 
+ ELSE
+  isShifted 
+ THEN
+ Shifted !
+
+ isNum IF ; THEN
+
+ ScanCodes @ 0x83 = IF 263 KEYDATA ! ; THEN
+ ScanCodes @ 0x79 > IF   0 KEYDATA ! ; THEN
+ ScanCodes @
+  isEng @ IF
+   Shifted @ IF 
+    eng_shift + @
+   ELSE
+    eng + @ 
+   THEN
+  ELSE
+   Shifted @ IF
+    rus_shift + @
+   ELSE
+    rus + @
+   THEN
+  THEN
+ KEYDATA !
+;
+
+: CHECKKEY
+ 0 KeyDown !
+ 0 KeyUp !
+ isNewData IF
+  GetScanCode
+  isPause      IF ; THEN
+  isPrtScrUp   IF ; THEN
+  isPrtScrDown IF ; THEN
+  isE0Up       IF ; THEN
+  isE0Down     IF ; THEN
+  isSpecUp     IF ; THEN
+  isSpecDown   IF ; THEN
+  ToKeyData
+  KEYDATA @ 0 = IF ; THEN
+  ScanCodes 1 + @ 0xF0 = IF
+   1 KeyUp !
+  ELSE   
+   1 KeyDown !
+  THEN
+ THEN
+;
+\ ******* END OF KEY *******
+
+\ ******* LCD *******
+
+: A_LCD_DQ 1000 ;
+: A_LCD_RS 1001 ;
+: A_LCD_RW 1002 ;
+: A_LCD_E  1003 ;
+
+: 0->E
+  0 A_LCD_E OUTPORT NOP
+;
+: 1->E
+  1 A_LCD_E OUTPORT NOP
+;
+: LCD-COMMAND
+  0 A_LCD_RS OUTPORT 20 0 DO LOOP
+;
+: LCD-DATA
+  1 A_LCD_RS OUTPORT  20 0 DO LOOP
+;
+
+: ->LCD \ X --
+  DUP 4 0 DO SHR LOOP
+  A_LCD_DQ OUTPORT 20 0 DO LOOP
+  1->E 50 0 DO LOOP 0->E 1000 0 DO LOOP
+  A_LCD_DQ OUTPORT 20 0 DO LOOP
+  1->E 50 0 DO LOOP 0->E 1000 0 DO LOOP
+  50000 0 DO LOOP
+;
+
+: LCD_EMIT
+  LCD-DATA
+  ->LCD
+;
+
+: LCD-CMD
+ LCD-COMMAND
+ ->LCD
+;
+
+: LCD_HOME
+  LCD-COMMAND
+  128 ->LCD
+;
+
+: LCD_CR
+  LCD-COMMAND
+  192 ->LCD
+;
+
+:  LCD_CLS
+ LCD_HOME
+ 16 0 DO 32 LCD_EMIT LOOP LCD_CR
+ 16 0 DO 32 LCD_EMIT LOOP
+ LCD_HOME
+;
+
+: LCD-INIT
+  0 A_LCD_RW OUTPORT
+
+  LCD-COMMAND
+  3 ->LCD
+  3 ->LCD
+  3 ->LCD
+  2 ->LCD
+
+  40 ->LCD
+  6  ->LCD
+  12 ->LCD \ 0000 1dcb - display cursor blinking
+  1  ->LCD
+  60000 0 DO LOOP
+  LCD-DATA
+
+  LCD_CLS
+;
+
+: LCD_CURSOR \ n --> 
+ 15 AND 192 + LCD-CMD
+;
+\ ********* END OF LCD *********
+
+\ ********* RS-232 *********
+: A_UART_DATA 1100 ;
+: A_UART_WE 1101 ;
+
+
+VARIABLE COMCOUNTER
+VARIABLE COMDATA
+
+: CHECKCOM
+ 1102 INPORT
+;
+
+: GETCOMDATA
+ 1101 INPORT COMDATA !
+ 0 1102 OUTPORT
+;
+
+: ->COM
+  A_UART_DATA OUTPORT
+  1 A_UART_WE OUTPORT
+  4 0 DO LOOP
+  0 A_UART_WE OUTPORT
+  4000 0 DO LOOP
+;
+
+: ->COM32
+                  DUP ->COM
+  8 0 DO SHR LOOP DUP ->COM
+  8 0 DO SHR LOOP DUP ->COM
+  8 0 DO SHR LOOP     ->COM
+;
+
+: ->COM16
+              DUP ->COM
+  8 0 DO SHR LOOP ->COM
+;
+
+: COM-INIT
+ 0 1104 OUTPORT
+ 0 COMDATA !
+;
+\ ******* END OF RS-232 *******
+
+: >DIGIT
+ DUP 9 > IF 7 + THEN 48 + LCD_EMIT
+;
+
+: HEXPRINT
+  DUP 28 0 DO SHR LOOP 15 AND >DIGIT
+  DUP 24 0 DO SHR LOOP 15 AND >DIGIT
+  DUP 20 0 DO SHR LOOP 15 AND >DIGIT
+  DUP 16 0 DO SHR LOOP 15 AND >DIGIT
+  DUP 12 0 DO SHR LOOP 15 AND >DIGIT
+  DUP  8 0 DO SHR LOOP 15 AND >DIGIT
+  DUP  4 0 DO SHR LOOP 15 AND >DIGIT
+                       15 AND >DIGIT
+;
+
+: HEXPRINTBYTE
+  DUP 4 0 DO SHR LOOP 15 AND >DIGIT
+                      15 AND >DIGIT
+;
+
+: HEXPRINTWORD
+  DUP 12 0 DO SHR LOOP 15 AND >DIGIT
+  DUP  8 0 DO SHR LOOP 15 AND >DIGIT
+  DUP  4 0 DO SHR LOOP 15 AND >DIGIT
+                       15 AND >DIGIT
+;
+
+: -1 0 1 - ;
+
+VARIABLE n1
+VARIABLE n10
+VARIABLE n100
+VARIABLE n1000
+VARIABLE n10000
+VARIABLE n100000
+VARIABLE n1000000
+VARIABLE n10000000
+VARIABLE n100000000
+VARIABLE n1000000000
+\ 10 чисел
+: init
+ 1          n1          !
+ 10         n10         !
+ 100        n100        !
+ 1000       n1000       !
+ 10000      n10000      !
+ 100000     n100000     !
+ 1000000    n1000000    !
+ 10000000   n10000000   !
+ 100000000  n100000000  !
+ 1000000000 n1000000000 !
+;
+
+: 0<
+ 2147483648 AND IF -1 ELSE 0 THEN
+;
+
+: 0>
+ DUP 2147483648 AND SWAP
+ 0 = OR IF 0 ELSE -1 THEN
+;
+
+ARRAY strbuf 16
+VARIABLE CurConst
+VARIABLE cur
+: IntToStr \ n --> addr
+ DUP 0< IF -1 XOR 1 + 45 ELSE 43 THEN strbuf !
+ 1 cur !
+ 10 0 DO
+  n1000000000 I - @ CurConst !
+  -1 SWAP
+  BEGIN
+   SWAP 1 + SWAP
+   CurConst @ - DUP 0< IF CurConst @ + 1 ELSE 0 THEN
+  UNTIL
+  SWAP
+  DUP 0 = NOT cur @ 1 > OR IF
+   48 + strbuf cur @ + !
+   cur @ 1 + cur !
+  ELSE
+   DROP
+  THEN
+ LOOP
+ DROP
+ cur @ 1 = IF
+  48 strbuf 1 + !
+  cur @ 1 + cur !
+ THEN
+ 0 strbuf cur @ + !
+ strbuf
+ strbuf @ 43 = IF 1 ELSE 0 THEN +
+;
+
+VARIABLE sign
+VARIABLE num
+VARIABLE StrToIntError
+: StrToInt
+ 0 StrToIntError !
+ 0 sign !
+ DUP @ 43 = IF 0 sign ! 1 + THEN
+ DUP @ 45 = IF 1 sign ! 1 + THEN
+ DUP cur !
+ 1 -
+ BEGIN
+  1 +
+ DUP @ 0 = UNTIL
+ 1 -
+ n1 CurConst !
+ 0 num !
+ BEGIN
+  DUP @ \ addr char
+  DUP
+   0x30 < OVER 0x39 > OR IF DROP DROP -1 StrToIntError ! ; THEN
+  48 - DUP 0 = IF
+   DROP 0
+  ELSE
+   0 SWAP
+   0 DO
+    CurConst @ @ +
+   LOOP
+  THEN
+  num @ + num !
+  CurConst @ 1 + CurConst !
+  1 - DUP cur @ 1 - =
+ UNTIL
+ DROP
+ num @
+ sign @ IF -1 XOR 1 + THEN
+;
+
+: StrLen \ str --> len
+ 0
+ BEGIN
+  OVER @ 0 = IF SWAP DROP ; THEN
+  1 + SWAP 1 + SWAP
+ AGAIN
+;
+
+: SMOVE \ str-from str-to -->
+ 1 - SWAP 1 - SWAP
+ BEGIN
+  1 + SWAP 1 + SWAP
+  OVER @ OVER !
+  OVER @ 0 =
+ UNTIL
+ DROP DROP
+;
+
+: 10* SHL DUP SHL SHL + ;
+
+: MAX
+ OVER OVER < IF SWAP THEN DROP
+;
+
+: SGN // ( u -- -1 | 0 | 1 )
+ DUP 0 = IF ELSE
+ DUP 0 MAX 0 = IF DROP -1 ELSE
+ DROP 1 THEN THEN
+;
+
+: NEGATE // ( x -- -x )
+ 0 SWAP -
+;
+
+: ABS // ( x -- u )
+ DUP 0x80000000 AND IF NEGATE THEN
+;
+
+VARIABLE a
+VARIABLE b
+VARIABLE power
+VARIABLE diver
+VARIABLE res
+VARIABLE cur
+VARIABLE sum
+VARIABLE sign
+
+: find_power
+ -1 power !
+ BEGIN
+  power @ 1 + power !
+  a @ cur !
+  b @ power @ DUP IF 0 DO 10* LOOP ELSE DROP THEN diver !
+  0
+  BEGIN
+   1 +
+   cur @ diver @ - cur !
+   DUP 10 > cur @ 0< OR
+  UNTIL
+  10 <
+ UNTIL
+;
+
+: /MOD \ a b --> (a / b) (a mod b)
+ b ! a !
+ 0 sign ! 
+ a @ 0< IF a @ ABS a ! 1 sign ! THEN
+ b @ 0< IF b @ ABS b ! sign @ 1 + sign ! THEN
+ find_power
+ 0 res !
+ power @ 1 + 0 DO
+  b @ power @ I - DUP IF 0 DO 10* LOOP ELSE DROP THEN diver !
+    1 power @ I - DUP IF 0 DO 10* LOOP ELSE DROP THEN sum !
+  BEGIN
+   a @ diver @ - a !
+   res @ sum @ + res !
+  a @ 0< UNTIL
+  a @ diver @ + a !
+  res @ sum @ - res !
+ LOOP
+ sign @ 1 = IF
+  0 res @ - 
+  0 a @ - 
+ ELSE
+  res @ 
+  a @
+ THEN
+;
+
+: /   /MOD DROP ;
+: MOD /MOD NIP ;
+
+: GetTickCount 400 INPORT ;
+VARIABLE RND
+: RANDOMIZE GetTickCount RND ! ;
+
+: NextRandom //  ( -- u )
+ RND @ 69069 * 31415 + 278720333 MOD DUP RND !
+;
+
+: RANDOM  \ ( u1 -- u2 )
+ 278720333 SWAP /
+ NextRandom ABS SWAP /
+;
+
+: LCD_PRINT \ str-addr -->
+ BEGIN
+  DUP @ 0 = IF DROP ; THEN
+  DUP @ LCD_EMIT
+  1 +
+ AGAIN
+;
+
+: VGA_SetData 300 OUTPORT ;
+: VGA_GetData 300 INPORT ;
+: VGA_SetData(A++) 309 OUTPORT ;
+: VGA_SetAddr 301 OUTPORT ;
+: VGA_SetLowLevel 307 OUTPORT ;
+
+: GOTOX 302 OUTPORT ;
+: GOTOY 303 OUTPORT ;
+: GOTOXY GOTOY GOTOX ;
+: SETCOLOR 304 OUTPORT ;
+: SETBGCOLOR 305 OUTPORT ;
+: EMIT 306 OUTPORT ;
+: CR 777 308 OUTPORT ;
+
+: CLS
+ 1 VGA_SetLowLevel
+ 0 VGA_SetAddr
+ 2000 0 DO
+  0 VGA_SetData(A++)
+ LOOP
+ 0 VGA_SetLowLevel
+;
+
+: SCREEN_UP
+ 1 VGA_SetLowLevel
+ 1920 0 DO
+  I 80 + VGA_SetAddr
+  VGA_GetData
+  I VGA_SetAddr
+  VGA_SetData
+ LOOP
+ 1920 VGA_SetAddr
+ 2000 1920 DO
+  0 VGA_SetData(A++)  
+ LOOP
+ 0 VGA_SetLowLevel
+;
+
+: PRINT
+ BEGIN
+  DUP @ 0 = IF DROP ; THEN
+  DUP @ EMIT
+  1 +
+ AGAIN
+;
+
+: BIGPRINT // n mask -->
+ BEGIN
+  DUP 0 = IF DROP DROP ; THEN
+  OVER OVER AND IF 0xAB ELSE 0x00 THEN EMIT
+  SHR
+ AGAIN  
+;
+
+: Spaces \ n -->
+ DUP 0 = IF DROP ; THEN
+ 0 DO
+  32 LCD_EMIT
+ LOOP
+;
+
+: Symbols \ n sym -->
+ OVER 0> NOT IF DROP DROP ; THEN
+ SWAP 0 DO
+  DUP LCD_EMIT
+ LOOP
+ DROP
+;
+
+: . // n -->
+ IntToStr PRINT 32 EMIT
+;
+
+\ *********************************************** begin of TiF_core
+
+VARIABLE Tib
+VARIABLE TibPos
+ARRAY Word 256
+VARIABLE WordPos
+VARIABLE LastVocWord
+VARIABLE TokenID
+VARIABLE Error
+VARIABLE State \ 0 - интерпретаци€
+VARIABLE StartCP
+VARIABLE StartDP
+
+: PassSpaces
+ BEGIN
+  Tib @ TibPos @ + @ DUP
+   32 = NOT SWAP
+   0 = OR IF
+    EXIT
+   THEN
+  TibPos @ 1 + TibPos !
+ AGAIN
+;
+
+: CutWord
+ 0 WordPos !
+ BEGIN
+  Tib @ TibPos @ + @ DUP
+   32 = SWAP
+   0 = OR IF
+    0 Word WordPos @ + !
+    EXIT
+   THEN
+  Tib @ TibPos @ + @ Word WordPos @ + !
+  TibPos @ 1 + TibPos !
+  WordPos @ 1 + WordPos !
+ AGAIN
+;
+
+: NextWord
+ PassSpaces
+ CutWord
+ PassSpaces
+ WordPos @ 0 =
+ Tib @ TibPos @ + @ 0 = AND NOT
+;
+
+\ ////////////////////////////////////////////////////
+\ слово
+\  name (до #0)
+\  tag        
+\  Imm       
+\  func      
+\  prev      
+\ ////////////////////////////////////////////////////
+: >name ;
+: >tag
+ 1 -
+ BEGIN
+  1 +
+ DUP @ 0 = UNTIL
+ 1 +
+;
+: >imm >tag 1 + ;
+: >func >tag 2 + ;
+: >prev >tag 3 + ;
+
+VARIABLE StrCmpRes
+: StrCmp \ addr1, addr2 --> res
+ 1 - SWAP 1 - SWAP
+ 0 StrCmpRes !
+ BEGIN
+  1 + SWAP 1 + SWAP
+  OVER @ OVER @ = NOT IF 1 StrCmpRes ! THEN
+  OVER @ 0 =
+  OVER @ 0 = OR
+  StrCmpRes @ OR
+ UNTIL
+ @ SWAP @ =
+;
+
+: FindToken
+ LastVocWord @
+ BEGIN
+  DUP -1 = IF EXIT THEN
+  DUP Word StrCmp IF EXIT THEN
+  >prev @
+ AGAIN
+;
+
+: ConvertionError
+ 1 Error !
+ RED SETCOLOR
+ TibPos @ 1 + 24 GOTOXY
+ " ^ " PRINT Word PRINT " ?" PRINT
+ SCREEN_UP
+;
+
+: isInterpret
+ State @ 0 =
+;
+
+: isCompile
+ isInterpret NOT
+;
+
+: EXECUTE >R ;
+: COMPILE 49152 + [C], ;
+
+\  HiLitMask := $20000;
+\  LoLitMask := $10000;
+\  ShortLitMask := $30000;
+\  ShortLimitPos := 32767;
+\  ShortLimitNeg := -32768;
+\  LoNumberMask := 65535;
+: LIT, \ n --> 
+  DUP 65535 NOT AND DUP -1 = SWAP 0 = OR IF
+   196608 + [C],
+  ELSE
+   DUP 
+    16 0 DO SHR LOOP 131072 + [C],
+    65535 AND 65536 + [C],
+  THEN
+;
+
+: Eval \ addr --> res
+ Tib !
+ 0 TibPos !
+ 0 Error !
+ BEGIN
+  Error @ IF EXIT THEN
+  NextWord NOT IF EXIT THEN
+  FindToken TokenID !
+  TokenID @ 0> IF
+   TokenID @ >func @
+   TokenID @ >imm @ isInterpret OR IF EXECUTE ELSE COMPILE THEN
+  ELSE
+   Word StrToInt isCompile IF LIT, THEN
+   StrToIntError @ IF ConvertionError ; THEN
+  THEN
+ AGAIN
+;
+
+: CopyToTop \ addr --> addr-top
+ HERE @ SWAP 1 -
+ BEGIN
+  1 +
+  DUP @ , 
+  DUP @ 0 =
+ UNTIL
+ DROP
+;
+
+: @NOP NOP ;
+: @I I ;
+: @R> R> ;
+// : @TEMP> TEMP> ;
+: @DEPTH DEPTH ;
+: @RDEPTH RDEPTH ;
+: @DUP DUP ;
+: @OVER OVER ;
+: @EXIT EXIT ;
+: @@ @ ;
+: @NOT NOT ;
+: @SHL SHL ;
+: @SHR SHR ;
+: @SHRA SHRA ;
+: @INPORT INPORT ;
+: @>R >R ;
+: @DROP DROP ;
+: @NIP NIP ;
+: @+ + ;
+: @- - ;
+: @AND AND ;
+: @OR OR ;
+: @XOR XOR ;
+: @= = ;
+: @< < ;
+: @> > ;
+: @! ! ;
+: @OUTPORT OUTPORT ;
+: @[C]! [C]! ;
+: @* * ;
+
+: OnlyForCompilingError
+ 2 Error !
+ TibPos @ 1 + 24 GOTOXY
+ RED SETCOLOR
+ " ^ " PRINT
+ " Only for compiling mode" PRINT
+ SCREEN_UP
+;
+
+: @DO 
+ isInterpret IF
+  OnlyForCompilingError
+ ELSE
+  114 [C], 
+ THEN
+;
+: @LOOP 
+ isInterpret IF
+  OnlyForCompilingError
+ ELSE
+  34 [C], 
+ THEN
+;
+
+\ управл€ющие конструкции
+
+: UnderflowControlStack
+ 3 Error !
+ TibPos @ 1 + 24 GOTOXY
+ RED SETCOLOR
+ " ^ " PRINT
+ " Underflow control stack" PRINT
+ SCREEN_UP
+;
+
+: @Create 
+ NextWord DROP
+ Word CopyToTop 0 , 0 , [C]HERE @ , LastVocWord @ , LastVocWord !
+ HERE @ LIT, 32 [C], 
+;
+
+: @Var
+ @Create 1 ALLOT
+;
+
+: @Array \ n --> 
+ @Create ALLOT
+;
+
+: @: 
+ -1 State !
+ NextWord DROP
+ Word CopyToTop 0 , 0 , [C]HERE @ , LastVocWord @ , LastVocWord !
+;
+
+: @; 
+ 0 State !
+ 32 [C],
+;
+
+\ addr source
+ARRAY ControlStack 256
+VARIABLE CSP
+: sIF 1 ;
+: sELSE 2 ;
+: sBEGIN 3 ;
+
+: @IF
+ isInterpret IF OnlyForCompilingError ELSE
+  [C]HERE @ ControlStack CSP @ +     !
+        sIF ControlStack CSP @ + 1 + !
+  777 [C],
+  CSP @ 2 + CSP !
+ THEN
+;
+
+: @ELSE
+ isInterpret IF OnlyForCompilingError ELSE
+  CSP @ 2 - CSP !
+  ControlStack CSP @ + 1 + @ sIF = NOT IF UnderflowControlStack THEN
+  777 [C],
+  32768 [C]HERE @ + ControlStack CSP @ + @ [C]!
+  [C]HERE @ 1 - ControlStack CSP @ + !
+  sELSE ControlStack CSP @ + 1 + !
+  CSP @ 2 + CSP !
+ THEN
+;
+
+: @THEN
+ isInterpret IF OnlyForCompilingError ELSE
+  CSP @ 2 - CSP !
+  ControlStack CSP @ + 1 + @ DUP sIF = SWAP sELSE = OR NOT IF UnderflowControlStack THEN
+  ControlStack CSP @ + 1 + @ sIF = IF 32768 ELSE 16384 THEN
+  [C]HERE @ + ControlStack CSP @ + @ [C]!
+ THEN
+;
+
+: @BEGIN
+ isInterpret IF OnlyForCompilingError ELSE
+  [C]HERE @ ControlStack CSP @ +     !
+     sBEGIN ControlStack CSP @ + 1 + !
+  CSP @ 2 + CSP ! 
+ THEN
+;
+
+: @AGAIN
+ isInterpret IF OnlyForCompilingError ELSE
+  CSP @ 2 - CSP !
+  ControlStack CSP @ + 1 + @ sBEGIN = NOT IF UnderflowControlStack THEN
+  16384 ControlStack CSP @ + @ + [C],
+ THEN
+;
+
+: @UNTIL
+ isInterpret IF OnlyForCompilingError ELSE
+  CSP @ 2 - CSP !
+  ControlStack CSP @ + 1 + @ sBEGIN = NOT IF UnderflowControlStack THEN
+  32768 ControlStack CSP @ + @ + [C],
+ THEN
+;
+
+: Reset
+ StartDP @    HERE !
+ StartCP @ [C]HERE !
+;
+\ *********************************************** end of TiF_core
+: HERE-PRINT
+ " CP=" PRINT [C]HERE @ . 
+ " DP=" PRINT    HERE @ .
+ WAIT
+;
+
+: FORTH_PRINT // :)
+ GREEN SETCOLOR
+ BLACK SETBGCOLOR 
+ 23 1 GOTOXY 0b11111101111110111111011111101100 0b10000000000000000000000000000000 BIGPRINT 0xAB EMIT 0xAB EMIT
+ 23 2 GOTOXY 0b11000001100110110011000110001100 0b10000000000000000000000000000000 BIGPRINT 0xAB EMIT 0xAB EMIT
+ 23 3 GOTOXY 0b11110001100110111100000110001111 0b10000000000000000000000000000000 BIGPRINT 0xAB EMIT 0xAB EMIT
+ 23 4 GOTOXY 0b11000001100110110011000110001100 0b10000000000000000000000000000000 BIGPRINT 0xAB EMIT 0xAB EMIT
+ 23 5 GOTOXY 0b11000001111110110011000110001100 0b10000000000000000000000000000000 BIGPRINT 0xAB EMIT 0xAB EMIT
+ 32 6 GOTOXY " Tiger Forth (TiF v1.2.0)" PRINT   
+;
+
+: welcome
+ CLS
+ FORTH_PRINT
+ 0 24 GOTOXY " > " PRINT 
+;
+
+ARRAY strbuf 256
+VARIABLE strpos
+: ComLOOP
+ 0 strpos !
+ BEGIN
+  CHECKCOM IF
+   GETCOMDATA
+   COMDATA @ strbuf strpos @ + !
+   strpos @ 1 + strpos !
+   COMDATA @ 0 = IF
+    0 strpos !
+    strbuf LCD_PRINT
+    30000000 0 DO LOOP
+    LCD_CLS
+    strbuf Eval        
+   THEN   
+  THEN 
+ AGAIN
+;
+
+: PRINT-STACK
+ 1 24 GOTOXY
+ GREEN SETCOLOR 
+ DEPTH 0 = IF " Stack is empty" PRINT SCREEN_UP ; THEN
+ DEPTH 1 = IF DUP . SCREEN_UP ; THEN
+ DEPTH 1 > IF 
+   OVER . 
+   DUP .
+  SCREEN_UP   
+ ; THEN
+;
+
+: KeyLOOP
+ 0 strpos !  
+ BEGIN  
+  CHECKKEY
+  KeyDown @ IF
+   KEYDATA @ 13 = IF
+    SCREEN_UP 
+    strbuf Eval
+    isInterpret IF PRINT-STACK THEN
+    0 strpos !
+    0 strbuf strpos @ + !
+    0 KEYDATA !     
+   THEN
+   KEYDATA @  8 = IF 
+    strpos @ 1 - DUP 0< IF DROP 0 THEN strpos !
+    0 strbuf strpos @ + !
+    0 KEYDATA !    
+   THEN
+   KEYDATA @ 0> KEYDATA @ 256 < AND IF 
+    KEYDATA @ strbuf strpos @ + !
+    strpos @ 1 + strpos !
+    0 strbuf strpos @ + !
+   THEN
+   0 24 GOTOXY 80 0 DO 32 EMIT LOOP
+   GREEN SETCOLOR
+   0 24 GOTOXY " > " PRINT strbuf PRINT 
+   THEN
+ AGAIN
+;
+
+VARIABLE count
+: ScanCodeLOOP
+LCD_CLS
+0 count !
+BEGIN
+ 203 INPORT IF
+  202 INPORT ScanCode ! 
+  0 202 OUTPORT  
+  count @ 1 + count !
+  count @ 7 AND 0 = IF LCD_CR THEN
+  
+  ScanCode @ HEXPRINTBYTE
+  ScanCode @ 118 = IF LCD_CLS 0 count ! THEN  
+ THEN
+AGAIN
+;
+
+: KeyboardTest
+ BEGIN
+  CHECKKEY
+  LCD_HOME
+  lShift @ HEXPRINTBYTE 32 LCD_EMIT
+  rShift @ HEXPRINTBYTE 32 LCD_EMIT
+   lCtrl @ HEXPRINTBYTE 32 LCD_EMIT
+   rCtrl @ HEXPRINTBYTE 32 LCD_EMIT 
+   isEng @ HEXPRINTBYTE 32 LCD_EMIT LCD_CR
+    lAlt @ HEXPRINTBYTE 32 LCD_EMIT
+    rAlt @ HEXPRINTBYTE 32 LCD_EMIT
+    KEYDATA @ LCD_EMIT
+ AGAIN
+;
+
+: ForthWord \ addr func -->
+ SWAP CopyToTop 0 , 0 , SWAP , LastVocWord @ , LastVocWord !
+;
+
+: ImmWord
+ SWAP CopyToTop 0 , -1 , SWAP , LastVocWord @ , LastVocWord !
+;
+
+ARRAY Matrix 512
+VARIABLE HeightLine
+// x 8bit y 8bit
+: MatrixInit
+ 512 0 DO
+  0xFFFFFFFF Matrix I + !
+ LOOP
+ 10 HeightLine !
+;
+
+VARIABLE curx
+VARIABLE cury
+VARIABLE curlen
+: GetSym // ix -->
+ DUP 0< NOT OVER 512 < AND IF
+  Matrix + @ 
+  DUP 0x000000FF AND cury !
+  DUP 0x0000FF00 AND 8 0 DO SHR LOOP curx !
+  DUP 0x00FF0000 AND 16 0 DO SHR LOOP curlen !
+  DROP          
+ ELSE
+  DROP
+ THEN
+;
+
+VARIABLE curaddr
+: PutSym // len x y ix -->
+ DUP 0< NOT OVER 512 < AND IF
+  Matrix + curaddr ! // len x y
+  0xFF AND SWAP 
+  0xFF AND 8 0 DO SHL LOOP OR SWAP
+  0xFF AND 16 0 DO SHL LOOP OR 
+  curaddr @ !  
+ ELSE
+  DROP DROP DROP
+ THEN
+;
+
+VARIABLE res
+: InScreen // x y --> 0|-1
+ DUP 0< NOT SWAP 25 < AND IF -1 ELSE 0 THEN SWAP
+ DUP 0< NOT SWAP 80 < AND IF -1 ELSE 0 THEN AND
+;
+
+: MatrixShow
+ 256 0 DO
+  I GetSym
+  curx @ 0xFF = NOT IF   
+   curlen @ 0 OVER OVER > IF DO
+    curx @ cury @ I - InScreen IF
+     I IF GREEN ELSE WHITE THEN SETCOLOR
+     I IF BLACK ELSE GREEN THEN SETBGCOLOR
+     curx @ cury @ I - GOTOXY
+     256 RANDOM EMIT 
+    THEN    
+   LOOP ELSE DROP DROP THEN   
+   curx @ cury @ curlen @ - InScreen IF
+    BLACK SETBGCOLOR
+    curx @ cury @ curlen @ - GOTOXY
+    32 EMIT
+   THEN
+  THEN
+ LOOP
+;
+
+: MatrixNewborn
+ 80 0 DO
+  1000 RANDOM 10 < IF
+   -1
+   BEGIN
+    1 +
+    DUP GetSym curx @ 0xFF =
+    OVER 256 = OR UNTIL
+   DUP 256 = IF
+    DROP
+   ELSE
+    5 15 RANDOM + SWAP I SWAP 0 SWAP PutSym
+   THEN           
+  THEN
+ LOOP
+;
+
+: MatrixDown
+ 256 0 DO
+  I GetSym
+  curx @ 0xFFFF = NOT IF
+   1000 RANDOM 330 < IF // 33%
+    cury @ 1 + cury !
+    cury @ 80 curlen @ + > IF 0xFF curx ! THEN
+    curlen @ curx @ cury @ I PutSym
+   THEN   
+  THEN
+ LOOP
+;
+
+: MATRIX
+ 0 310 OUTPORT
+ MatrixInit
+ BEGIN
+  MatrixNewborn
+  MatrixDown
+  MatrixShow  
+ AGAIN
+;
+
+: Tif_Init
+ -1 LastVocWord !
+ " BLACK"   ' BLACK    ForthWord
+ " RED"     ' RED      ForthWord
+ " GREEN"   ' GREEN    ForthWord
+ " YELLOW"  ' YELLOW   ForthWord
+ " BLUE"    ' BLUE     ForthWord
+ " PURPLE"  ' PURPLE   ForthWord
+ " CYAN"    ' CYAN     ForthWord
+ " WHITE"   ' WHITE    ForthWord
+
+ " NOP"     ' @NOP     ForthWord
+ " I"       ' @I       ForthWord
+ " R>"      ' @R>      ForthWord
+// " TEMP>"   ' @TEMP>   ForthWord
+ " DEPTH"   ' @DEPTH   ForthWord
+ " RDEPTH"  ' @RDEPTH  ForthWord
+ " DUP"     ' @DUP     ForthWord
+ " OVER"    ' @OVER    ForthWord 
+ " EXIT"    ' @EXIT    ForthWord 
+ " @"       ' @@       ForthWord 
+ " NOT"     ' @NOT     ForthWord 
+ " SHL"     ' @SHL     ForthWord 
+ " SHR"     ' @SHR     ForthWord 
+ " SHRA"    ' @SHRA    ForthWord 
+ " INPORT"  ' @INPORT  ForthWord 
+ " >R"      ' @>R      ForthWord 
+ " DROP"    ' @DROP    ForthWord 
+ " NIP"     ' @NIP     ForthWord 
+ " +"       ' @+       ForthWord 
+ " -"       ' @-       ForthWord 
+ " AND"     ' @AND     ForthWord 
+ " OR"      ' @OR      ForthWord 
+ " XOR"     ' @XOR     ForthWord
+ " ="       ' @=       ForthWord 
+ " <"       ' @<       ForthWord 
+ " >"       ' @>       ForthWord 
+ " !"       ' @!       ForthWord 
+ " OUTPORT" ' @OUTPORT ForthWord 
+ " [C]!"    ' @[C]!    ForthWord 
+ " *"       ' @*       ForthWord
+ " DO"      ' @DO      ImmWord
+ " LOOP"    ' @LOOP    ImmWord
+
+ " 10*"     ' 10*      ForthWord
+ " /MOD"    ' /MOD     ForthWord
+ " /"       ' /        ForthWord
+ " MOD"     ' MOD      ForthWord
+
+ " CREATE"   ' @Create ForthWord
+ " VARIABLE" ' @Var    ForthWord
+ " ARRAY"    ' @Array  ForthWord
+ " :"        ' @:      ForthWord
+ " ;"        ' @;      ImmWord
+ " IF"       ' @IF     ImmWord
+ " ELSE"     ' @ELSE   ImmWord
+ " THEN"     ' @THEN   ImmWord
+ " BEGIN"    ' @BEGIN  ImmWord
+ " AGAIN"    ' @AGAIN  ImmWord
+ " UNTIL"    ' @UNTIL  ImmWord
+
+ " HERE"       ' @HERE       ForthWord 
+ " [C]HERE"    ' @[C]HERE    ForthWord 
+ " ,"          ' ,           ForthWord 
+ " [C],"       ' [C],        ForthWord 
+ " ALLOT"      ' ALLOT       ForthWord 
+ " [C]ALLOT"   ' [C]ALLOT    ForthWord
+ " INVERT"     ' INVERT      ForthWord
+ " WAIT"       ' WAIT        ForthWord
+ " SWAP"       ' SWAP        ForthWord
+
+ " CHECKKEY"   ' CHECKKEY    ForthWord
+
+ " LCD-COMMAND" ' LCD-COMMAND ForthWord
+ " LCD-DATA"   ' LCD-DATA    ForthWord
+ " LCD_EMIT"   ' LCD_EMIT    ForthWord
+ " LCD-CMD"    ' LCD-CMD     ForthWord
+ " LCD_CLS"    ' LCD_CLS     ForthWord
+ " LCD_HOME"   ' LCD_HOME    ForthWord
+ " LCD_CR"     ' LCD_CR      ForthWord
+ " LCD_CURSOR" ' LCD_CURSOR  ForthWord
+
+ " CHECKCOM"   ' CHECKCOM    ForthWord
+ " GETCOMDATA" ' GETCOMDATA  ForthWord
+ " ->COM"      ' ->COM       ForthWord
+ " ->COM16"    ' ->COM16     ForthWord
+ " ->COM32"    ' ->COM32     ForthWord
+ " COM-INIT"   ' COM-INIT    ForthWord
+ 
+ " >DIGIT"     ' >DIGIT      ForthWord
+ " HEXPRINT"   ' HEXPRINT    ForthWord
+ " HEXPRINTBYTE" ' HEXPRINTBYTE ForthWord
+ " HEXPRINTWORD" ' HEXPRINTWORD ForthWord
+ " -1"         ' -1          ForthWord
+ " 0<"         ' 0<          ForthWord
+ " 0>"         ' 0>          ForthWord
+ " IntToStr"   ' IntToStr    ForthWord 
+ " StrToInt"   ' StrToInt    ForthWord
+ " StrLen"     ' StrLen      ForthWord
+ " SMOVE"      ' SMOVE       ForthWord
+ " LCD_PRINT"  ' LCD_PRINT   ForthWord
+ " Spaces"     ' Spaces      ForthWord
+ " Symbols"    ' Symbols     ForthWord
+ " ."          ' .           ForthWord
+ 
+ " PassSpaces" ' PassSpaces  ForthWord
+ " CutWord"    ' CutWord     ForthWord
+ " NextWord"   ' NextWord    ForthWord
+ " >name"      ' >name       ForthWord
+ " >tag"       ' >tag        ForthWord
+ " >imm"       ' >imm        ForthWord
+ " >func"      ' >func       ForthWord
+ " >prev"      ' >prev       ForthWord
+ " StrCmp"     ' StrCmp      ForthWord
+ " FindToken"  ' FindToken   ForthWord
+ " ERROR"      ' ERROR       ForthWord
+ " isInterpret" ' isInterpret ForthWord
+ " isCompile"  ' isCompile   ForthWord
+ " EXECUTE"    ' EXECUTE     ForthWord
+ " COMPILE"    ' COMPILE     ForthWord
+ " LIT,"       ' LIT,        ForthWord
+ " Eval"       ' Eval        ForthWord 
+
+ " CopyToTop"  ' CopyToTop   ForthWord
+ " RESET"      ' Reset       ForthWord
+ " HERE-PRINT" ' HERE-PRINT  ForthWord
+ " welcome"    ' welcome     ForthWord
+ " ComLOOP"    ' ComLOOP     ForthWord
+ " PRINT-STACK" ' PRINT-STACK ForthWord
+ " KeyLOOP"    ' KeyLOOP     ForthWord
+ " ScanCodeLOOP" ' ScanCodeLOOP ForthWord
+ " KeyboardTest" ' KeyboardTest ForthWord
+ " ForthWord"  ' ForthWord   ForthWord
+ " ImmWord"    ' ImmWord     ForthWord
+
+ " VGA_SetData"      ' VGA_SetData      ForthWord
+ " VGA_SetAddr"      ' VGA_SetAddr      ForthWord
+ " VGA_SetLowLevel"  ' VGA_SetLowLevel  ForthWord
+ " VGA_GetData"      ' VGA_GetData      ForthWord
+ " VGA_SetData(A++)" ' VGA_SetData(A++) ForthWord 
+ " GOTOX"      ' GOTOX       ForthWord
+ " GOTOY"      ' GOTOY       ForthWord
+ " GOTOXY"     ' GOTOXY      ForthWord
+ " SETCOLOR"   ' SETCOLOR    ForthWord    
+ " SETBGCOLOR" ' SETBGCOLOR  ForthWord
+ " EMIT"       ' EMIT        ForthWord
+ " PRINT"      ' PRINT       ForthWord
+ " CR"         ' CR          ForthWord
+ " CLS"        ' CLS         ForthWord
+ " SCREEN_UP"  ' SCREEN_UP   ForthWord
+ " BIGPRINT"   ' BIGPRINT    ForthWord
+
+ " FORTH_PRINT" ' FORTH_PRINT ForthWord
+ " RANDOMIZE"   ' RANDOMIZE   ForthWord
+ " RANDOM"      ' RANDOM      ForthWord
+ 
+ " MATRIX"      ' MATRIX      ForthWord
+ " InScreen"    ' InScreen    ForthWord
+ " PutSym"      ' PutSym      ForthWord
+ " GetSym"      ' GetSym      ForthWord                     
+
+    HERE @ StartDP !
+ [C]HERE @ StartCP !
+ 0 State !
+ 0 CSP !
+;
+
+MAIN:
+
+LCD-INIT
+Tif_Init
+85 3010 OUTPORT
+0 3010 OUTPORT
+
+NewMAIN:
+RANDOMIZE
+170 3010 OUTPORT
+0 3010 OUTPORT
+
+INIT_KEYBOARD
+LCD-INIT
+COM-INIT
+init
+welcome
+63 3010 OUTPORT
+\ ComLOOP
+\ KeyLOOP
+\ ScanCodeLOOP
+\ KeyboardTest
+BEGIN AGAIN

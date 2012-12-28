@@ -873,7 +873,7 @@ begin
     begin
       res := MessageBox(0,
         pchar('Файл "' + _FileName + '" уже открыт.' +#13#10+
-              'Повторно открыть его (изменения будут утеряны)?'),
+              'Повторно открыть его (изменения будут потеряны)?'),
         'Вопрос',
         MB_ICONQUESTION or MB_YESNO);
       if res = mrYes then
