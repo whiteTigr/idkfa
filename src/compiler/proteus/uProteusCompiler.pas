@@ -144,6 +144,7 @@ type
     function isInterpreting: boolean;
 
     function GetLastNumber: integer;
+    function GetLastString: string;
 
     procedure DeleteCode(fromPos, toPos: integer);
     procedure CorrectJumps(delPos, delCount: integer);
@@ -930,6 +931,12 @@ begin
   Result := LastNumber;
 end;
 
+function TProteusCompiler.GetLastString: string;
+begin
+
+  Result := LastString;
+end;
+
 function TProteusCompiler.GetLiteralPos(from: integer): integer;
 var
   pos: integer;
@@ -1303,7 +1310,7 @@ var
   fileName: string;
   str: string;
 begin
-  fileName := LastString;
+  fileName := GetLastString;
 
   if uGlobal.FilePath <> '' then
   begin
@@ -1319,12 +1326,15 @@ begin
 
   AssignFile(inputFile, str);
   Reset(inputFile);
-  while not EoF(inputFile) and (LastError = 0) do
-  begin
-    readln(inputFile, str);
-    Evaluate(str);
+  try
+    while not EoF(inputFile) and (LastError = 0) do
+    begin
+      readln(inputFile, str);
+      Evaluate(str);
+    end;
+  finally
+    CloseFile(inputFile);
   end;
-  CloseFile(inputFile);
 end;
 
 procedure TProteusCompiler._Interpret;
