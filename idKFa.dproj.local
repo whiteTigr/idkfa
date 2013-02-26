@@ -26,6 +26,8 @@
     <File Path="src\compiler\proteus\uProteusSoftDebuger.pas"/>
     <File Path="src\compiler\proteus\uProteusComModel.pas"/>
     <File Path="src\compiler\proteus\uProteusComModel.dfm"/>
+    <File Path="src\compiler\proteus\uProteusDownloader.pas"/>
+    <File Path="src\compiler\proteus\uProteusDownloader.dfm"/>
     <File Path="src\compiler\quark"/>
     <File Path="src\compiler\quark\uQuarkCompiler.pas"/>
     <File Path="src\compiler\quark\uQuarkDevice.pas"/>

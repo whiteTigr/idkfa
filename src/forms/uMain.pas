@@ -524,12 +524,12 @@ begin
   mmCode[PageIndex].SetFocus;
 
   if compiled then
-  uSimulator.Prepare;
+    uSimulator.Prepare;
 end;
 
 procedure TfMain.GotoDownloadExecute(Sender: TObject);
 begin
-  FormDownload.Showmodal;
+  FormDownload.ShowModal;
 end;
 
 procedure TfMain.ExportCoeExecute(Sender: TObject);

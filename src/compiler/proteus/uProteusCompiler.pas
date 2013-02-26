@@ -93,6 +93,9 @@ type
     LastNumberSize: integer;
 
     LastString: string;
+    LastStringTempCodeSize: integer;
+    LastStringCodeSize: integer;
+    LastStringDataSize: integer;
 
     FHere: integer;
     FCHere: integer;
@@ -166,11 +169,13 @@ type
     procedure _UNTIL;
     procedure _WHILE;
     procedure _REPEAT;
-    procedure _CREATE;
+    procedure _PROC;
+    procedure _CompilePROC;
     procedure _RET;
     procedure _CompileCall;
     procedure _CompileInline;
     procedure _VARIABLE;
+    procedure _CREATE;
     procedure _ARRAY;
     procedure _VariableProc;
     procedure _VarChange;
@@ -194,7 +199,7 @@ type
     procedure AddForthToken(name: string; tag: integer);
     procedure AddCmd2Token(name: string; tag: integer);
     procedure AddCmd3Token(name: string; tag: integer);
-    function AddVariable(name: string): integer;
+    function AddVariable(name: string; size: integer = 1): integer;
     procedure AddVarChange(name: string; _var: pointer);
 
     function Code(pos: integer): integer; override;
@@ -239,7 +244,9 @@ const
   errInvalideNumber = 7;
   errUnknownToken = 8;
   errControlMismatch = 9;
-  errCount = 10;
+  errFileNotFound = 10;
+  errControlStackNotEmpty = 11;
+  errCount = 12;
 
   ErrorMessage: array[0..errCount-1] of record
     code: integer;
@@ -254,8 +261,13 @@ const
    (code: errDataMemoryIsFull; msg: 'Data memory is full'),
    (code: errInvalideNumber; msg: 'Invalide number'),
    (code: errUnknownToken; msg: 'Unknown token'),
-   (code: errControlMismatch; msg: 'Control mismatch')
+   (code: errControlMismatch; msg: 'Control mismatch'),
+   (code: errFileNotFound; msg: 'File not found'),
+   (code: errControlStackNotEmpty; msg: 'Control stack not empty')
   );
+
+  stCompiling = 1;
+  stInterpreting = 0;
 
 function TokenWord(name: string; tag: integer; immediate: boolean; proc: TProc): TTokenWord;
 function ControlStackCell(addr: integer; source: integer): TControlStackCell;
@@ -365,7 +377,7 @@ end;
 procedure TProteusCompiler.CompileNumber(_value: integer; ToTempCode: boolean = false);
 var
   value: integer;
-  buffer: array[0..7] of integer;
+  buffer: array[0..8] of integer;
   wrongPositive: boolean;
   wrongNegative: boolean;
   needCorrectSignExtention: boolean;
@@ -589,12 +601,12 @@ begin
   AddSynlightWord(name, tokDict);
 end;
 
-function TProteusCompiler.AddVariable(name: string): integer;
+function TProteusCompiler.AddVariable(name: string; size: integer = 1): integer;
 begin
   AddToken(TokenWord(name, DP, true, _VariableProc));
   AddSynlightWord(name, tokVar);
   Result := DP;
-  inc(DP);
+  inc(DP, size);
 end;
 
 procedure TProteusCompiler.InitBasicCommands;
@@ -632,6 +644,7 @@ begin
   AddForthToken('RIF', cmdRIF);
   AddForthToken('UNTIL', cmdUNTIL);
   AddImmToken(';', _RET);
+  AddImmToken('ENDPROC', _RET);
   AddForthToken('EXIT', cmdRET);
   AddForthToken('RET', cmdRET);
 
@@ -646,8 +659,10 @@ begin
   AddImmToken('WHILE', _While);
   AddImmToken('REPEAT', _Repeat);
   AddImmToken('UNTIL', _Until);
-  AddImmToken(':', _Create);
+  AddImmToken('PROC', _CompilePROC);
+  AddImmToken(':', _CompilePROC);
   AddImmToken('VARIABLE', _Variable);
+  AddImmToken('CREATE', _CREATE);
   AddImmToken('ARRAY', _Array);
   AddImmToken('CMD', _AddCmd);
   AddImmToken('INLINE', _Inline);
@@ -678,12 +693,12 @@ end;
 
 function TProteusCompiler.isCompiling: boolean;
 begin
-  Result := State <> 0;
+  Result := State <> stInterpreting;
 end;
 
 function TProteusCompiler.isInterpreting: boolean;
 begin
-  Result := not isCompiling;
+  Result := State = stInterpreting;
 end;
 
 procedure TProteusCompiler.BeginInitCommandSystem;
@@ -933,7 +948,9 @@ end;
 
 function TProteusCompiler.GetLastString: string;
 begin
-
+  dec(CP, LastStringCodeSize);
+  dec(TCP, LastStringTempCodeSize);
+  dec(DP, LastStringDataSize);
   Result := LastString;
 end;
 
@@ -1105,6 +1122,7 @@ begin
       ReserveCodeForNumber(integer($80000000)); // reserve code for max number
       Compile(cmdNOP);
       CompileNumber(FVocabulary[tmp].tag);
+      Compile(cmdNOP);
       Compile(cmdStore);
     end;
   end;
@@ -1184,6 +1202,7 @@ var
   begin
     CompileNumber(integer(value), true);
     CompileNumber(DP, true);
+    Compile(cmdNop, true);
     Compile(cmdSTORE, true);
     FData[DP].value := integer(value);
     inc(DP);
@@ -1193,6 +1212,9 @@ begin
   begin
     addr := DP;
     LastString := '';
+    LastStringTempCodeSize := TCP;
+    LastStringCodeSize := CP;
+    LastStringDataSize := DP;
     repeat
       CompileCharacter(tib[tibPos]);
       LastString := LastString + tib[tibPos];
@@ -1201,19 +1223,32 @@ begin
     IncTibPos;
 
     CompileNumber(addr);
+    LastStringTempCodeSize := TCP - LastStringTempCodeSize;
+    LastStringCodeSize := CP - LastStringCodeSize;
+    LastStringDataSize := DP - LastStringDataSize;
   end;
 end;
 
-procedure TProteusCompiler._Create;
+procedure TProteusCompiler._PROC;
 begin
   ParseToken;
   AddToken(TokenWord(Parser.token, CP, true, _CompileCall));
   AddSynlightWord(Parser.token, tokDict);
+end;
+
+procedure TProteusCompiler._CompilePROC;
+begin
+  _PROC;
   State := 1; // compiling
 end;
 
 procedure TProteusCompiler._RET;
 begin
+  if ControlStackTop > 0 then
+  begin
+    Error(errControlStackNotEmpty);
+    Exit;
+  end;
   State := 0; // interpreting
   Compile(cmdRet);
 end;
@@ -1243,6 +1278,12 @@ procedure TProteusCompiler._VARIABLE;
 begin
   ParseToken;
   AddVariable(Parser.token);
+end;
+
+procedure TProteusCompiler._CREATE;
+begin
+  ParseToken;
+  AddVariable(Parser.token, 0);
 end;
 
 procedure TProteusCompiler._ARRAY;
@@ -1312,17 +1353,22 @@ var
 begin
   fileName := GetLastString;
 
-  if uGlobal.FilePath <> '' then
+  if FilePath <> '' then
   begin
     str := FilePath + fileName;
     if not FileExists(str) then
       str := '';
-  end
-  else
-    str := '';
+  end;
 
   if str = '' then
+  begin
     str := ExePath + fileName;
+    if not FileExists(str) then
+    begin
+      Error(errFileNotFound);
+      Exit;
+    end;
+  end;
 
   AssignFile(inputFile, str);
   Reset(inputFile);
@@ -1345,8 +1391,7 @@ end;
 
 procedure TProteusCompiler._Z;
 begin
-  dec(CP, LastNumberSize);
-  Compile(LastNumber and $3F);
+  Compile(GetLastNumber and $3F);
 end;
 
 procedure TProteusCompiler._WriteCode;
@@ -1355,8 +1400,7 @@ var
 begin
   if isInterpreting then
   begin
-    FCode[CP].value := GetLastNumber;
-    inc(CP);
+    Compile(GetLastNumber and $3F);
   end
   else
   begin

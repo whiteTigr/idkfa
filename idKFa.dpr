@@ -33,7 +33,8 @@ uses
   uQuarkDevice in 'src\compiler\quark\uQuarkDevice.pas' {fQuarkDevice},
   uSimVga in 'src\simforms\uSimVga.pas' {fSimVga},
   uLed in 'src\simforms\uLed.pas' {fLed},
-  uComModel in 'src\simforms\uComModel.pas' {fComModel};
+  uComModel in 'src\simforms\uComModel.pas' {fComModel},
+  uProteusDownloader in 'src\compiler\proteus\uProteusDownloader.pas' {fProteusDownloader};
 
 {$R *.res}
 
