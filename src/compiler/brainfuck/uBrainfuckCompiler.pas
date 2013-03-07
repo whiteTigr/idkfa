@@ -24,7 +24,7 @@ type
   public
     constructor Create;
     procedure InitVocabulary;
-    function Dizasm(cmd: integer): string; override;
+    function DizasmCmd(cmd: integer): string; override;
   end;
 
 implementation
@@ -67,7 +67,7 @@ begin
   InitVocabulary;
 end;
 
-function TBrainfuckCompiler.Dizasm(cmd: integer): string;
+function TBrainfuckCompiler.DizasmCmd(cmd: integer): string;
 const
   CmdToChar: array[0..7] of char = '+-><[],.';
 var

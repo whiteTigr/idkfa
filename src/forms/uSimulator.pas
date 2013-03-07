@@ -160,7 +160,7 @@ begin
   posY := 1 + position div 16;
   case fSimulator.rgCodeBase.ItemIndex of
     0: fSimulator.sgCode.Cells[posX, posY] := IntToHex(newValue, 5);
-    1: fSimulator.sgCode.Cells[posX, posY] := compiler.DizAsm(newValue);
+    1: fSimulator.sgCode.Cells[posX, posY] := compiler.DizAsmCmd(newValue);
   end;
   fSimulator.sgCode.Objects[posX, posY] := TObject(newValue);
   RedrawCode(posX, posY);
@@ -239,7 +239,7 @@ begin
       case fSimulator.rgCodeBase.ItemIndex of
         0: Cells[1 + i mod 16, 1 + i div 16] := IntToHex(debuger.Code[i], 0);
         1: Cells[1 + i mod 16, 1 + i div 16] := IntToStr(debuger.Code[i]);
-        2: Cells[1 + i mod 16, 1 + i div 16] := compiler.DizAsm(debuger.Code[i]);
+        2: Cells[1 + i mod 16, 1 + i div 16] := compiler.DizAsmCmd(debuger.Code[i]);
       end;
       Objects[1 + i mod 16, 1 + i div 16] := TObject(debuger.Code[i]);
     end;

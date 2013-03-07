@@ -210,7 +210,7 @@ type
     function DataCount: integer; override;
     function MaxData: integer; override;
 
-    function Dizasm(cmd: integer): string; override;
+    function DizasmCmd(cmd: integer): string; override;
     function GetCmdColor(cmd: integer): cardinal; override;
 
     procedure Evaluate(const tib: string); override;
@@ -1387,6 +1387,7 @@ procedure TProteusCompiler._Interpret;
 begin
   CompileNumber(CP, true);
   Compile(cmdCALL, true);
+  State := 1; // compiling
 end;
 
 procedure TProteusCompiler._Z;
@@ -1526,7 +1527,7 @@ begin
 end;
 
 
-function TProteusCompiler.Dizasm(cmd: integer): string;
+function TProteusCompiler.DizasmCmd(cmd: integer): string;
 var
   WordID: integer;
   WordS: string;
@@ -1535,6 +1536,7 @@ begin
   case cmd of
     cmdNOP: Result := 'NOP';
     cmdRET: Result := 'RET';
+    cmdSTORE: Result := '!';
     $20..$3F: Result := IntToHex(cmd and LitMask, 0);
     else
       WordID := FindWord(cmd);

@@ -154,7 +154,7 @@ type
     function Code(pos: integer): integer; override;
     function CodeCount: integer; override;
     function MaxCode: integer; override;
-    function Dizasm(cmd: integer): string; override;
+    function DizasmCmd(cmd: integer): string; override;
     function GetCmdColor(cmd: integer): cardinal; override;
 
     function GetHerePosition: integer;
@@ -818,7 +818,7 @@ begin
     end;
 end;
 
-function TForthCompiler.Dizasm(cmd: integer): string;
+function TForthCompiler.DizasmCmd(cmd: integer): string;
 var
   WordID: integer;
   WordS: string;

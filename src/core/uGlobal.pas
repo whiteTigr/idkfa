@@ -6,8 +6,8 @@ uses
   Windows, Messages, Sysutils, Classes, uRecordList;
 
 const
-  MaxCode = 1024 * 16;
-  MaxData = 1024 * 16;
+  MaxCode = 1024 * 128;
+  MaxData = 1024 * 128;
 
 type
   TDeviceType =
@@ -94,12 +94,14 @@ type
     function Code(pos: integer): integer; virtual;
     // * Сколько скомпилировано кода
     function CodeCount: integer; virtual;
-    // Дизасемблирование отдельной команды, взятой по Code(i)
-    function Dizasm(cmd: integer): string; virtual;
     // Получение цвета команды (для симулятора)
     function GetCmdColor(cmd: integer): cardinal; virtual;
     // Максимальный размер памяти кода
     function MaxCode: integer; virtual;
+    // Дизасемблирование отдельной команды с кодом cmd
+    function DizasmCmd(cmd: integer): string; virtual;
+    // Дизасемблирование отдельной команды по адресу addr
+    function DizasmAddr(addr: integer): string; virtual;
 
     // Получение данных по адресу
     function Data(pos: integer): integer; virtual;
@@ -111,7 +113,7 @@ type
     // * Обработка строки
     procedure Evaluate(const tib: string); virtual;
     // or
-    // * Обработка всего файла
+    // * Обработка всего файла, в этом случае дополнительно нужно сбросить флаг hasEvaluate
     procedure EvaluateFile(const fileName: string); virtual;
 
     // Вызывается перед компиляцией
@@ -301,9 +303,14 @@ begin
   Result := 0;
 end;
 
-function TTargetCompiler.Dizasm(cmd: integer): string;
+function TTargetCompiler.DizasmCmd(cmd: integer): string;
 begin
   Result := IntToHex(cmd, 0);
+end;
+
+function TTargetCompiler.DizasmAddr(addr: integer): string;
+begin
+  Result := DizasmCmd(Code(addr));
 end;
 
 function TTargetCompiler.GetCmdColor(cmd: integer): cardinal;
