@@ -78,6 +78,7 @@ type
     ControlStackTop: integer;
 
     FError: integer;
+    ErrorComment: string;
 
     LineCount: integer;
     Compiled: boolean;
@@ -1378,6 +1379,11 @@ begin
       readln(inputFile, str);
       Evaluate(str);
     end;
+
+    if (LastError <> 0) then
+    begin
+      ErrorComment := 'at "' + fileName + '"';
+    end;
   finally
     CloseFile(inputFile);
   end;
@@ -1553,6 +1559,7 @@ begin
   inherited;
 
   FError := 0;
+  ErrorComment := '';
   LineCount := 0;
 
   State := 0;
@@ -1582,6 +1589,8 @@ end;
 function TProteusCompiler.LastErrorMessage: string;
 begin
   Result := GetErrorMessage;
+  if ErrorComment <> '' then
+    Result := Result + ' ' + ErrorComment;
 end;
 
 function TProteusCompiler.LastToken: string;
