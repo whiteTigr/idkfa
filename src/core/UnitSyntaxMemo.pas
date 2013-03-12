@@ -3826,6 +3826,9 @@ begin
       { } {$ENDIF}
       Lines.BeginUpdate;
 
+      // wt: снятие выделение со слова
+      SetSelectedWord(Point(-1, -1));
+
       // Старые установки
       fStart := uiSelStart;
       fEnd := uiSelEnd;

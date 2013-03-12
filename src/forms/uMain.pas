@@ -719,6 +719,7 @@ begin
     OnKeyPress := fMain.mmCodeKeyPress;
     OnParseWord := fMain.mmCodeParseWord;
     OnWordInfo := fMain.mmCodeWordInfo;
+    // OnLog := fMain.ToLog;
   end;
   InitHighlight;
 end;
@@ -1239,7 +1240,6 @@ end;
 
 initialization
   DownloadComInit;
-
 //  Assign(fLog, 'UnitSyntaxMemo.log');
 //  Rewrite(fLog);
 finalization
