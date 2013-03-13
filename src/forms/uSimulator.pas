@@ -159,8 +159,11 @@ begin
   posX := 1 + position mod 16;
   posY := 1 + position div 16;
   case fSimulator.rgCodeBase.ItemIndex of
-    0: fSimulator.sgCode.Cells[posX, posY] := IntToHex(newValue, 5);
-    1: fSimulator.sgCode.Cells[posX, posY] := compiler.DizAsmCmd(newValue);
+    0: fSimulator.sgCode.Cells[posX, posY] := IntToHex(newValue, 0);
+    1: fSimulator.sgCode.Cells[posX, posY] := IntToStr(newValue);
+    2, 3: fSimulator.sgCode.Cells[posX, posY] := compiler.DizAsmCmd(newValue);
+    // Код меняется, дизасемблер по адресу выдаст устаревшую информацию,
+    // поэтому выдаем новую (хоть и коряво расшифрованую)
   end;
   fSimulator.sgCode.Objects[posX, posY] := TObject(newValue);
   RedrawCode(posX, posY);
@@ -240,6 +243,7 @@ begin
         0: Cells[1 + i mod 16, 1 + i div 16] := IntToHex(debuger.Code[i], 0);
         1: Cells[1 + i mod 16, 1 + i div 16] := IntToStr(debuger.Code[i]);
         2: Cells[1 + i mod 16, 1 + i div 16] := compiler.DizAsmCmd(debuger.Code[i]);
+        3: Cells[1 + i mod 16, 1 + i div 16] := compiler.DizAsmAddr(i);
       end;
       Objects[1 + i mod 16, 1 + i div 16] := TObject(debuger.Code[i]);
     end;

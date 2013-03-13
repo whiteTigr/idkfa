@@ -719,6 +719,7 @@ begin
     OnKeyPress := fMain.mmCodeKeyPress;
     OnParseWord := fMain.mmCodeParseWord;
     OnWordInfo := fMain.mmCodeWordInfo;
+    // debug log, uncomment SYNDEBUG directive
     // OnLog := fMain.ToLog;
   end;
   InitHighlight;

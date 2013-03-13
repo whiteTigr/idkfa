@@ -287,14 +287,15 @@ object fSimulator: TfSimulator
             Left = 1
             Top = 1
             Width = 94
-            Height = 72
+            Height = 88
             Align = alTop
             Caption = #1055#1088#1077#1076#1089#1090#1072#1074#1083#1077#1085#1080#1077
             ItemIndex = 0
             Items.Strings = (
               'Code (hex)'
               'Code (dec)'
-              'Dizasm')
+              'DizasmCmd'
+              'DizasmAddr')
             TabOrder = 0
             OnClick = rgCodeBaseClick
           end

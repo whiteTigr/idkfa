@@ -141,6 +141,8 @@ type
     function LastCmdIsLiteral(InTempCode: boolean = false): boolean;
 
     function FindWord(tag: integer): integer;
+    function FindProcedure(tag: integer): integer;
+    function FindVariable(tag: integer): integer;
 
     procedure WritePredefinedVariables;
 
@@ -212,6 +214,7 @@ type
     function MaxData: integer; override;
 
     function DizasmCmd(cmd: integer): string; override;
+    function DizasmAddr(addr: integer): string; override;
     function GetCmdColor(cmd: integer): cardinal; override;
 
     procedure Evaluate(const tib: string); override;
@@ -856,6 +859,44 @@ begin
     begin
       Result := i;
       Exit;
+    end;
+end;
+
+function TProteusCompiler.FindProcedure(tag: integer): integer;
+var
+  i: integer;
+  CallProcedure: TProc;
+  CallCode: pointer;
+begin
+  Result := -1;
+  CallProcedure := _CompileCall;
+  CallCode := TMethod(CallProcedure).Code;
+  for i := 0 to VP-1 do
+    begin
+      if (FVocabulary[i].tag = tag) and (TMethod(FVocabulary[i].proc).Code = CallCode) then
+      begin
+        Result := i;
+        Exit;
+      end;
+    end;
+end;
+
+function TProteusCompiler.FindVariable(tag: integer): integer;
+var
+  i: integer;
+  VariableProcedure: TProc;
+  VariableCode: pointer;
+begin
+  Result := -1;
+  VariableProcedure := _VariableProc;
+  VariableCode := TMethod(VariableProcedure).Code;
+  for i := 0 to VP-1 do
+    begin
+      if (FVocabulary[i].tag = tag) and (TMethod(FVocabulary[i].proc).Code = VariableCode) then
+      begin
+        Result := i;
+        Exit;
+      end;
     end;
 end;
 
@@ -1532,7 +1573,6 @@ begin
   inherited;
 end;
 
-
 function TProteusCompiler.DizasmCmd(cmd: integer): string;
 var
   WordID: integer;
@@ -1551,6 +1591,64 @@ begin
       else
         WordS := string(FVocabulary[WordID].name);
       Result := WordS;
+  end;
+end;
+
+function TProteusCompiler.DizasmAddr(addr: integer): string;
+var
+  cmd: integer;
+  value: integer;
+  valueGetted: boolean;
+  index: integer;
+
+  procedure GetPrevLiteral;
+  var
+    cmdAddr: integer;
+  begin
+    cmdAddr := addr;
+    dec(addr);
+    while (addr > 0) and (FCode[addr].value = cmdNOP) do
+      dec(addr);
+    while (addr > 0) and CmdIsLiteral(FCode[addr].value) do
+      dec(addr);
+    inc(addr);
+
+    valueGetted := (addr < cmdAddr) and CmdIsLiteral(FCode[addr].value);
+    if valueGetted then
+      value := GetLiteralValue(addr);
+  end;
+begin
+  Result := 'Unknown';
+  cmd := Code(addr);
+  case cmd of
+    cmdSTORE, cmdFETCH:
+    begin
+      GetPrevLiteral;
+      if valueGetted then
+        index := FindVariable(value)
+      else
+        index := -1;
+
+      Result := DizasmCmd(cmd);
+      if index > 0 then
+        Result := FVocabulary[index].name + ' ' + Result;
+    end;
+
+    cmdCALL:
+    begin
+      GetPrevLiteral;
+      if valueGetted then
+        index := FindProcedure(value)
+      else
+        index := -1;
+
+      if index > 0 then
+        Result := 'C ' + FVocabulary[index].name
+      else
+        Result := 'CALL';
+    end;
+    else
+      Result := DizasmCmd(cmd);
   end;
 end;
 
