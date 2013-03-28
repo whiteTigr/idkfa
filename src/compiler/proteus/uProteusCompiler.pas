@@ -192,6 +192,8 @@ type
     procedure _Z;
     procedure _String;
 
+    procedure _DampVocabulary;
+
     procedure _WriteData;
     procedure _WriteCode;
   public
@@ -680,6 +682,8 @@ begin
 
   AddImmToken('"', _String);
 
+  AddImmToken('DampVocabulary', _DampVocabulary);
+
   FHere := AddVariable('HERE');
   FCHere := AddVariable('[C]HERE');
 
@@ -763,6 +767,12 @@ begin
   if instr[pos] = '-' then
   begin
     sign := -1;
+    inc(pos);
+  end;
+
+  if instr[pos] = '$' then
+  begin
+    base := 16;
     inc(pos);
   end;
 
@@ -989,10 +999,16 @@ begin
 end;
 
 function TProteusCompiler.GetLastString: string;
+var
+  i: integer;
 begin
   dec(CP, LastStringCodeSize);
   dec(TCP, LastStringTempCodeSize);
-  dec(DP, LastStringDataSize);
+  for i := 0 to LastStringDataSize-1 do
+  begin
+    dec(DP);
+    FData[DP].value := 0;
+  end;
   Result := LastString;
 end;
 
@@ -1306,7 +1322,7 @@ var
   i: integer;
 begin
   i := Token.tag;
-  if ((Code(i) and cmdLIT) <> 0) and ((Code(CP-1) and cmdLIT) <> 0) then
+  if CmdIsLiteral(Code(i)) and CmdIsLiteral(Code(CP-1)) then
     Compile(cmdNOP);
 
   while Code(i) <> cmdRET do
@@ -1326,6 +1342,23 @@ procedure TProteusCompiler._CREATE;
 begin
   ParseToken;
   AddVariable(Parser.token, 0);
+end;
+
+procedure TProteusCompiler._DampVocabulary;
+var
+  f: TextFile;
+  i: integer;
+begin
+  AssignFile(f, 'damp.txt');
+  Rewrite(f);
+  writeln(f,
+      format('%32s %10s %8s %5s %8s',
+      ['name', 'tag dec', 'tag hex', 'imm', 'proc']));
+  for i := 0 to VP-1 do
+    writeln(f,
+        format('%32s %10d %8x %5s %8x',
+        [FVocabulary[i].name, FVocabulary[i].tag, FVocabulary[i].tag, BoolToStr(FVocabulary[i].immediate), integer(TMethod(FVocabulary[i].proc).Code)]));
+  CloseFile(f);
 end;
 
 procedure TProteusCompiler._ARRAY;

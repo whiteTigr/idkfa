@@ -33,7 +33,6 @@ object fProteusDevice: TfProteusDevice
     Height = 126
     Align = alBottom
     TabOrder = 0
-    ExplicitTop = 343
     object SpeedButton2: TSpeedButton
       Left = 119
       Top = 6
@@ -63,8 +62,8 @@ object fProteusDevice: TfProteusDevice
       Top = 90
       Width = 91
       Height = 21
-      EditLabel.Width = 120
-      EditLabel.Height = 25
+      EditLabel.Width = 114
+      EditLabel.Height = 26
       EditLabel.Caption = #1050#1086#1084#1072#1085#1076' '#1079#1072' '#1087#1086#1089#1083#1077#1076#1085#1080#1081' StepOver'
       EditLabel.WordWrap = True
       LabelPosition = lpLeft
@@ -86,7 +85,7 @@ object fProteusDevice: TfProteusDevice
       'Ret')
     TabIndex = 0
     OnChange = tabStacksChange
-    ExplicitHeight = 308
+    ExplicitTop = 3
     object sgStack: TStringGrid
       Left = 4
       Top = 24
@@ -108,7 +107,6 @@ object fProteusDevice: TfProteusDevice
       ParentCtl3D = False
       ParentFont = False
       TabOrder = 0
-      ExplicitHeight = 209
       RowHeights = (
         16
         16
@@ -142,7 +140,6 @@ object fProteusDevice: TfProteusDevice
         'Char')
       TabOrder = 1
       OnClick = rgStackBaseClick
-      ExplicitTop = 233
     end
   end
 end

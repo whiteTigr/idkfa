@@ -1,26 +1,49 @@
-VARIABLE HERE
-VARIABLE [C]HERE
+// VARIABLE HERE
+// : ALLOT HERE @ + HERE ! ;
+// : , HERE @ ! 1 ALLOT ;
 
-: ALLOT HERE @ + HERE ! ;
-// : [C]ALLOT [C]HERE @ + [C]HERE ! ;
-: , HERE @ ! 1 ALLOT ;
-// : [C], [C]HERE @ [C]! 1 [C]ALLOT ;
+: -TH // addr, index --> addr+index*cellsize
+ +
+; INLINE
 
-: 34NOPS
+: NEGATE 0 SWAP - ; INLINE
+
+: 0< 0x80000000 AND NOT NOT ;
+: 0> NEGATE 0< ;
+
+: ABS \ ( x -- u )
+ DUP 0< IF
+  NEGATE
+ THEN
+;
+
+
+: 34NOPS    // 50 nops
   NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP
   NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP
   NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP
   NOP NOP NOP NOP
+//  NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP
+//                  NOP NOP NOP NOP NOP NOP
 ;
 
-: NIP SWAP DROP ; INLINE
-
+VARIABLE ÇÍÀÊ
 : DEPTH         0 SYSREG@ ; INLINE
 : RDEPTH        1 SYSREG@ ; INLINE
 : I             2 SYSREG@ ; INLINE
-: /      34NOPS DROP DROP 3 SYSREG@ ;
-: MOD    34NOPS DROP DROP 4 SYSREG@ NIP NIP ;
-: /MOD   34NOPS DROP DROP 3 SYSREG@ 4 SYSREG@ ;
+// : /      34NOPS DROP DROP 3 SYSREG@  ;
+: / // a, b --> a/b
+  OVER 0< OVER 0< XOR SHL 1 + ÇÍÀÊ ! ABS SWAP ABS SWAP
+  1000002 OUTPORT // b (63..32)
+  1000000 OUTPORT // a (31..0)
+  0 1000001 OUTPORT // a (63..32)
+  1 1000003 OUTPORT // start
+  34NOPS 3 SYSREG@ ÇÍÀÊ @ *
+;
+// : MOD    34NOPS DROP DROP 4 SYSREG@ ;
+// : /MOD   34NOPS DROP DROP 3 SYSREG@ 4 SYSREG@ ;
+: MOD    / DROP 4 SYSREG@ ; INLINE
+: /MOD   /      4 SYSREG@ ; INLINE
 : TXSTATE       5 SYSREG@ ; INLINE
 : RECEIVED      6 SYSREG@ ; INLINE
 : RXCOUNTER     7 SYSREG@ ; INLINE
@@ -31,61 +54,227 @@ VARIABLE [C]HERE
 : SEC          12 SYSREG@ ; INLINE
 : MIN          13 SYSREG@ ; INLINE
 : HOUR         14 SYSREG@ ; INLINE
+: MULT64       15 SYSREG@ ; INLINE
 
-: -1 0 NOT ; INLINE
+: << // x n --> (x shl n)
+ DUP IF 0 DO
+  SHL
+ LOOP ELSE DROP THEN
+ NOP
+;
 
-// *** COM ***
-VARIABLE CurrentRXCOUNTER
-VARIABLE COMDATA
-{ RXCOUNTER CurrentRXCOUNTER ! }
+: >> // x n --> (x shr n)
+ DUP IF 0 DO
+  SHR
+ LOOP ELSE DROP THEN
+ NOP
+;
 
-: WAITING_TX
+
+: >>A // x n --> (x shr n)
+ DUP IF 0 DO
+  SHRA
+ LOOP ELSE DROP THEN
+ NOP
+;
+
+
+
+: WAIT_TX=0
  BEGIN
   TXSTATE NOT IF EXIT THEN
  AGAIN
 ;
 
 : ->COM
- WAITING_TX
- -1 !
+ WAIT_TX=0
+ -1 OUTPORT
 ;
 
 : ->COM16
- DUP ->COM
- SHR SHR SHR SHR SHR SHR SHR SHR
- ->COM
+                  DUP ->COM
+  8 0 DO SHR LOOP     ->COM
 ;
 
 : ->COM32
- DUP ->COM16
- SHR SHR SHR SHR SHR SHR SHR SHR
- SHR SHR SHR SHR SHR SHR SHR SHR
- ->COM16
+                  DUP ->COM
+  8 0 DO SHR LOOP DUP ->COM
+  8 0 DO SHR LOOP DUP ->COM
+  8 0 DO SHR LOOP     ->COM
 ;
 
+VARIABLE CurRXCOUNTER
+VARIABLE COMDATA
 : CHECKCOM
- RXCOUNTER CurrentRXCOUNTER @ = NOT
+ CurRXCOUNTER @ RXCOUNTER = NOT
 ; INLINE
 
 : GETCOMDATA
- RXCOUNTER CurrentRXCOUNTER !
- RECEIVED COMDATA !
+ RXCOUNTER RECEIVED
+ COMDATA !
+ CurRXCOUNTER !
 ;
 
-// *** END OF COM ***
+{ GETCOMDATA }
 
-: 0< 0x80000000 AND ;
-: 0>
- DUP
-  0x80000000 AND NOT SWAP
-  0x7FFFFFFF AND
- AND
-;
+VARIABLE n1
+VARIABLE n10
+VARIABLE n100
+VARIABLE n1000
+VARIABLE n10000
+VARIABLE n100000
+VARIABLE n1000000
+VARIABLE n10000000
+VARIABLE n100000000
+VARIABLE n1000000000
+{
+ 1          n1          !
+ 10         n10         !
+ 100        n100        !
+ 1000       n1000       !
+ 10000      n10000      !
+ 100000     n100000     !
+ 1000000    n1000000    !
+ 10000000   n10000000   !
+ 100000000  n100000000  !
+ 1000000000 n1000000000 !
+}
 
-: ABS \ ( x -- u )
- DUP 0< IF
-  -1 XOR 1 +
+ARRAY strbuf 16
+VARIABLE CurConst
+VARIABLE cur
+: IntToStr \ n --> addr
+ DUP 0< IF -1 XOR 1 + 45 ELSE 43 THEN strbuf !
+ 1 cur !
+ 10 0 DO
+  n1000000000 I - @ CurConst !
+  -1 SWAP
+  BEGIN
+   SWAP 1 + SWAP
+   CurConst @ - DUP 0< IF CurConst @ + 1 ELSE 0 THEN
+  UNTIL
+  SWAP
+  DUP 0 = NOT cur @ 1 > OR IF
+   48 + strbuf cur @ + !
+   cur @ 1 + cur !
+  ELSE
+   DROP
+  THEN
+ LOOP
+ DROP
+ cur @ 1 = IF
+  48 strbuf 1 + !
+  cur @ 1 + cur !
  THEN
+ 0 strbuf cur @ + !
+ strbuf
+ strbuf @ 43 = IF 1 ELSE 0 THEN +
+;
+
+VARIABLE sign
+VARIABLE num
+: StrToInt // addr --> number
+ 0 sign !
+ DUP @ 43 = IF 0 sign ! 1 + THEN
+ DUP @ 45 = IF 1 sign ! 1 + THEN
+ 0 num !
+ BEGIN
+  DUP @ // addr char
+  DUP 0 = IF // end of string
+   DROP DROP
+   num @ sign @ IF 0 SWAP - THEN
+   EXIT
+  THEN
+  DUP 0x2E = IF
+   DROP // skip '.'
+  ELSE
+   48 - num @ 10 * + num !
+  THEN
+  1 +
+ AGAIN
+;
+
+VARIABLE StrCmpRes
+// : StrCmp2 \ addr1, addr2 --> res
+// 1 - SWAP 1 - SWAP
+// 0 StrCmpRes !
+// BEGIN
+//  1 + SWAP 1 + SWAP
+//  OVER @ OVER @ = NOT IF 1 StrCmpRes ! THEN
+//  OVER @ 0 =
+//  OVER @ 0 = OR
+//  StrCmpRes @ OR
+// UNTIL
+// @ SWAP @ =
+// ;
+
+: StrCmp
+ 1 - SWAP 1 - SWAP
+ BEGIN
+  1 + SWAP 1 + SWAP
+  OVER @ OVER @
+  OVER OVER = NOT >R
+  NOT SWAP NOT OR
+  R> OR
+ UNTIL
+ @ SWAP @ =
+;
+
+: STR->COM
+ BEGIN
+  DUP @ ->COM
+  1 +
+  DUP @ NOT IF DROP EXIT THEN
+ AGAIN
+;
+
+: INT->COM
+ IntToStr STR->COM
+;
+
+: BYTE->COM
+  8 0 DO
+    DUP
+    7 I - >> 1 AND IF 49 ELSE 48 THEN ->COM
+  LOOP
+  DROP
+;
+
+: CR_COM 13 ->COM 10 ->COM ; INLINE
+: TAB_COM 9 ->COM ; INLINE
+
+: PRINT \ str-addr -->
+ BEGIN
+  DUP @ 0 = IF DROP EXIT THEN
+  DUP @ ->COM
+  1 +
+ AGAIN
+;
+
+: HEXDIGIT
+ 0xF AND 48 + DUP 57 > IF 7 + THEN ->COM
+;
+
+: HEX->COM
+ DUP SHR SHR SHR SHR HEXDIGIT
+ HEXDIGIT
+;
+
+: HEX16->COM
+ DUP 8 0 DO SHR LOOP HEX->COM
+ HEX->COM
+;
+
+: HEX32->COM
+ DUP 16 0 DO SHR LOOP HEX16->COM
+ HEX16->COM
+;
+
+: BIN->COM
+ 9 0 DO
+  DUP 1 AND 48 + ->COM SHR
+ LOOP
+ DROP
 ;
 
 VARIABLE RND
@@ -94,9 +283,31 @@ VARIABLE RND
 { RANDOMIZE }
 
 : RANDOM \  ( -- u )
-RND @ 69069 * 31415 + 278720333 MOD DUP RND ! ;
+RND @ 69069 * 31415 + 278720333 MOD DUP RND !
+;
 
 : CHOOSE  \ ( u1 -- u2 )
    278720333 SWAP /
    RANDOM ABS SWAP /
 ;
+
+VARIABLE 'J
+: J 'J @ ; INLINE
+: J! I 'J ! ; INLINE
+
+: SMOVE // src dest -->
+ BEGIN
+  OVER @ OVER !
+  OVER @ 0 = IF DROP DROP EXIT THEN
+  SWAP 1 + SWAP 1 +
+ AGAIN
+;
+
+: S> // a b --> a>b
+  SWAP - 0<
+;
+: S< // a b --> a<b
+ - 0<
+;
+
+: DEP->COM INT->COM 0x2E ->COM DEPTH INT->COM 9 ->COM ; INLINE // count -->

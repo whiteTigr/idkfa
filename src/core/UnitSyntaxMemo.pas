@@ -12,7 +12,7 @@ unit UnitSyntaxMemo;
 
 interface
 
-{ $DEFINE SYNDEBUG }
+{$DEFINE SYNDEBUG }
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, StdCtrls,
@@ -3622,6 +3622,10 @@ begin
 {$ENDIF}
   // Запоминаем позицию вставки для коррекции секций
   fRichMemo.Lines.BeginUpdate;
+
+  // wt: снятие выделение со слова
+  fRichMemo.SetSelectedWord(Point(-1, -1));
+
   if not(smoSkipSectionsOnPaste in fRichMemo.Options) and Clipboard.HasFormat
     (CF_SYNTAX) then
   begin
@@ -4955,7 +4959,8 @@ begin
     j := Min(Col, t.stStart + t.stLength);
     while i < j do
     begin
-      Inc(Result, fCharWidths[Bold][s[i + 1]]);
+      if i < Length(s) then
+        Inc(Result, fCharWidths[Bold][s[i + 1]]);
       Inc(i);
     end;
     if i = Col then

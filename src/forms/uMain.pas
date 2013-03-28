@@ -7,7 +7,7 @@ uses
   Dialogs, ActnList, ComCtrls, Menus, Grids, StdCtrls, ExtCtrls,
   ToolWin, ImgList, uForthCompiler, Gauges, UnitSyntaxMemo, uStyleEditor, Buttons, uRecordList, uSimulator, uGlobal,
   ShellAPI, uBrainfuckCompiler, uDownloadCom, uCommonFunctions, uProteusCompiler, uQuarkCompiler,
-  TabNotBk;
+  TabNotBk, ActnMan, ActnCtrls;
 
 type
   TfMain = class(TForm)
@@ -720,7 +720,7 @@ begin
     OnParseWord := fMain.mmCodeParseWord;
     OnWordInfo := fMain.mmCodeWordInfo;
     // debug log, uncomment SYNDEBUG directive
-    // OnLog := fMain.ToLog;
+    OnLog := fMain.ToLog;
   end;
   InitHighlight;
 end;
@@ -1241,8 +1241,8 @@ end;
 
 initialization
   DownloadComInit;
-//  Assign(fLog, 'UnitSyntaxMemo.log');
-//  Rewrite(fLog);
+  Assign(fLog, 'UnitSyntaxMemo.log');
+  Rewrite(fLog);
 finalization
-//  CloseFile(fLog);
+  CloseFile(fLog);
 end.
