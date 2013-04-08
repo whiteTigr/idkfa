@@ -12,7 +12,7 @@ unit UnitSyntaxMemo;
 
 interface
 
-{$DEFINE SYNDEBUG }
+{ $DEFINE SYNDEBUG }
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, StdCtrls,

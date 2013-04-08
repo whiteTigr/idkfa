@@ -157,6 +157,7 @@ type
     function FindJump(from: integer): integer;
     function GetLiteralPos(from: integer): integer;
     function GetLiteralValue(from: integer): integer;
+    function GetPrevLiteral(var addr: integer; out valueGetted: boolean): integer;
     function GetLiteralSize(from: integer): integer;
     function GetNopCount(from, _to: integer): integer;
     procedure ClearJumps;
@@ -191,8 +192,9 @@ type
     procedure _Interpret;
     procedure _Z;
     procedure _String;
+    procedure _PLUS;
 
-    procedure _DampVocabulary;
+    procedure _DumpVocabulary;
 
     procedure _WriteData;
     procedure _WriteCode;
@@ -630,7 +632,8 @@ begin
   AddForthToken('R>', cmdFROMR);
   AddImmToken  ('LOOP', _Loop, cmdLoop);
   AddForthToken('SYSREG@', cmdSYSREG);
-  AddForthToken('+', cmdPLUS);
+  AddImmToken('+', _PLUS, cmdPLUS);
+  //AddForthToken('+', cmdPLUS);
   AddForthToken('-', cmdMINUS);
   AddForthToken('AND', cmdAND);
   AddForthToken('OR', cmdOR);
@@ -682,7 +685,7 @@ begin
 
   AddImmToken('"', _String);
 
-  AddImmToken('DampVocabulary', _DampVocabulary);
+  AddImmToken('DumpVocabulary', _DumpVocabulary);
 
   FHere := AddVariable('HERE');
   FCHere := AddVariable('[C]HERE');
@@ -1049,9 +1052,10 @@ begin
     if firstPart then
     begin
       firstPart := false;
-      ValueIsNegative := (cmd and NegativeBit) <> 0;
-      if ValueIsNegative then
-        value := value or (not LitMask);
+//      sign extention
+//      ValueIsNegative := (cmd and NegativeBit) <> 0;
+//      if ValueIsNegative then
+//        value := value or (not LitMask);
     end;
 
     inc(pos);
@@ -1287,6 +1291,26 @@ begin
   end;
 end;
 
+procedure TProteusCompiler._PLUS;
+var
+  addr: integer;
+  A, B: integer;
+  valid: boolean;
+begin
+  addr := CP;
+  B := GetPrevLiteral(addr, valid);
+  if valid then
+    A := GetPrevLiteral(addr, valid);
+  if valid then
+  begin
+    CP := addr;
+    if Token.tag = cmdPLUS then
+      CompileNumber(A + B);
+  end
+  else
+    Compile(Token.tag);
+end;
+
 procedure TProteusCompiler._PROC;
 begin
   ParseToken;
@@ -1344,7 +1368,7 @@ begin
   AddVariable(Parser.token, 0);
 end;
 
-procedure TProteusCompiler._DampVocabulary;
+procedure TProteusCompiler._DumpVocabulary;
 var
   f: TextFile;
   i: integer;
@@ -1627,36 +1651,36 @@ begin
   end;
 end;
 
+function TProteusCompiler.GetPrevLiteral(var addr: integer; out valueGetted: boolean): integer;
+var
+  cmdAddr: integer;
+begin
+  cmdAddr := addr;
+  dec(addr);
+  while (addr > 0) and (FCode[addr].value = cmdNOP) do
+    dec(addr);
+  while (addr > 0) and CmdIsLiteral(FCode[addr].value) do
+    dec(addr);
+  inc(addr);
+
+  valueGetted := (addr < cmdAddr) and CmdIsLiteral(FCode[addr].value);
+  if valueGetted then
+    Result := GetLiteralValue(addr);
+end;
+
 function TProteusCompiler.DizasmAddr(addr: integer): string;
 var
   cmd: integer;
   value: integer;
   valueGetted: boolean;
   index: integer;
-
-  procedure GetPrevLiteral;
-  var
-    cmdAddr: integer;
-  begin
-    cmdAddr := addr;
-    dec(addr);
-    while (addr > 0) and (FCode[addr].value = cmdNOP) do
-      dec(addr);
-    while (addr > 0) and CmdIsLiteral(FCode[addr].value) do
-      dec(addr);
-    inc(addr);
-
-    valueGetted := (addr < cmdAddr) and CmdIsLiteral(FCode[addr].value);
-    if valueGetted then
-      value := GetLiteralValue(addr);
-  end;
 begin
   Result := 'Unknown';
   cmd := Code(addr);
   case cmd of
     cmdSTORE, cmdFETCH:
     begin
-      GetPrevLiteral;
+      value := GetPrevLiteral(addr, valueGetted);
       if valueGetted then
         index := FindVariable(value)
       else
@@ -1669,7 +1693,7 @@ begin
 
     cmdCALL:
     begin
-      GetPrevLiteral;
+      value := GetPrevLiteral(addr, valueGetted);
       if valueGetted then
         index := FindProcedure(value)
       else

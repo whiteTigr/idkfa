@@ -1,11 +1,10 @@
-// VARIABLE HERE
-// : ALLOT HERE @ + HERE ! ;
-// : , HERE @ ! 1 ALLOT ;
+: CpuBaseAddr 0x10000 ; INLINE
 
 : -TH // addr, index --> addr+index*cellsize
  +
 ; INLINE
 
+: -1 0 NOT ; INLINE
 : NEGATE 0 SWAP - ; INLINE
 
 : 0< 0x80000000 AND NOT NOT ;
@@ -34,10 +33,10 @@ VARIABLE ÇÍÀÊ
 // : /      34NOPS DROP DROP 3 SYSREG@  ;
 : / // a, b --> a/b
   OVER 0< OVER 0< XOR SHL 1 + ÇÍÀÊ ! ABS SWAP ABS SWAP
-  1000002 OUTPORT // b (63..32)
-  1000000 OUTPORT // a (31..0)
-  0 1000001 OUTPORT // a (63..32)
-  1 1000003 OUTPORT // start
+  CpuBaseAddr 2 + OUTPORT // b (63..32)
+  CpuBaseAddr     OUTPORT // a (31..0)
+  0 CpuBaseAddr 1 + OUTPORT // a (63..32)
+  1 CpuBaseAddr 3 + OUTPORT // start
   34NOPS 3 SYSREG@ ÇÍÀÊ @ *
 ;
 // : MOD    34NOPS DROP DROP 4 SYSREG@ ;
@@ -252,7 +251,7 @@ VARIABLE StrCmpRes
 ;
 
 : HEXDIGIT
- 0xF AND 48 + DUP 57 > IF 7 + THEN ->COM
+ 0xF AND DUP 9 > IF 55 ELSE 48 THEN + ->COM
 ;
 
 : HEX->COM
