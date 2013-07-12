@@ -26,6 +26,15 @@
 //                  NOP NOP NOP NOP NOP NOP
 ;
 
+: SETDIVAHIGH CpuBaseAddr     OUTPORT ; INLINE
+: SETDIVALOW  CpuBaseAddr 1 + OUTPORT ; INLINE
+: SETDIVB     CpuBaseAddr 2 + OUTPORT ; INLINE
+: STARTDIVIDE 0 CpuBaseAddr 3 + OUTPORT ; INLINE
+: DIVASHRA    0 CpuBaseAddr 4 + OUTPORT ; INLINE
+: DIVASHR     0 CpuBaseAddr 5 + OUTPORT ; INLINE
+: DIVASHL     0 CpuBaseAddr 6 + OUTPORT ; INLINE
+: TIMERTODIVA 0 CpuBaseAddr 7 + OUTPORT ; INLINE
+
 VARIABLE ÇÍÀÊ
 : DEPTH         0 SYSREG@ ; INLINE
 : RDEPTH        1 SYSREG@ ; INLINE
@@ -33,10 +42,10 @@ VARIABLE ÇÍÀÊ
 // : /      34NOPS DROP DROP 3 SYSREG@  ;
 : / // a, b --> a/b
   OVER 0< OVER 0< XOR SHL 1 + ÇÍÀÊ ! ABS SWAP ABS SWAP
-  CpuBaseAddr 2 + OUTPORT // b (63..32)
-  CpuBaseAddr     OUTPORT // a (31..0)
-  0 CpuBaseAddr 1 + OUTPORT // a (63..32)
-  1 CpuBaseAddr 3 + OUTPORT // start
+  SETDIVB // b (63..32)
+  SETDIVALOW // a (31..0)
+  0 SETDIVAHIGH // a (63..32)
+  STARTDIVIDE // start
   34NOPS 3 SYSREG@ ÇÍÀÊ @ *
 ;
 // : MOD    34NOPS DROP DROP 4 SYSREG@ ;
@@ -54,6 +63,8 @@ VARIABLE ÇÍÀÊ
 : MIN          13 SYSREG@ ; INLINE
 : HOUR         14 SYSREG@ ; INLINE
 : MULT64       15 SYSREG@ ; INLINE
+: DIVALOW      16 SYSREG@ ; INLINE
+: DIVAHIGH     17 SYSREG@ ; INLINE
 
 : << // x n --> (x shl n)
  DUP IF 0 DO
@@ -194,19 +205,6 @@ VARIABLE num
 ;
 
 VARIABLE StrCmpRes
-// : StrCmp2 \ addr1, addr2 --> res
-// 1 - SWAP 1 - SWAP
-// 0 StrCmpRes !
-// BEGIN
-//  1 + SWAP 1 + SWAP
-//  OVER @ OVER @ = NOT IF 1 StrCmpRes ! THEN
-//  OVER @ 0 =
-//  OVER @ 0 = OR
-//  StrCmpRes @ OR
-// UNTIL
-// @ SWAP @ =
-// ;
-
 : StrCmp
  1 - SWAP 1 - SWAP
  BEGIN
@@ -269,12 +267,19 @@ VARIABLE StrCmpRes
  HEX16->COM
 ;
 
-: BIN->COM
- 9 0 DO
-  DUP 1 AND 48 + ->COM SHR
+: BINX->COM // num N --
+ 1 OVER 1 - <<
+ SWAP 0 DO
+  OVER OVER AND IF 49 ELSE 48 THEN ->COM
+  SHR
+  I 7 AND 7 = IF 32 ->COM THEN
  LOOP
- DROP
+ DROP DROP
 ;
+
+: BIN->COM 8 BINX->COM ; INLINE
+: BIN16->COM 16 BINX->COM ; INLINE
+: BIN32->COM 32 BINX->COM ; INLINE
 
 VARIABLE RND
 
