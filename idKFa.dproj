@@ -118,6 +118,10 @@
 				<ResourceType>RCData</ResourceType>
 				<ResourceId>SimVgaSymbols</ResourceId>
 			</RcItem>
+			<RcItem Include="bmp\ABORT.BMP">
+				<ResourceType>Bitmap</ResourceType>
+				<ResourceId>CancelBtnBmp</ResourceId>
+			</RcItem>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

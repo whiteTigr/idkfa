@@ -139,6 +139,7 @@ end;
 var
   sleeptime: real;
   gauge: TGauge;
+  buttonCancel: TBitBtn;
   DownloadLog: TextFile;
 
 procedure BufToLog(buf: array of byte; count: integer); overload;
@@ -330,32 +331,55 @@ begin
   if gauge = nil then
   begin
     gauge := TGauge.Create(fMain.StatusBar1);
-    gauge.Parent := fMain.StatusBar1;
-    gauge.Height := fMain.StatusBar1.Height - 4;
-    gauge.Width := 195;
-    gauge.Left := 2;
-    gauge.Top := 2;
-    gauge.MinValue := 0;
-    gauge.MaxValue := 100;
+    with gauge do
+    begin
+      Parent := fMain.StatusBar1;
+      Height := fMain.StatusBar1.Height - 4;
+      Width := 195;
+      Left := 2;
+      Top := 2;
+      MinValue := 0;
+      MaxValue := 100;
+    end;
+  end;
+
+  if buttonCancel = nil then
+  begin
+    buttonCancel := TBitBtn.Create(fMain.StatusBar1);
+    with buttonCancel do
+    begin
+      Parent := fMain.StatusBar1;
+      Height := fMain.StatusBar1.Height - 4;
+      Width := Height;
+      Left := gauge.Width + 5;
+      Top := 2;
+      Glyph.LoadFromResourceName(hInstance, 'CloseBtnBmp');
+      OnClick := FormDownload.bCancelClick;
+    end;
   end;
 
   FormDownload.ProgressBar1.Show;
   gauge.Show;
+  buttonCancel.Show;
   FormDownload.labelStatus.Hide;
   FormDownload.bCancel.Show;
   FormDownload.bCancel.Enabled := true;
+
+  fMain.BtnCOMonoff.Enabled := false;
 end;
 
 procedure HideVisualElements;
 begin
   FormDownload.ProgressBar1.Hide;
   gauge.hide;
+  buttonCancel.Hide;
   fMain.Hide;
   fMain.Show;
   if FormDownload.Visible then FormDownload.Show;
   FormDownload.bCancel.Hide;
   FormDownload.bCancel.Enabled := false;
   FormDownload.labelStatus.Show;
+  fMain.BtnCOMonoff.Enabled := true;
 end;
 
 procedure ReadSendCountPackage;
@@ -385,6 +409,8 @@ var
   i: integer;
   needToWait: real;
   downloadCom: TDownloaderCom absolute downloader;
+  wasOpen: boolean;
+  ComPropertiesChanges: boolean;
 label finishit;
 begin
   time := Now;
@@ -394,9 +420,15 @@ begin
   ReadSendCountPackage;
   ReadSendWaitingCoef;
 
-  downloadCom.ComName := cbComName.Text;
-  downloadCom.baudrate := StrToInt(cbBaudrate.Text);
-  downloader.Open;
+  wasOpen := downloadCom.isOpen;
+  ComPropertiesChanges := (downloadCom.ComName <> cbComName.Text) or (downloadCom.baudrate <> StrToInt(cbBaudrate.Text));
+  if not downloadCom.isOpen or ComPropertiesChanges then
+  begin
+    downloadCom.Close;
+    downloadCom.ComName := cbComName.Text;
+    downloadCom.baudrate := StrToInt(cbBaudrate.Text);
+    downloader.Open;
+  end;
 
   Application.ProcessMessages;
 
@@ -459,7 +491,8 @@ begin
   ClearReset;
 
 FinishIt:
-  downloader.Close;
+  if not wasOpen then
+    downloader.Close;
 
   if UserBreak then labelStatus.Caption := 'Cancelled.'
                else labelStatus.Caption := 'Successfully.';

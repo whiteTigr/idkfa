@@ -4,6 +4,7 @@
     <File Path="bmp"/>
     <File Path="bmp\CloseBtn.bmp"/>
     <File Path="bmp\CloseBtnFocused.bmp"/>
+    <File Path="bmp\ABORT.BMP"/>
     <File Path="src"/>
     <File Path="src\compiler"/>
     <File Path="src\compiler\brainfuck"/>
@@ -65,5 +66,6 @@
     <Transaction>2012.09.11 11:38:29.609.pas,D:\projects\git\idkfa\Unit1.pas=D:\projects\git\idkfa\src\compiler\proteus\uSimVga.pas</Transaction>
     <Transaction>2012.09.11 11:38:29.609.dfm,D:\projects\git\idkfa\Unit1.dfm=D:\projects\git\idkfa\src\compiler\proteus\uSimVga.dfm</Transaction>
     <Transaction>2012.09.12 10:17:28.593.coe,D:\projects\git\idkfa\src\compiler\proteus\symbols.coe=</Transaction>
+    <Transaction>2013.07.12 16:26:43.890.BMP,D:\Zzz\ABORT.BMP=</Transaction>
   </Transactions>
 </BorlandProject>

@@ -79,6 +79,9 @@ type
     ToolButton1: TToolButton;
     CloseCurrentTab: TAction;
     SpeedButton1: TSpeedButton;
+    Splitter2: TSplitter;
+    Terminal: TMemo;
+    BtnCOMonoff: TToolButton;
     procedure CompileExecute(Sender: TObject);
     procedure GotoDownloadExecute(Sender: TObject);
     procedure ExportCoeExecute(Sender: TObject);
@@ -118,6 +121,7 @@ type
     procedure ExportRawExecute(Sender: TObject);
     procedure CloseBtnMouseEnter(Sender: TObject);
     procedure CloseBtnMouseLeave(Sender: TObject);
+    procedure BtnCOMonoffClick(Sender: TObject);
   private
     procedure ForthCom;
     procedure ForthPackSize;
@@ -898,11 +902,25 @@ begin
 end;
 
 procedure TfMain.OpenExecute(Sender: TObject);
+var
+  kfprj_file: textfile;
+  s: string;
 begin
-  OpenDialog1.FilterIndex := 1;
+  OpenDialog1.FilterIndex := 5;
   if OpenDialog1.Execute then
   begin
     OpenKfFile(OpenDialog1.FileName);
+    if extractfileext(OpenDialog1.FileName) = '.kfprj' then
+    begin
+      assignfile(kfprj_file, OpenDialog1.FileName);
+      reset(kfprj_file);
+      while not eof(kfprj_file) do
+      begin
+        readln(kfprj_file, s);
+        OpenKfFile(extractfilepath(OpenDialog1.FileName)+'\'+s);
+      end;
+      closefile(kfprj_file);
+    end;
   end;
 end;
 
@@ -1027,6 +1045,21 @@ procedure TfMain.ToLog(Sender: TObject; LogStr: string);
 begin
   writeln(fLog, LogStr);
   Flush(fLog);
+end;
+
+procedure TfMain.BtnCOMonoffClick(Sender: TObject);
+begin
+  if downloader.isOpen then
+  begin
+    downloader.Close;
+    BtnCOMonoff.imageindex := 21;
+  end
+  else
+  begin
+    downloader.open;
+    if downloader.isOpen then
+      BtnCOMonoff.imageindex := 20;
+  end;
 end;
 
 procedure TfMain.CloseCurrentTabExecute(Sender: TObject);

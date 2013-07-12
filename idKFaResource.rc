@@ -1,3 +1,4 @@
 CloseBtnBmp Bitmap "bmp\\CloseBtn.bmp"
 CloseBtnFocusedBmp Bitmap "bmp\\CloseBtnFocused.bmp"
 SimVgaSymbols RCData "src\\other\\symbols.bin"
+CancelBtnBmp Bitmap "bmp\\ABORT.BMP"

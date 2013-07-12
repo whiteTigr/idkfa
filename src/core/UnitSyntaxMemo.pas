@@ -4844,19 +4844,37 @@ end;
 
 // Перерасчет параметров шрифта
 // SiO: Разделил на две
+var
+  CacheWidthTable: TCharWidths;
+  CacheFontName: TFontName = '';
+
 procedure TMPCustomSyntaxMemo.CalcFontParams;
 var
   c: Char;
+  monotype: boolean;
+  CharWidthLow, CharWidthHigh: char;
+  CharWidth: byte;
 begin
   fLettersCalculated := True;
   Canvas.Font.Assign(self.Font);
   fCharHeight := -Font.Height + 3;
+  if self.Font.Name = CacheFontName then
+  begin
+    CopyMemory(@fCharWidths, @CacheWidthTable, sizeof(TCharWidths));
+    Exit;
+  end;
+  CharWidthLow := Low(fCharWidths[False]);
+  CharWidthHigh := High(fCharWidths[False]);
+
   Canvas.Font.Style := [];
-  for c := Low(fCharWidths[False]) to High(fCharWidths[False]) do
+  for c := CharWidthLow to CharWidthHigh do
     fCharWidths[False][c] := Byte(Canvas.TextWidth(c));
   Canvas.Font.Style := [fsBold];
-  for c := Low(fCharWidths[True]) to High(fCharWidths[True]) do
+  for c := CharWidthLow to CharWidthHigh do
     fCharWidths[True][c] := Byte(Canvas.TextWidth(c));
+
+  CopyMemory(@CacheWidthTable, @fCharWidths, sizeof(TCharWidths));
+  CacheFontName := Canvas.Font.Name;
 end;
 
 procedure TMPCustomSyntaxMemo.CalcScreenParams;
