@@ -181,6 +181,8 @@ var
   ExePath: string;
   FilePath: string;
 
+  hTakt: THandle;
+
 procedure AddSynlightWord(name: string; _type: integer);
 
 

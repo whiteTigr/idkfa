@@ -1,6 +1,6 @@
 object fMain: TfMain
-  Left = 188
-  Top = 268
+  Left = 0
+  Top = 0
   Caption = 'Cross-compiler'
   ClientHeight = 574
   ClientWidth = 743
@@ -209,8 +209,6 @@ object fMain: TfMain
       ParentFont = False
       ScrollBars = ssBoth
       TabOrder = 1
-      ExplicitLeft = 399
-      ExplicitTop = 2
     end
   end
   object Panel3: TPanel

@@ -177,6 +177,7 @@ var
   mmCode: array of TMPSyntaxMemo;
   CloseBtns: array of TSpeedButton;
   Compiled : boolean;
+  ComInputThread: TComInputThread;
 
   TimerInit: TTimer;
   fLog: TextFile;
@@ -741,6 +742,8 @@ begin
   StartTimerInit;
 
   uGlobal.ExePath := ExtractFilePath(Application.ExeName);
+
+  hTakt := CreateEvent(nil, true, false, nil);
 end;
 
 procedure TfMain.Font1Click(Sender: TObject);
@@ -1060,6 +1063,9 @@ begin
     if downloader.isOpen then
       BtnCOMonoff.imageindex := 20;
   end;
+
+  if ComInputThread = nil then
+    ComInputThread := TComInputThread.Create;
 end;
 
 procedure TfMain.CloseCurrentTabExecute(Sender: TObject);
