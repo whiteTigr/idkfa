@@ -34,7 +34,8 @@ uses
   uSimVga in 'src\simforms\uSimVga.pas' {fSimVga},
   uLed in 'src\simforms\uLed.pas' {fLed},
   uComModel in 'src\simforms\uComModel.pas' {fComModel},
-  uProteusDownloader in 'src\compiler\proteus\uProteusDownloader.pas' {fProteusDownloader};
+  uProteusDownloader in 'src\compiler\proteus\uProteusDownloader.pas' {fProteusDownloader},
+  uTermSet in 'src\forms\uTermSet.pas' {fmTermSet};
 
 // {fProteusDownloader},
 //  uComTerminal in 'src\forms\uComTerminal.pas' {fComTerminal};
@@ -53,6 +54,7 @@ begin
   Application.CreateForm(TfComModel, fComModel);
   Application.CreateForm(TfProteusComModel, fProteusComModel);
   Application.CreateForm(TfLed, fLed);
+  Application.CreateForm(TfmTermSet, fmTermSet);
   Application.Run;
 end.
 

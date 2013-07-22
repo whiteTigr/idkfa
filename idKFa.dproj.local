@@ -52,6 +52,8 @@
     <File Path="src\forms\uSimulator.dfm"/>
     <File Path="src\forms\uStyleEditor.pas"/>
     <File Path="src\forms\uStyleEditor.dfm"/>
+    <File Path="src\forms\uTermSet.pas"/>
+    <File Path="src\forms\uTermSet.dfm"/>
     <File Path="src\other"/>
     <File Path="src\other\symbols.bin"/>
     <File Path="src\simforms"/>
@@ -67,5 +69,7 @@
     <Transaction>2012.09.11 11:38:29.609.dfm,D:\projects\git\idkfa\Unit1.dfm=D:\projects\git\idkfa\src\compiler\proteus\uSimVga.dfm</Transaction>
     <Transaction>2012.09.12 10:17:28.593.coe,D:\projects\git\idkfa\src\compiler\proteus\symbols.coe=</Transaction>
     <Transaction>2013.07.12 16:26:43.890.BMP,D:\Zzz\ABORT.BMP=</Transaction>
+    <Transaction>2013.07.22 16:59:46.500.pas,D:\Delphi\idkfa\Unit1.pas=D:\Delphi\idkfa\src\forms\uTermSet.pas</Transaction>
+    <Transaction>2013.07.22 16:59:46.500.dfm,D:\Delphi\idkfa\Unit1.dfm=D:\Delphi\idkfa\src\forms\uTermSet.dfm</Transaction>
   </Transactions>
 </BorlandProject>

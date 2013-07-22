@@ -82,6 +82,8 @@ type
     Splitter2: TSplitter;
     Terminal: TMemo;
     BtnCOMonoff: TToolButton;
+    com_port_on_off: TAction;
+    erminalsettings1: TMenuItem;
     procedure CompileExecute(Sender: TObject);
     procedure GotoDownloadExecute(Sender: TObject);
     procedure ExportCoeExecute(Sender: TObject);
@@ -122,6 +124,7 @@ type
     procedure CloseBtnMouseEnter(Sender: TObject);
     procedure CloseBtnMouseLeave(Sender: TObject);
     procedure BtnCOMonoffClick(Sender: TObject);
+    procedure erminalsettings1Click(Sender: TObject);
   private
     procedure ForthCom;
     procedure ForthPackSize;
@@ -184,7 +187,7 @@ var
 
 implementation
 
-uses uDownload, AboutWindow, StrUtils;
+uses uDownload, AboutWindow, StrUtils, uTermSet;
 
 {$R *.dfm}
 {$R WindowsXP.res}
@@ -530,6 +533,43 @@ begin
 
   if compiled then
     uSimulator.Prepare;
+end;
+
+procedure TfMain.erminalsettings1Click(Sender: TObject);
+var
+  result: integer;
+begin
+  with fmTermSet do
+  begin
+    if ComInputThread.OutputType = otCharsWithHex then
+    begin
+      rbCharsWithHex.Checked := true;
+      if ComInputThread.LineLength = 8 then
+        cbHexLen.ItemIndex := 0
+      else
+        cbHexLen.ItemIndex := 1;
+    end
+    else
+    begin
+      rbCharsOnly.Checked := true;
+      seStrLen.Text := IntToStr(ComInputThread.LineLength);
+    end;
+
+    result := fmTermSet.showmodal;
+    if result = mrOk then
+      with fmTermSet do
+      begin
+        Terminal.Font := edTestTerm.Font;
+        Terminal.Color := edTestTerm.Color;
+        if rbCharsOnly.Checked then
+          ComInputThread.SetOutputSettings(otCharsOnly, seStrLen.Value)
+        else
+          if cbHexLen.ItemIndex = 0 then
+            ComInputThread.SetOutputSettings(otCharsWithHex, 8)
+          else
+            ComInputThread.SetOutputSettings(otCharsWithHex, 16);
+      end;
+  end;
 end;
 
 procedure TfMain.GotoDownloadExecute(Sender: TObject);

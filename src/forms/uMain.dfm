@@ -20,11 +20,12 @@ object fMain: TfMain
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 0
-    Top = 449
+    Top = 440
     Width = 743
     Height = 3
     Cursor = crVSplit
     Align = alBottom
+    ExplicitTop = 449
   end
   object SpeedButton1: TSpeedButton
     Left = 392
@@ -173,15 +174,15 @@ object fMain: TfMain
   end
   object Panel1: TPanel
     Left = 0
-    Top = 452
+    Top = 443
     Width = 743
-    Height = 103
+    Height = 112
     Align = alBottom
     TabOrder = 3
     object Splitter2: TSplitter
       Left = 393
       Top = 1
-      Height = 101
+      Height = 110
       ExplicitLeft = 568
       ExplicitTop = 48
       ExplicitHeight = 100
@@ -190,39 +191,44 @@ object fMain: TfMain
       Left = 1
       Top = 1
       Width = 392
-      Height = 101
+      Height = 110
       Align = alLeft
       ScrollBars = ssBoth
       TabOrder = 0
+      ExplicitHeight = 101
     end
     object Terminal: TMemo
       Left = 396
       Top = 1
       Width = 346
-      Height = 101
+      Height = 110
       Align = alClient
+      Color = clBlack
       Font.Charset = RUSSIAN_CHARSET
-      Font.Color = clWindowText
+      Font.Color = clLime
       Font.Height = -13
       Font.Name = 'Fixedsys'
       Font.Style = []
       ParentFont = False
+      ReadOnly = True
       ScrollBars = ssBoth
       TabOrder = 1
+      ExplicitHeight = 101
     end
   end
   object Panel3: TPanel
     Left = 0
     Top = 29
     Width = 743
-    Height = 420
+    Height = 411
     Align = alClient
     TabOrder = 0
+    ExplicitHeight = 420
     object Tabs: TTabbedNotebook
       Left = 1
       Top = 1
       Width = 741
-      Height = 418
+      Height = 409
       Align = alClient
       TabFont.Charset = DEFAULT_CHARSET
       TabFont.Color = clBtnText
@@ -231,10 +237,12 @@ object fMain: TfMain
       TabFont.Style = []
       TabOrder = 0
       OnChange = TabsChange
+      ExplicitHeight = 418
       object TTabPage
         Left = 4
         Top = 24
         Caption = 'Default'
+        ExplicitHeight = 390
       end
     end
   end
@@ -323,6 +331,11 @@ object fMain: TfMain
         'Ctrl+F4')
       OnExecute = CloseCurrentTabExecute
     end
+    object com_port_on_off: TAction
+      Caption = 'com port on_off'
+      ShortCut = 121
+      OnExecute = BtnCOMonoffClick
+    end
   end
   object MainMenu1: TMainMenu
     Images = ImageList1
@@ -388,6 +401,10 @@ object fMain: TfMain
       object Createdownloadlog1: TMenuItem
         AutoCheck = True
         Caption = 'Create download log'
+      end
+      object erminalsettings1: TMenuItem
+        Caption = 'Terminal settings'
+        OnClick = erminalsettings1Click
       end
       object N1: TMenuItem
         Caption = '-'
