@@ -195,7 +195,6 @@ object fMain: TfMain
       Align = alLeft
       ScrollBars = ssBoth
       TabOrder = 0
-      ExplicitHeight = 101
     end
     object Terminal: TMemo
       Left = 396
@@ -213,7 +212,6 @@ object fMain: TfMain
       ReadOnly = True
       ScrollBars = ssBoth
       TabOrder = 1
-      ExplicitHeight = 101
     end
   end
   object Panel3: TPanel
@@ -223,7 +221,6 @@ object fMain: TfMain
     Height = 411
     Align = alClient
     TabOrder = 0
-    ExplicitHeight = 420
     object Tabs: TTabbedNotebook
       Left = 1
       Top = 1
@@ -237,12 +234,10 @@ object fMain: TfMain
       TabFont.Style = []
       TabOrder = 0
       OnChange = TabsChange
-      ExplicitHeight = 418
       object TTabPage
         Left = 4
         Top = 24
         Caption = 'Default'
-        ExplicitHeight = 390
       end
     end
   end
@@ -402,9 +397,9 @@ object fMain: TfMain
         AutoCheck = True
         Caption = 'Create download log'
       end
-      object erminalsettings1: TMenuItem
+      object TerminalSettings: TMenuItem
         Caption = 'Terminal settings'
-        OnClick = erminalsettings1Click
+        OnClick = TerminalSettingsClick
       end
       object N1: TMenuItem
         Caption = '-'

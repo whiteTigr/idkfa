@@ -22,25 +22,10 @@ type
   TOutputType = (otCharsOnly, otCharsWithHex);
 
   TComInputThread = class(TThread)
-  private
-    FLineSymbols: integer;
-    FCurrentLine: string;
-    FCurrentLineIndex: integer;
-    FOutputSettings: TRTLCriticalSection;
-    FLineLength: integer;
-    FOutputType: TOutputType;
-    HexTable: PIntegerArray;
-    CharTable: PIntegerArray;
-    EmptyLine: string;
-
-    procedure NewLine;
   protected
     procedure Execute; override;
-    procedure Show;
   public
-    property OutputType: TOutputType read FOutputType;
-    property LineLength: integer read FLineLength;
-    procedure SetOutputSettings(NewOutputType: TOutputType; NewLineLength: integer);
+    procedure CopyInputBuffer(buf: PByteArray; out size: integer);
     constructor Create;
   end;
 
@@ -80,15 +65,6 @@ implementation
 
 uses
   uMain;
-
-const
-  HexTable8Byte: array[0..7] of integer = (1, 4, 7, 10, 14, 17, 20, 23);
-  CharTable8Byte: array[0..7] of integer = (30, 31, 32, 33, 35, 36, 37, 38);
-  EmptyLine8Byte: string = '                          |           ';
-  HexTable16Byte: array[0..15] of integer = (1, 4, 7, 10, 13, 16, 19, 22, 26, 29, 32, 35, 38, 41, 44, 47);
-  CharTable16Byte: array[0..15] of integer = (54, 55, 56, 57, 58, 59, 60, 61, 63, 64, 65, 66, 67, 68, 69, 70);
-  EmptyLine16Byte: string = '                                                  |                   ';
-
 
 { TDownloaderCom }
 
@@ -341,12 +317,36 @@ end;
 
 { TComInputThread }
 
+procedure TComInputThread.CopyInputBuffer(buf: PByteArray; out size: integer);
+var
+  downloadCom: TDownloaderCom absolute downloader;
+begin
+  try
+    EnterCriticalSection(downloadCom.FInputCritical);
+    with downloadCom.FInputBuffer do
+    begin
+      size := 0;
+      if write > read then
+      begin
+        size := write - read;
+        CopyMemory(buf, @data[read], size);
+      end
+      else if write < read then
+      begin
+        size := BufferSize + write - read;
+        CopyMemory(buf, @data[read], BufferSize - read);
+        CopyMemory(pointer(integer(buf) + (BufferSize - read)), @data[0], write);
+      end;
+      read := write;
+    end;
+  finally
+    LeaveCriticalSection(downloadCom.FInputCritical);
+  end;
+end;
+
 constructor TComInputThread.Create;
 begin
   inherited Create(false);
-  FLineSymbols := 0;
-  InitializeCriticalSection(FOutputSettings);
-  SetOutputSettings(otCharsWithHex, 16);
 end;
 
 procedure TComInputThread.Execute;
@@ -414,121 +414,12 @@ begin
       finally
         LeaveCriticalSection(downloadCom.FInputCritical);
       end;
+      PostMessage(fMain.Handle, WM_TerminalShow, 0, 0);
     end;
-
-    Synchronize(Show);
 
     QueryPerformanceCounter(TimeEnd);
     LoopTime := (TimeEnd - TimeBegin) / CPUFreq;
 	  timeEndPeriod(1);
-  end;
-end;
-
-procedure TComInputThread.NewLine;
-begin
-  FCurrentLine := EmptyLine;
-  FCurrentLineIndex := fMain.Terminal.Lines.Add(FCurrentLine);
-  FLineSymbols := 0;
-end;
-
-procedure TComInputThread.SetOutputSettings(NewOutputType: TOutputType; NewLineLength: integer);
-var
-  i: integer;
-begin
-  if (NewOutputType <> FOutputType) or (NewLineLength <> FLineLength) then
-  begin
-    try
-      EnterCriticalSection(FOutputSettings);
-      FOutputType := NewOutputType;
-      FLineLength := NewLineLength;
-      if FOutputType = otCharsOnly then
-      begin
-        EmptyLine := '';
-        for i := 0 to FLineLength - 1 do
-          EmptyLine := EmptyLine + ' ';
-      end
-      else if FLineLength = 8 then
-      begin
-        HexTable := @HexTable8Byte;
-        CharTable := @CharTable8Byte;
-        EmptyLine := EmptyLine8Byte;
-      end
-      else
-      begin
-        HexTable := @HexTable16Byte;
-        CharTable := @CharTable16Byte;
-        EmptyLine := EmptyLine16Byte;
-      end;
-      NewLine;
-    finally
-      LeaveCriticalSection(FOutputSettings);
-    end;
-  end;
-end;
-
-procedure TComInputThread.Show;
-var
-  downloadCom: TDownloaderCom absolute downloader;
-  buf: array[0..4095] of byte;
-  size: integer;
-  i: integer;
-begin
-  try
-    EnterCriticalSection(downloadCom.FInputCritical);
-    with downloadCom.FInputBuffer do
-    begin
-      size := 0;
-      if write > read then
-      begin
-        size := write - read;
-        CopyMemory(@buf, @data[read], size);
-      end
-      else if write < read then
-      begin
-        size := BufferSize + write - read;
-        CopyMemory(@buf, @data[read], BufferSize - read);
-        CopyMemory(@buf[BufferSize - read], @data[0], write);
-      end;
-      read := write;
-    end;
-  finally
-    LeaveCriticalSection(downloadCom.FInputCritical);
-  end;
-
-  try
-    EnterCriticalSection(FOutputSettings);
-    with fMain.Terminal do
-    begin
-      if Lines.Count = 0 then
-        NewLine;
-
-      for i := 0 to size - 1 do
-      begin
-        if FLineSymbols >= FLineLength then
-        begin
-          if Lines.Count > 200 then
-            Lines.Delete(0);
-          NewLine;
-          SendMessage(Handle, EM_SCROLL, 0, FCurrentLineIndex);
-        end;
-
-        if FOutputType = otCharsWithHex then
-        begin
-          FCurrentLine[HexTable[FLineSymbols]] := IntToHex((buf[i] shr 4) and $F, 1)[1];
-          FCurrentLine[HexTable[FLineSymbols] + 1] := IntToHex(buf[i] and $F, 1)[1];
-          FCurrentLine[CharTable[FLineSymbols]] := char(buf[i]);
-        end
-        else
-          FCurrentLine[FLineSymbols] := char(buf[i]);
-
-        inc(FLineSymbols);
-        Lines.BeginUpdate;
-        Lines[FCurrentLineIndex] := FCurrentLine;
-        Lines.EndUpdate;
-      end;
-    end;
-  finally
-    LeaveCriticalSection(FOutputSettings);
   end;
 end;
 

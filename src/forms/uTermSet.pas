@@ -22,6 +22,8 @@ type
     dlgColor: TColorDialog;
     procedure btnFontClick(Sender: TObject);
     procedure btnBGcolorClick(Sender: TObject);
+    procedure cbHexLenSelect(Sender: TObject);
+    procedure seStrLenClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -49,6 +51,16 @@ begin
   begin
     edTestTerm.Font := dlgFont.Font;
   end;
+end;
+
+procedure TfmTermSet.cbHexLenSelect(Sender: TObject);
+begin
+  rbCharsWithHex.Checked := true;
+end;
+
+procedure TfmTermSet.seStrLenClick(Sender: TObject);
+begin
+  rbCharsOnly.Checked := true;
 end;
 
 end.

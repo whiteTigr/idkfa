@@ -123,6 +123,7 @@ object fmTermSet: TfmTermSet
       MinValue = 1
       TabOrder = 2
       Value = 80
+      OnClick = seStrLenClick
     end
     object cbHexLen: TComboBox
       Left = 184
@@ -133,6 +134,7 @@ object fmTermSet: TfmTermSet
       ItemIndex = 0
       TabOrder = 3
       Text = '8'
+      OnSelect = cbHexLenSelect
       Items.Strings = (
         '8'
         '16')

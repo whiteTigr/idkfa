@@ -83,7 +83,7 @@ type
     Terminal: TMemo;
     BtnCOMonoff: TToolButton;
     com_port_on_off: TAction;
-    erminalsettings1: TMenuItem;
+    TerminalSettings: TMenuItem;
     procedure CompileExecute(Sender: TObject);
     procedure GotoDownloadExecute(Sender: TObject);
     procedure ExportCoeExecute(Sender: TObject);
@@ -124,7 +124,7 @@ type
     procedure CloseBtnMouseEnter(Sender: TObject);
     procedure CloseBtnMouseLeave(Sender: TObject);
     procedure BtnCOMonoffClick(Sender: TObject);
-    procedure erminalsettings1Click(Sender: TObject);
+    procedure TerminalSettingsClick(Sender: TObject);
   private
     procedure ForthCom;
     procedure ForthPackSize;
@@ -132,6 +132,10 @@ type
     procedure ForthCore;
 
     procedure Init(Sender: TObject);
+
+    procedure TerminalNewLine;
+    procedure TerminalShow(var message: TMessage); message WM_TerminalShow;
+    procedure TerminalSetOutputSettings(NewOutputType: TOutputType; NewLineLength: integer);
   public
     { Public declarations }
   end;
@@ -140,6 +144,18 @@ type
   TStyleCell = record
     id: integer; // -1 - not exist
     TokenStyle: TTokenStyle;
+  end;
+
+  TTerminalData = record
+    LineSymbols: integer;
+    CurrentLine: string;
+    CurrentLineIndex: integer;
+    OutputSettings: TRTLCriticalSection;
+    LineLength: integer;
+    OutputType: TOutputType;
+    HexTable: PIntegerArray;
+    CharTable: PIntegerArray;
+    EmptyLine: string;
   end;
 
 const
@@ -173,6 +189,13 @@ const
    (id: tokErrorDict;    str: 'sErrorDict')
   );
 
+  HexTable8Byte: array[0..7] of integer = (1, 4, 7, 10, 14, 17, 20, 23);
+  CharTable8Byte: array[0..7] of integer = (30, 31, 32, 33, 35, 36, 37, 38);
+  EmptyLine8Byte: string = '                          |           ';
+  HexTable16Byte: array[0..15] of integer = (1, 4, 7, 10, 13, 16, 19, 22, 26, 29, 32, 35, 38, 41, 44, 47);
+  CharTable16Byte: array[0..15] of integer = (54, 55, 56, 57, 58, 59, 60, 61, 63, 64, 65, 66, 67, 68, 69, 70);
+  EmptyLine16Byte: string = '                                                  |                   ';
+
 var
   fMain: TfMain;
   FileName : array of string;
@@ -181,6 +204,7 @@ var
   CloseBtns: array of TSpeedButton;
   Compiled : boolean;
   ComInputThread: TComInputThread;
+  TerminalData: TTerminalData;
 
   TimerInit: TTimer;
   fLog: TextFile;
@@ -482,6 +506,9 @@ var
   PageIndex: integer;
   LineNum : integer;
 begin
+  if Length(mmCode) = 0 then
+    Exit;
+
   Console.Lines.Clear;
   Console.Lines.Add('Starting cross compilation');
 
@@ -535,16 +562,64 @@ begin
     uSimulator.Prepare;
 end;
 
-procedure TfMain.erminalsettings1Click(Sender: TObject);
+procedure TfMain.TerminalNewLine;
+begin
+  with TerminalData do
+  begin
+    CurrentLine := EmptyLine;
+    CurrentLineIndex := fMain.Terminal.Lines.Add(CurrentLine);
+    LineSymbols := 0;
+  end;
+end;
+
+procedure TfMain.TerminalSetOutputSettings(NewOutputType: TOutputType; NewLineLength: integer);
+var
+  i: integer;
+begin
+  with TerminalData do
+  begin
+    if (NewOutputType <> OutputType) or (NewLineLength <> LineLength) then
+    begin
+      try
+        EnterCriticalSection(OutputSettings);
+        OutputType := NewOutputType;
+        LineLength := NewLineLength;
+        if OutputType = otCharsOnly then
+        begin
+          EmptyLine := '';
+          for i := 0 to LineLength - 1 do
+            EmptyLine := EmptyLine + ' ';
+        end
+        else if LineLength = 8 then
+        begin
+          HexTable := @HexTable8Byte;
+          CharTable := @CharTable8Byte;
+          EmptyLine := EmptyLine8Byte;
+        end
+        else
+        begin
+          HexTable := @HexTable16Byte;
+          CharTable := @CharTable16Byte;
+          EmptyLine := EmptyLine16Byte;
+        end;
+        TerminalNewLine;
+      finally
+        LeaveCriticalSection(OutputSettings);
+      end;
+    end;
+  end;
+end;
+
+procedure TfMain.TerminalSettingsClick(Sender: TObject);
 var
   result: integer;
 begin
   with fmTermSet do
   begin
-    if ComInputThread.OutputType = otCharsWithHex then
+    if TerminalData.OutputType = otCharsWithHex then
     begin
       rbCharsWithHex.Checked := true;
-      if ComInputThread.LineLength = 8 then
+      if TerminalData.LineLength = 8 then
         cbHexLen.ItemIndex := 0
       else
         cbHexLen.ItemIndex := 1;
@@ -552,24 +627,70 @@ begin
     else
     begin
       rbCharsOnly.Checked := true;
-      seStrLen.Text := IntToStr(ComInputThread.LineLength);
+      seStrLen.Text := IntToStr(TerminalData.LineLength);
     end;
 
-    result := fmTermSet.showmodal;
+    result := fmTermSet.ShowModal;
     if result = mrOk then
-      with fmTermSet do
-      begin
-        Terminal.Font := edTestTerm.Font;
-        Terminal.Color := edTestTerm.Color;
-        if rbCharsOnly.Checked then
-          ComInputThread.SetOutputSettings(otCharsOnly, seStrLen.Value)
-        else
-          if cbHexLen.ItemIndex = 0 then
-            ComInputThread.SetOutputSettings(otCharsWithHex, 8)
-          else
-            ComInputThread.SetOutputSettings(otCharsWithHex, 16);
-      end;
+    begin
+      Terminal.Font := edTestTerm.Font;
+      Terminal.Color := edTestTerm.Color;
+      if rbCharsOnly.Checked then
+        TerminalSetOutputSettings(otCharsOnly, seStrLen.Value)
+      else if cbHexLen.ItemIndex = 0 then
+        TerminalSetOutputSettings(otCharsWithHex, 8)
+      else
+        TerminalSetOutputSettings(otCharsWithHex, 16);
+    end;
   end;
+end;
+
+procedure TfMain.TerminalShow(var message: TMessage);
+var
+  buf: array[0..4095] of byte;
+  size: integer;
+  i: integer;
+begin
+  ToLog(fMain, '+++');
+  try
+    EnterCriticalSection(TerminalData.OutputSettings);
+
+    ComInputThread.CopyInputBuffer(@buf, size);
+    ToLog(fMain, IntToStr(size));
+    with TerminalData do
+    begin
+      if Terminal.Lines.Count = 0 then
+        TerminalNewLine;
+
+      for i := 0 to size - 1 do
+      begin
+        if LineSymbols >= LineLength then
+        begin
+          if Terminal.Lines.Count > 200 then
+            Terminal.Lines.Delete(0);
+          TerminalNewLine;
+          SendMessage(Terminal.Handle, EM_SCROLL, 0, CurrentLineIndex);
+        end;
+
+        if OutputType = otCharsWithHex then
+        begin
+          CurrentLine[HexTable[LineSymbols]] := IntToHex((buf[i] shr 4) and $F, 1)[1];
+          CurrentLine[HexTable[LineSymbols] + 1] := IntToHex(buf[i] and $F, 1)[1];
+          CurrentLine[CharTable[LineSymbols]] := char(buf[i]);
+        end
+        else
+          CurrentLine[LineSymbols] := char(buf[i]);
+
+        inc(LineSymbols);
+        //Terminal.Lines.BeginUpdate;
+        Terminal.Lines[CurrentLineIndex] := CurrentLine;
+        //Terminal.Lines.EndUpdate;
+      end;
+    end;
+  finally
+    LeaveCriticalSection(TerminalData.OutputSettings);
+  end;
+  ToLog(fMain, '---');
 end;
 
 procedure TfMain.GotoDownloadExecute(Sender: TObject);
@@ -1043,7 +1164,7 @@ begin
   if SaveDialog1.Execute then
   begin
     fn := SaveDialog1.FileName;
-    if ExtractFileExt(fn) = '' then
+    if (ExtractFileExt(fn) = '') and (SaveDialog1.FilterIndex < Length(FilterExt)) then
       fn := fn + FilterExt[SaveDialog1.FilterIndex - 1];
     SetFileChanged(Tabs.PageIndex, false);
     if FileExists(fn) then
@@ -1287,6 +1408,20 @@ begin
   ChangeCompilerTo(compilerProteus);
 end;
 
+procedure TfMain.changeCompilerToQuarkClick(Sender: TObject);
+begin
+  changeCompilerToQuark.Checked := true;
+  ChangeCompilerTo(compilerQuark);
+end;
+
+procedure TerminalDataInit;
+begin
+  FillMemory(@TerminalData, sizeof(TerminalData), 0);
+  TerminalData.CurrentLine := '';
+  InitializeCriticalSection(TerminalData.OutputSettings);
+  fMain.TerminalSetOutputSettings(otCharsWithHex, 8);
+end;
+
 procedure DownloadComInit;
 var
   downloadCom: TDownloaderCom absolute downloader;
@@ -1310,18 +1445,15 @@ begin
     OpenKfFile(ParamStr(1));
 
   SetFormName;
-end;
 
-procedure TfMain.changeCompilerToQuarkClick(Sender: TObject);
-begin
-  changeCompilerToQuark.Checked := true;
-  ChangeCompilerTo(compilerQuark);
+  ComInputThread := TComInputThread.Create;
+  TerminalDataInit;
 end;
 
 initialization
   DownloadComInit;
-//  Assign(fLog, 'UnitSyntaxMemo.log');
-//  Rewrite(fLog);
+  Assign(fLog, 'UnitSyntaxMemo.log');
+  Rewrite(fLog);
 finalization
-//  CloseFile(fLog);
+  CloseFile(fLog);
 end.

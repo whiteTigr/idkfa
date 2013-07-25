@@ -9,6 +9,8 @@ const
   MaxCode = 1024 * 128;
   MaxData = 1024 * 128;
 
+  WM_TerminalShow = WM_APP + 0;
+
 type
   TDeviceType =
   (devNone,
