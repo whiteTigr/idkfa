@@ -217,6 +217,7 @@ begin
         sysSEC: DStack.Push(int1);
         sysMIN: DStack.Push(int1);
         sysHOUR: DStack.Push(int1);
+        else DStack.Push(0);
       end;
     end;
 
