@@ -50,8 +50,9 @@ type
     procedure Close; override;
 
     procedure SendByte(buf: byte); override;
-    procedure Send(buf: array of byte); overload; override;
-    procedure Send(buf: array of byte; size: integer); overload; override;
+     
+    procedure Send(const buf: array of byte); overload; override;
+    procedure Send(const buf: array of byte; size: integer); overload; override;
 
     procedure GetByte(var buf: byte); overload; override;
     procedure Get(var buf: array of byte; size: integer); overload; override;
@@ -128,7 +129,7 @@ begin
   SetCommTimeOuts(FHCom, TimeOuts);
 end;
 
-procedure TDownloaderCom.Send(buf: array of byte);
+procedure TDownloaderCom.Send(const buf: array of byte);
 var
   writted: cardinal;
   i: integer;
@@ -138,7 +139,7 @@ begin
 //    SendByte(buf[i]);
 end;
 
-procedure TDownloaderCom.Send(buf: array of byte; size: integer);
+procedure TDownloaderCom.Send(const buf: array of byte; size: integer);
 var
   writted: cardinal;
   i: integer;

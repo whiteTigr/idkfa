@@ -364,8 +364,6 @@ begin
   FormDownload.labelStatus.Hide;
   FormDownload.bCancel.Show;
   FormDownload.bCancel.Enabled := true;
-
-  fMain.BtnCOMonoff.Enabled := false;
 end;
 
 procedure HideVisualElements;
@@ -373,13 +371,11 @@ begin
   FormDownload.ProgressBar1.Hide;
   gauge.hide;
   buttonCancel.Hide;
-  fMain.Hide;
-  fMain.Show;
+  fMain.StatusBar1.Panels.Items[0].Text := '';
   if FormDownload.Visible then FormDownload.Show;
   FormDownload.bCancel.Hide;
   FormDownload.bCancel.Enabled := false;
   FormDownload.labelStatus.Show;
-  fMain.BtnCOMonoff.Enabled := true;
 end;
 
 procedure ReadSendCountPackage;
@@ -409,8 +405,6 @@ var
   i: integer;
   needToWait: real;
   downloadCom: TDownloaderCom absolute downloader;
-  wasOpen: boolean;
-  ComPropertiesChanges: boolean;
 label finishit;
 begin
   time := Now;
@@ -420,15 +414,9 @@ begin
   ReadSendCountPackage;
   ReadSendWaitingCoef;
 
-  wasOpen := downloadCom.isOpen;
-  ComPropertiesChanges := (downloadCom.ComName <> cbComName.Text) or (downloadCom.baudrate <> StrToInt(cbBaudrate.Text));
-  if not downloadCom.isOpen or ComPropertiesChanges then
-  begin
-    downloadCom.Close;
-    downloadCom.ComName := cbComName.Text;
-    downloadCom.baudrate := StrToInt(cbBaudrate.Text);
-    downloader.Open;
-  end;
+  downloadCom.ComName := cbComName.Text;
+  downloadCom.baudrate := StrToInt(cbBaudrate.Text);
+  downloader.Open;
 
   Application.ProcessMessages;
 
@@ -482,7 +470,7 @@ begin
 
     if UserBreak then GOTO FinishIt;
   end;
-  downloader.Send(SendBuffer[SendPtr], StopPtr - SendPtr);
+  downloader.Send(SendBuffer[SendPtr], StopPtr - SendPtr + 1);
   Application.ProcessMessages;
   sleep(round((StopPtr - SendPtr) * 8 / 115200 * SendWaitingCoef * 1000));
   gauge.AddProgress(StopPtr - SendPtr);
@@ -491,8 +479,7 @@ begin
   ClearReset;
 
 FinishIt:
-  if not wasOpen then
-    downloader.Close;
+  downloader.Close;
 
   if UserBreak then labelStatus.Caption := 'Cancelled.'
                else labelStatus.Caption := 'Successfully.';

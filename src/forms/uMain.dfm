@@ -161,16 +161,6 @@ object fMain: TfMain
       ImageIndex = 11
       Style = tbsSeparator
     end
-    object BtnCOMonoff: TToolButton
-      Left = 368
-      Top = 0
-      Hint = 'COM port ON/OFF'
-      Caption = 'BtnCOMonoff'
-      ImageIndex = 21
-      ParentShowHint = False
-      ShowHint = True
-      OnClick = BtnCOMonoffClick
-    end
   end
   object Panel1: TPanel
     Left = 0
