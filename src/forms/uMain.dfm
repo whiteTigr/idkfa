@@ -160,16 +160,6 @@ object fMain: TfMain
       ImageIndex = 11
       Style = tbsSeparator
     end
-    object BtnCOMonoff: TToolButton
-      Left = 368
-      Top = 0
-      Hint = 'COM port ON/OFF'
-      Caption = 'BtnCOMonoff'
-      ImageIndex = 21
-      ParentShowHint = False
-      ShowHint = True
-      OnClick = BtnCOMonoffClick
-    end
   end
   object Panel1: TPanel
     Left = 0
@@ -178,39 +168,17 @@ object fMain: TfMain
     Height = 103
     Align = alBottom
     TabOrder = 3
-    object Splitter2: TSplitter
-      Left = 393
-      Top = 1
-      Height = 101
-      ExplicitLeft = 568
-      ExplicitTop = 48
-      ExplicitHeight = 100
-    end
+    ExplicitLeft = 1
+    ExplicitTop = 454
     object Console: TMemo
       Left = 1
       Top = 1
-      Width = 392
-      Height = 101
-      Align = alLeft
-      ScrollBars = ssBoth
-      TabOrder = 0
-    end
-    object Terminal: TMemo
-      Left = 396
-      Top = 1
-      Width = 346
+      Width = 741
       Height = 101
       Align = alClient
-      Font.Charset = RUSSIAN_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -13
-      Font.Name = 'Fixedsys'
-      Font.Style = []
-      ParentFont = False
       ScrollBars = ssBoth
-      TabOrder = 1
-      ExplicitLeft = 399
-      ExplicitTop = 2
+      TabOrder = 0
+      ExplicitWidth = 392
     end
   end
   object Panel3: TPanel

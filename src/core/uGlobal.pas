@@ -144,8 +144,8 @@ type
     procedure Close; virtual; abstract;
 
     procedure SendByte(buf: byte); virtual; abstract;
-    procedure Send(buf: array of byte); overload; virtual;
-    procedure Send(buf: array of byte; size: integer); overload; virtual;
+    procedure Send(const buf: array of byte); overload; virtual;
+    procedure Send(const buf: array of byte; size: integer); overload; virtual;
     procedure Send(buf: integer); overload; virtual;
     procedure Send(buf: word); overload; virtual;
     procedure Send(buf: byte); overload; virtual;
@@ -397,12 +397,12 @@ end;
 
 { TDownloader }
 
-procedure TDownloader.Send(buf: array of byte);
+procedure TDownloader.Send(const buf: array of byte);
 begin
   Send(buf, sizeof(buf));
 end;
 
-procedure TDownloader.Send(buf: array of byte; size: integer);
+procedure TDownloader.Send(const buf: array of byte; size: integer);
 var
   i: integer;
 begin
