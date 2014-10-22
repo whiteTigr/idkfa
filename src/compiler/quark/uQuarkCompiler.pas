@@ -51,18 +51,17 @@ implementation
 
 var
   eval_str: AnsiString;
-
-function QuarkEvaluate(s : integer): integer; external QuarkDll name 'Evaluate';
-function QuarkEvaluateC(s : integer): integer; external QuarkDll name 'EvaluateC';
-function QuarkInit(): integer; external QuarkDll name 'Init';
-function QuarkDone(): integer; external QuarkDll name 'Done';
-function QuarkGetCode(): integer; external QuarkDll name 'GetCode';
-function QuarkGetData(): integer; external QuarkDll name 'GetData';
-function QuarkGetStack(): integer; external QuarkDll name 'GetStack';
-function QuarkGetDepth(): integer; external QuarkDll name 'GetDepth';
-function QuarkGetScreen(): integer; external QuarkDll name 'GetScreen';
-function QuarkSetHWindow(hwnd : integer): integer; external QuarkDll name 'SetHWindow';
-function QuarkForthInfo(): integer; external QuarkDll name 'ForthInfo';
+  QuarkEvaluate: function(s : integer): integer;
+  QuarkEvaluateC: function(s : integer): integer;
+  QuarkInit: function(): integer;
+  QuarkDone: function(): integer;
+  QuarkGetCode: function(): integer;
+  QuarkGetData: function(): integer;
+  QuarkGetStack: function(): integer;
+  QuarkGetDepth: function(): integer;
+  QuarkGetScreen: function(): integer;
+  QuarkSetHWindow: function(hwnd : integer): integer;
+  QuarkForthInfo: function(): integer;
 
 function ExecAndWait(const FileName: string;
                      const WinState: Word): boolean; export;
@@ -114,6 +113,19 @@ constructor TQuarkCompiler.Create;
 begin
   inherited;
 
+  DLLHandle := LoadLibrary(QuarkDll);
+  QuarkEvaluate := GetProcAddress(DLLHandle, 'Evaluate');
+  QuarkEvaluateC := GetProcAddress(DLLHandle, 'EvaluateC');
+  QuarkInit := GetProcAddress(DLLHandle, 'Init');
+  QuarkDone := GetProcAddress(DLLHandle, 'Done');
+  QuarkGetCode := GetProcAddress(DLLHandle, 'GetCode');
+  QuarkGetData := GetProcAddress(DLLHandle, 'GetData');
+  QuarkGetStack := GetProcAddress(DLLHandle, 'GetStack');
+  QuarkGetDepth := GetProcAddress(DLLHandle, 'GetDepth');
+  QuarkGetScreen := GetProcAddress(DLLHandle, 'GetScreen');
+  QuarkSetHWindow := GetProcAddress(DLLHandle, 'SetHWindow');
+  QuarkForthInfo := GetProcAddress(DLLHandle, 'ForthInfo');
+
   FCode := 0;
   FData := 0;
 
@@ -126,7 +138,7 @@ end;
 destructor TQuarkCompiler.Destroy;
 begin
   QuarkDone;
-//  FreeLibrary(DLLHandle);
+  FreeLibrary(DLLHandle);
   inherited;
 end;
 
