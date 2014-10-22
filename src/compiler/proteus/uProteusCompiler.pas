@@ -134,6 +134,8 @@ type
     procedure FindToken; overload;
     function FindToken(const name: string): integer; overload;
 
+    function TryDispatchIntegerNumber: boolean;
+    function TryDispatchFloatNumber: boolean;
     procedure TryDispatchNumber;
 
     function LastCmd(InTempCode: boolean = false): integer;
@@ -751,7 +753,7 @@ begin
   Result := -1;
 end;
 
-procedure TProteusCompiler.TryDispatchNumber;
+function TProteusCompiler.TryDispatchIntegerNumber: boolean;
 var
   instr: string;
   curChar: char;
@@ -818,14 +820,39 @@ begin
       curDigit := curDigit - ord('A') + ord('9') + 1;
     if (curDigit < 0) or (curDigit > base) then
     begin
-      Error(errInvalideNumber);
-      res := -1;
-      break;
+      Result := false;
+      Exit;
     end;
     res := res * base + curDigit;
   end;
 
   Number := sign * res;
+  Result := true;
+end;
+
+function TProteusCompiler.TryDispatchFloatNumber: boolean;
+var
+  instr: string;
+  fvalue: single;
+  len: integer;
+  i: integer;
+begin
+  instr := Parser.token;
+  len := Length(instr);
+  for i := 1 to len do
+    if (instr[i] = '.') or (instr[i] = ',') then
+      instr[i] := DecimalSeparator;
+
+  Result := TryStrToFloat(instr, fvalue);
+  if Result then
+    Number := PInt(@fvalue)^;
+end;
+
+procedure TProteusCompiler.TryDispatchNumber;
+begin
+  if TryDispatchIntegerNumber then Exit;
+  if TryDispatchFloatNumber then Exit;
+  Error(errInvalideNumber);
 end;
 
 procedure TProteusCompiler.WritePredefinedVariables;
@@ -1262,7 +1289,7 @@ var
   addr: integer;
   procedure CompileCharacter(value: char);
   begin
-    CompileNumber(integer(value), true);
+    CompileNumber(integer(AnsiString(value)[1]), true);
     CompileNumber(DP, true);
     Compile(cmdNop, true);
     Compile(cmdSTORE, true);

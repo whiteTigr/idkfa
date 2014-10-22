@@ -986,7 +986,7 @@ end;
 procedure TfMain.SaveAsExecute(Sender: TObject);
 var
   fn: string;
-  ext: string;
+//  ext: string;
 begin
   // нет ни одной вкладки
   if Length(mmCode) = 0 then

@@ -1614,7 +1614,7 @@ begin
           begin
             if HasChars(si, 2, ['0' .. '9']) then
               Result := tokInteger
-            else if HasChars(si, 2, ['0' .. '9', PA.LiteralDecimalPoint]) then
+            else if HasChars(si, 2, ['0' .. '9', PA.LiteralDecimalPoint, 'E', '-']) then
               Result := tokFloat
           end;
 

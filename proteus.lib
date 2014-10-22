@@ -1,7 +1,11 @@
 : CpuBaseAddr 0x10000 ; INLINE
 
-: -TH // addr, index --> addr+index*cellsize
- +
+: CELLS // value -- value*cellsize
+ 1 *
+; INLINE
+
+: -TH // addr, index -- addr+index*cellsize
+ CELLS +
 ; INLINE
 
 : -1 0 NOT ; INLINE
@@ -16,18 +20,15 @@
  THEN
 ;
 
-
-: 34NOPS    // 50 nops
+: 34NOPS    // 34 nops
   NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP
   NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP
   NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP
   NOP NOP NOP NOP
-//  NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP
-//                  NOP NOP NOP NOP NOP NOP
 ;
 
-: SETDIVAHIGH CpuBaseAddr     OUTPORT ; INLINE
-: SETDIVALOW  CpuBaseAddr 1 + OUTPORT ; INLINE
+: SETDIVALOW  CpuBaseAddr     OUTPORT ; INLINE
+: SETDIVAHIGH CpuBaseAddr 1 + OUTPORT ; INLINE
 : SETDIVB     CpuBaseAddr 2 + OUTPORT ; INLINE
 : STARTDIVIDE 0 CpuBaseAddr 3 + OUTPORT ; INLINE
 : DIVASHRA    0 CpuBaseAddr 4 + OUTPORT ; INLINE
@@ -38,21 +39,18 @@
 : COMINIT 0 CpuBaseAddr 16 + OUTPORT ; INLINE
 : TestGetByte 0 CpuBaseAddr 17 + OUTPORT ; INLINE
 
-VARIABLE ÇÍÀÊ
+VARIABLE DividerSign
 : DEPTH         0 SYSREG@ ; INLINE
 : RDEPTH        1 SYSREG@ ; INLINE
 : I             2 SYSREG@ ; INLINE
-// : /      34NOPS DROP DROP 3 SYSREG@  ;
 : / // a, b --> a/b
-  OVER 0< OVER 0< XOR SHL 1 + ÇÍÀÊ ! ABS SWAP ABS SWAP
+  OVER 0< OVER 0< XOR SHL 1 + DividerSign ! ABS SWAP ABS SWAP
   SETDIVB // b (63..32)
   SETDIVALOW // a (31..0)
   0 SETDIVAHIGH // a (63..32)
   STARTDIVIDE // start
-  34NOPS 3 SYSREG@ ÇÍÀÊ @ *
+  34NOPS 3 SYSREG@ DividerSign @ *
 ;
-// : MOD    34NOPS DROP DROP 4 SYSREG@ ;
-// : /MOD   34NOPS DROP DROP 3 SYSREG@ 4 SYSREG@ ;
 : MOD    / DROP 4 SYSREG@ ; INLINE
 : /MOD   /      4 SYSREG@ ; INLINE
 : COMREADYFORTX 5 SYSREG@ ; INLINE
@@ -68,6 +66,9 @@ VARIABLE ÇÍÀÊ
 : MULT64       15 SYSREG@ ; INLINE
 : DIVALOW      16 SYSREG@ ; INLINE
 : DIVAHIGH     17 SYSREG@ ; INLINE
+: RXCOUNTER    18 SYSREG@ ; INLINE
+: TXCOUNTER    19 SYSREG@ ; INLINE
+: USCOUNTER    20 SYSREG@ ; INLINE
 
 : << // x n --> (x shl n)
  DUP IF 0 DO
@@ -190,7 +191,6 @@ VARIABLE num
  AGAIN
 ;
 
-VARIABLE StrCmpRes
 : StrCmp
  1 - SWAP 1 - SWAP
  BEGIN
@@ -228,10 +228,12 @@ VARIABLE StrCmpRes
 
 : PRINT \ str-addr -->
  BEGIN
-  DUP @ 0 = IF DROP EXIT THEN
+  DUP @
+ WHILE
   DUP @ ->COM
   1 +
- AGAIN
+ REPEAT
+ DROP
 ;
 
 : HEXDIGIT
@@ -283,7 +285,7 @@ RND @ 69069 * 31415 + 278720333 MOD DUP RND !
 
 VARIABLE 'J
 : J 'J @ ; INLINE
-: J! I 'J ! ; INLINE
+: J! 'J ! ; INLINE
 
 : SMOVE // src dest -->
  BEGIN
@@ -299,5 +301,3 @@ VARIABLE 'J
 : S< // a b --> a<b
  - 0<
 ;
-
-: DEP->COM INT->COM 0x2E ->COM DEPTH INT->COM 9 ->COM ; INLINE // count -->

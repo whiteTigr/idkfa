@@ -168,8 +168,6 @@ object fMain: TfMain
     Height = 103
     Align = alBottom
     TabOrder = 3
-    ExplicitLeft = 1
-    ExplicitTop = 454
     object Console: TMemo
       Left = 1
       Top = 1
@@ -178,7 +176,6 @@ object fMain: TfMain
       Align = alClient
       ScrollBars = ssBoth
       TabOrder = 0
-      ExplicitWidth = 392
     end
   end
   object Panel3: TPanel

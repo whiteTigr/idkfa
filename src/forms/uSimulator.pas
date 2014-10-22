@@ -736,5 +736,3 @@ end;
 initialization
   Init;
 end.
-
->>>>>>> master
