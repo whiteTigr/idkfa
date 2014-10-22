@@ -114,6 +114,11 @@ begin
   inherited;
 
   DLLHandle := LoadLibrary(QuarkDll);
+  if DLLHandle = 0 then
+  begin
+    raise Exception.Create(QuarkDLL + ' not found!');
+  end;
+
   QuarkEvaluate := GetProcAddress(DLLHandle, 'Evaluate');
   QuarkEvaluateC := GetProcAddress(DLLHandle, 'EvaluateC');
   QuarkInit := GetProcAddress(DLLHandle, 'Init');
@@ -137,8 +142,11 @@ end;
 
 destructor TQuarkCompiler.Destroy;
 begin
-  QuarkDone;
-  FreeLibrary(DLLHandle);
+  if DLLHandle > 0 then
+  begin
+    QuarkDone;
+    FreeLibrary(DLLHandle);
+  end;
   inherited;
 end;
 
