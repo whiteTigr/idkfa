@@ -290,11 +290,44 @@ begin
   ToSend([value and $F, ((value shr 4) and $F) or $10, 241, 242]);
 end;
 
+procedure ProgrammData(_value: integer);
+var
+  value: integer;
+  buf: array[0..4] of byte;
+  count: integer;
+begin
+  value := _value;
+  count := 0;
+  while value <> 0 do
+  begin
+    buf[count] := value and $7F;
+    inc(count);
+    value := value shr 7;
+  end;
+  while count > 0 do
+  begin
+    ToSend(buf[count]);
+    dec(count);
+  end;
+  ToSend($80);
+end;
+
 procedure PrepareToSend_Proteus;
+const
+  LoadDataMemoryProgramm: array[0..55] of byte = (41, 23, 0, 0, 0, 0, 0, 0, 0, 32, 0, 34, 32, 32, 48, 27, 32, 0, 32, 0, 39, 12, 32, 61, 29, 38, 12, 8, 36, 32, 15, 32, 43, 29, 22, 9, 27, 33, 13, 32, 0, 32, 42, 25, 7, 39, 0, 32, 28, 3, 11, 0, 13, 32, 52, 23);
 var
   i: integer;
 begin
   SendBufferPtr := 0;
+
+  ToSend([243, 240]); // reset, addr=0
+  ToSend(LoadDataMemoryProgramm);
+  ToSend(244);
+  for i := 0 to compiler.DataCount - 1 do
+  begin
+    ProgrammData(compiler.Data(i));
+  end;
+
   ToSend([243, 240]); // reset, addr=0
   for i := 0 to compiler.CodeCount - 1 do
   begin

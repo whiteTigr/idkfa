@@ -32,10 +32,11 @@ type
 
   PTokenWord = ^TTokenWord;
   TTokenWord = record
-    name : string[255];
-    tag : integer;
-    immediate : boolean;
-    proc : TProc;
+    name: string[255];
+    tag: integer;
+    immediate: boolean;
+    proc: TProc;
+    memory: pointer;
   end;
   PVocabulary = ^TVocabulary;
   TVocabulary = array[0..MaxVocabulary-1] of TTokenWord;
@@ -279,7 +280,7 @@ const
   stCompiling = 1;
   stInterpreting = 0;
 
-function TokenWord(name: string; tag: integer; immediate: boolean; proc: TProc): TTokenWord;
+function TokenWord(name: string; tag: integer; immediate: boolean; proc: TProc; memory: pointer): TTokenWord;
 function ControlStackCell(addr: integer; source: integer): TControlStackCell;
 
 implementation
@@ -298,12 +299,13 @@ const
 
   RJmpSize = 2;
 
-function TokenWord(name: string; tag: integer; immediate: boolean; proc: TProc): TTokenWord;
+function TokenWord(name: string; tag: integer; immediate: boolean; proc: TProc; memory: pointer): TTokenWord;
 begin
   Result.name := ShortString(name);
   Result.tag := tag;
   Result.immediate := immediate;
   Result.proc := proc;
+  Result.memory := memory;
 end;
 
 function ControlStackCell(addr: integer; source: integer): TControlStackCell;
@@ -583,37 +585,37 @@ end;
 
 procedure TProteusCompiler.AddImmToken(name: string; proc: TProc; tag: integer = 0);
 begin
-  AddToken(TokenWord(name, tag, true, proc));
+  AddToken(TokenWord(name, tag, true, proc, nil));
   AddSynlightWord(name, tokImmediate);
 end;
 
 procedure TProteusCompiler.AddForthToken(name: string; tag: integer);
 begin
-  AddToken(TokenWord(name, tag, false, nil));
+  AddToken(TokenWord(name, tag, false, nil, nil));
   AddSynlightWord(name, tokAlfabet);
 end;
 
 procedure TProteusCompiler.AddCmd2Token(name: string; tag: integer);
 begin
-  AddToken(TokenWord(name, tag, true, _Cmd2));
+  AddToken(TokenWord(name, tag, true, _Cmd2, nil));
   AddSynlightWord(name, tokAlfabet);
 end;
 
 procedure TProteusCompiler.AddCmd3Token(name: string; tag: integer);
 begin
-  AddToken(TokenWord(name, tag, true, _Cmd3));
+  AddToken(TokenWord(name, tag, true, _Cmd3, nil));
   AddSynlightWord(name, tokAlfabet);
 end;
 
 procedure TProteusCompiler.AddVarChange(name: string; _var: pointer);
 begin
-  AddToken(TokenWord(name, integer(_var), true, _VarChange));
+  AddToken(TokenWord(name, integer(_var), true, _VarChange, nil));
   AddSynlightWord(name, tokDict);
 end;
 
 function TProteusCompiler.AddVariable(name: string; size: integer = 1): integer;
 begin
-  AddToken(TokenWord(name, DP, true, _VariableProc));
+  AddToken(TokenWord(name, DP, true, _VariableProc, nil));
   AddSynlightWord(name, tokVar);
   Result := DP;
   inc(DP, size);
@@ -696,11 +698,11 @@ begin
   AddVarChange('#MaxData=', @UserMaxData);
 
   ReserveCodeForJump;
-  Evaluate(': DP++ HERE @ 1 + HERE ! ;');
-  Evaluate(': CP++ [C]HERE @ 1 + [C]HERE ! ;');
-  Evaluate(': ALLOT HERE @ + HERE ! ;');
-  Evaluate(': [C]ALLOT [C]HERE @ + [C]HERE ! ;');
-  Evaluate(': _, HERE @ ! DP++ ;');
+//  Evaluate(': DP++ HERE @ 1 + HERE ! ;');
+//  Evaluate(': CP++ [C]HERE @ 1 + [C]HERE ! ;');
+//  Evaluate(': ALLOT HERE @ + HERE ! ;');
+//  Evaluate(': [C]ALLOT [C]HERE @ + [C]HERE ! ;');
+//  Evaluate(': _, HERE @ ! DP++ ;');
 //  Evaluate(': _[C], [C]HERE @ [C]! CP++ ;'); // нет команды [C]!
 end;
 
@@ -857,8 +859,10 @@ end;
 
 procedure TProteusCompiler.WritePredefinedVariables;
 begin
-  if FindToken('HERE') <> -1 then CompileNumberTo(PredefinedVariablePos[0], DP);
-  if FindToken('[C]HERE') <> -1 then CompileNumberTo(PredefinedVariablePos[1], CP);
+//  if FindToken('HERE') <> -1 then CompileNumberTo(PredefinedVariablePos[0], DP);
+//  if FindToken('[C]HERE') <> -1 then CompileNumberTo(PredefinedVariablePos[1], CP);
+  FData[0].value := DP;
+  FData[1].value := CP;
 end;
 
 function TProteusCompiler.LastCmd(InTempCode: boolean = false): integer;
@@ -1079,7 +1083,7 @@ begin
     if firstPart then
     begin
       firstPart := false;
-//      sign extention
+//    sign extention
 //      ValueIsNegative := (cmd and NegativeBit) <> 0;
 //      if ValueIsNegative then
 //        value := value or (not LitMask);
@@ -1202,19 +1206,19 @@ begin
   _CP := CompileNumberTo(0, CP);
   CompileTo(_CP, cmdJMP);
 
-  for i := Low(PredefinedVariable) to High(PredefinedVariable) do
-  begin
-    tmp := FindToken(PredefinedVariable[i]);
-    if tmp <> -1 then
-    begin
-      PredefinedVariablePos[i] := CP;
-      ReserveCodeForNumber(integer($80000000)); // reserve code for max number
-      Compile(cmdNOP);
-      CompileNumber(FVocabulary[tmp].tag);
-      Compile(cmdNOP);
-      Compile(cmdStore);
-    end;
-  end;
+//  for i := Low(PredefinedVariable) to High(PredefinedVariable) do
+//  begin
+//    tmp := FindToken(PredefinedVariable[i]);
+//    if tmp <> -1 then
+//    begin
+//      PredefinedVariablePos[i] := CP;
+//      ReserveCodeForNumber(integer($80000000)); // reserve code for max number
+//      Compile(cmdNOP);
+//      CompileNumber(FVocabulary[tmp].tag);
+//      Compile(cmdNOP);
+//      Compile(cmdStore);
+//    end;
+//  end;
 
   CopyTempCode;
 end;
@@ -1341,14 +1345,14 @@ end;
 procedure TProteusCompiler._PROC;
 begin
   ParseToken;
-  AddToken(TokenWord(Parser.token, CP, true, _CompileCall));
+  AddToken(TokenWord(Parser.token, CP, true, _CompileCall, nil));
   AddSynlightWord(Parser.token, tokDict);
 end;
 
 procedure TProteusCompiler._CompilePROC;
 begin
   _PROC;
-  State := 1; // compiling
+  State := stCompiling;
 end;
 
 procedure TProteusCompiler._RET;
@@ -1358,7 +1362,7 @@ begin
     Error(errControlStackNotEmpty);
     Exit;
   end;
-  State := 0; // interpreting
+  State := stInterpreting;
   Compile(cmdRet);
 end;
 
@@ -1372,13 +1376,13 @@ procedure TProteusCompiler._CompileInline;
 var
   i: integer;
 begin
-  i := Token.tag;
-  if CmdIsLiteral(Code(i)) and CmdIsLiteral(Code(CP-1)) then
+  if CmdIsLiteral(PByteArray(Token.memory)[0]) and CmdIsLiteral(Code(CP-1)) then
     Compile(cmdNOP);
 
-  while Code(i) <> cmdRET do
+  i := 0;
+  while PByteArray(Token.memory)[i] <> cmdRET do
   begin
-    Compile(Code(i));
+    Compile(PByteArray(Token.memory)[i]);
     inc(i);
   end;
 end;
@@ -1400,7 +1404,7 @@ var
   f: TextFile;
   i: integer;
 begin
-  AssignFile(f, 'damp.txt');
+  AssignFile(f, 'dump.txt');
   Rewrite(f);
   writeln(f,
       format('%32s %10s %8s %5s %8s',
@@ -1419,7 +1423,7 @@ var
 begin
   name := ParseToken;
   size := ParseInt;
-  AddToken(TokenWord(name, DP, true, _VariableProc));
+  AddToken(TokenWord(name, DP, true, _VariableProc, nil));
   AddSynlightWord(name, tokVar);
   inc(DP, size);
 end;
@@ -1467,8 +1471,22 @@ begin
 end;
 
 procedure TProteusCompiler._Inline;
+var
+  i: integer;
+  length: integer;
 begin
+  // todo: нужна проверка на то, что последняя запись в словаре - это процедура
+  // todo: требование INLINE строго после процедуры
   FVocabulary[VP-1].proc := _CompileInline;
+  length := CP - FVocabulary[VP-1].tag;
+  CP := FVocabulary[VP-1].tag;
+
+  if FVocabulary[VP-1].memory <> nil then
+    FreeMemory(FVocabulary[VP-1].memory);
+  FVocabulary[VP-1].memory := GetMemory(length);
+
+  for i := 0 to length - 1 do
+    PByteArray(FVocabulary[VP-1].memory)[i] := FCode[CP + i].value;
 end;
 
 procedure TProteusCompiler._LoadFile;
@@ -1527,8 +1545,6 @@ begin
 end;
 
 procedure TProteusCompiler._WriteCode;
-var
-  tokenID: integer;
 begin
   if isInterpreting then
   begin
@@ -1737,6 +1753,8 @@ begin
 end;
 
 procedure TProteusCompiler.BeginCompile;
+var
+  i: integer;
 begin
   inherited;
 
@@ -1749,6 +1767,12 @@ begin
   CP := HardwiredCodeCount;
   DP := HardwiredDataCount;
   ControlStackTop := 0;
+  for i := HardwiredWordsCount to VP-1 do
+    if FVocabulary[i].memory <> nil then
+    begin
+      FreeMemory(FVocabulary[i].memory);
+      FVocabulary[i].memory := nil;
+    end;
   VP := HardwiredWordsCount;
   SynLightWords.Clear;
   SynLightWords.AddStrings(HardwiredWords);
