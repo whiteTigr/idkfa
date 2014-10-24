@@ -511,7 +511,11 @@ begin
   ParseAll(Tabs.PageIndex);
 
   if compiler.LastError = 0 then
-    Console.Lines.Add('Complete.')
+  begin
+    Console.Lines.Add('Complete.');
+    Console.Lines.Add(format('Code: %d / %d (%.0f%%)', [compiler.CodeCount, compiler.MaxCode, compiler.CodeCount * 100 / compiler.MaxCode]));
+    Console.Lines.Add(format('Data: %d / %d (%.0f%%)', [compiler.DataCount, compiler.MaxData, compiler.DataCount * 100 / compiler.MaxData]));
+  end
   else
     Console.Lines.Add('There are errors!');
 

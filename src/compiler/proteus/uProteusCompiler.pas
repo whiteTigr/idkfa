@@ -1293,10 +1293,10 @@ var
   addr: integer;
   procedure CompileCharacter(value: char);
   begin
-    CompileNumber(integer(AnsiString(value)[1]), true);
-    CompileNumber(DP, true);
-    Compile(cmdNop, true);
-    Compile(cmdSTORE, true);
+//    CompileNumber(integer(AnsiString(value)[1]), true);
+//    CompileNumber(DP, true);
+//    Compile(cmdNop, true);
+//    Compile(cmdSTORE, true);
     FData[DP].value := integer(value);
     inc(DP);
   end;

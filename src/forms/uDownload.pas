@@ -306,7 +306,7 @@ begin
   end;
   while count > 0 do
   begin
-    ToSend(buf[count]);
+    ToSend(buf[count - 1]);
     dec(count);
   end;
   ToSend($80);
@@ -321,7 +321,8 @@ begin
   SendBufferPtr := 0;
 
   ToSend([243, 240]); // reset, addr=0
-  ToSend(LoadDataMemoryProgramm);
+  for i := 0 to Length(LoadDatamemoryProgramm) - 1 do
+    ProgrammByte(LoadDatamemoryProgramm[i]);
   ToSend(244);
   for i := 0 to compiler.DataCount - 1 do
   begin
