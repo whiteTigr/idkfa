@@ -698,11 +698,11 @@ begin
   AddVarChange('#MaxData=', @UserMaxData);
 
   ReserveCodeForJump;
-//  Evaluate(': DP++ HERE @ 1 + HERE ! ;');
-//  Evaluate(': CP++ [C]HERE @ 1 + [C]HERE ! ;');
-//  Evaluate(': ALLOT HERE @ + HERE ! ;');
-//  Evaluate(': [C]ALLOT [C]HERE @ + [C]HERE ! ;');
-//  Evaluate(': _, HERE @ ! DP++ ;');
+  Evaluate(': DP++ HERE @ 1 + HERE ! ;');
+  Evaluate(': CP++ [C]HERE @ 1 + [C]HERE ! ;');
+  Evaluate(': ALLOT HERE @ + HERE ! ;');
+  Evaluate(': [C]ALLOT [C]HERE @ + [C]HERE ! ;');
+  Evaluate(': _, HERE @ ! DP++ ;');
 //  Evaluate(': _[C], [C]HERE @ [C]! CP++ ;'); // нет команды [C]!
 end;
 
@@ -1297,7 +1297,7 @@ var
 //    CompileNumber(DP, true);
 //    Compile(cmdNop, true);
 //    Compile(cmdSTORE, true);
-    FData[DP].value := integer(value);
+    FData[DP].value := integer(AnsiString(value)[1]);
     inc(DP);
   end;
 begin

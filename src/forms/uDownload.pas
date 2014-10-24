@@ -479,7 +479,7 @@ begin
   else
     StopPtr := DataStart;
   fMain.Console.Lines.Add('Bytes to send: ' + inttostr(StopPtr) + ' b (' + floattostr(round(StopPtr/1024*100)/100) + ' kb)');
-  fMain.Console.Lines.Add('Estimated download time: ' + floattostr(round(StopPtr * 8 / 115200 * SendWaitingCoef * 180)/100) + ' s');
+//  fMain.Console.Lines.Add('Estimated download time: ' + floattostr(round(StopPtr * 8 / 115200 * SendWaitingCoef * 180)/100) + ' s');
   ProgressBar1.Max := StopPtr;
   gauge.MaxValue := StopPtr;
   while ((SendPtr + SendCountPackage) < StopPtr) do

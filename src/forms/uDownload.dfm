@@ -16,7 +16,7 @@ object FormDownload: TFormDownload
   TextHeight = 13
   object bDownload: TSpeedButton
     Left = 80
-    Top = 16
+    Top = 25
     Width = 177
     Height = 57
     Action = ProcessDownload
