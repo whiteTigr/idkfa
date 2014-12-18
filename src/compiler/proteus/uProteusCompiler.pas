@@ -1697,6 +1697,7 @@ end;
 function TProteusCompiler.GetPrevLiteral(var addr: integer; out valueGetted: boolean): integer;
 var
   cmdAddr: integer;
+  controlTop: TControlStackCell;
 begin
   cmdAddr := addr;
   dec(addr);
@@ -1706,7 +1707,13 @@ begin
     dec(addr);
   inc(addr);
 
-  valueGetted := (addr < cmdAddr) and CmdIsLiteral(FCode[addr].value);
+  if (ControlStackTop > 0) then
+    controlTop := ControlReadTop
+  else
+    controlTop := ControlStackCell(0, 0);
+
+  valueGetted := (addr < cmdAddr) and CmdIsLiteral(FCode[addr].value)
+    and not ((controlTop.Source = sBEGIN) and (controlTop.Addr > addr));
   if valueGetted then
     Result := GetLiteralValue(addr);
 end;
@@ -1765,7 +1772,9 @@ begin
   State := 0;
   TCP := 0;
   CP := HardwiredCodeCount;
+  FillMemory(@FCode[CP], sizeof(TCodeCell) * (MaxCode - HardwiredCodeCount), 0);
   DP := HardwiredDataCount;
+  FillMemory(@FData[DP], sizeof(TDataCell) * (MaxData - HardwiredDataCount), 0);
   ControlStackTop := 0;
   for i := HardwiredWordsCount to VP-1 do
     if FVocabulary[i].memory <> nil then
