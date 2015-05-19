@@ -684,7 +684,7 @@ begin
   AddImmToken(',Z', _Z);
   AddImmToken(',', _WriteData);
   AddImmToken('[C],', _WriteCode);
-  AddImmToken(',', _ALLOT);
+  AddImmToken('ALLOT', _ALLOT);
 
   AddImmToken('{', _Interpret);
   AddForthToken('}', cmdRET);
