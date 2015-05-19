@@ -301,3 +301,18 @@ VARIABLE 'J
 : S< // a b --> a<b
  - 0<
 ;
+
+: ByteReverse // 0x12345678 -- 0x78563412
+ DUP  0x000000FF AND 24 <<
+ OVER 0x0000FF00 AND  8 << +
+ OVER 0x00FF0000 AND  8 >> +
+ SWAP 0xFF000000 AND 24 >> +
+;
+
+: OFF // addr --
+ 0 SWAP !
+;
+
+: ON // addr --
+ -1 SWAP !
+;

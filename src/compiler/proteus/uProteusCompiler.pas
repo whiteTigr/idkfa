@@ -201,6 +201,7 @@ type
 
     procedure _WriteData;
     procedure _WriteCode;
+    procedure _ALLOT;
   public
     procedure BeginInitCommandSystem;
     procedure EndInitCommandSystem;
@@ -683,6 +684,7 @@ begin
   AddImmToken(',Z', _Z);
   AddImmToken(',', _WriteData);
   AddImmToken('[C],', _WriteCode);
+  AddImmToken(',', _ALLOT);
 
   AddImmToken('{', _Interpret);
   AddForthToken('}', cmdRET);
@@ -700,8 +702,8 @@ begin
   ReserveCodeForJump;
   Evaluate(': DP++ HERE @ 1 + HERE ! ;');
   Evaluate(': CP++ [C]HERE @ 1 + [C]HERE ! ;');
-  Evaluate(': ALLOT HERE @ + HERE ! ;');
-  Evaluate(': [C]ALLOT [C]HERE @ + [C]HERE ! ;');
+  Evaluate(': _ALLOT HERE @ + HERE ! ;');
+  Evaluate(': _[C]ALLOT [C]HERE @ + [C]HERE ! ;');
   Evaluate(': _, HERE @ ! DP++ ;');
 //  Evaluate(': _[C], [C]HERE @ [C]! CP++ ;'); // нет команды [C]!
 end;
@@ -1566,6 +1568,18 @@ begin
   else
   begin
     CompileCallTo('_,');
+  end;
+end;
+
+procedure TProteusCompiler._ALLOT;
+begin
+  if isInterpreting then
+  begin
+    inc(DP, GetLastNumber);
+  end
+  else
+  begin
+    CompileCallTo('_ALLOT');
   end;
 end;
 
