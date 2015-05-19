@@ -1564,7 +1564,6 @@ begin
   begin
     FData[DP].value := GetLastNumber;
     inc(DP);
-    Beep;
   end
   else
   begin
@@ -1577,7 +1576,6 @@ begin
   if isInterpreting then
   begin
     inc(DP, GetLastNumber);
-    Beep;
   end
   else
   begin
