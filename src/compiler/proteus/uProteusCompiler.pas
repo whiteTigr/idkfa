@@ -258,7 +258,8 @@ const
   errControlMismatch = 9;
   errFileNotFound = 10;
   errControlStackNotEmpty = 11;
-  errCount = 12;
+  errUnexceptedEOLN = 12;
+  errCount = 13;
 
   ErrorMessage: array[0..errCount-1] of record
     code: integer;
@@ -275,7 +276,8 @@ const
    (code: errUnknownToken; msg: 'Unknown token'),
    (code: errControlMismatch; msg: 'Control mismatch'),
    (code: errFileNotFound; msg: 'File not found'),
-   (code: errControlStackNotEmpty; msg: 'Control stack not empty')
+   (code: errControlStackNotEmpty; msg: 'Control stack not empty'),
+   (code: errUnexceptedEOLN; msg: 'Unexcepted end of line')
   );
 
   stCompiling = 1;
@@ -1496,6 +1498,7 @@ var
   inputFile: TextFile;
   fileName: string;
   str: string;
+  lineNumber: integer;
 begin
   fileName := GetLastString;
 
@@ -1516,6 +1519,7 @@ begin
     end;
   end;
 
+  lineNumber := 1;
   AssignFile(inputFile, str);
   Reset(inputFile);
   try
@@ -1523,11 +1527,12 @@ begin
     begin
       readln(inputFile, str);
       Evaluate(str);
+      inc(lineNumber);
     end;
 
     if (LastError <> 0) then
     begin
-      ErrorComment := 'at "' + fileName + '"';
+      ErrorComment := format('at line %d in file %s', [lineNumber, fileName]);
     end;
   finally
     CloseFile(inputFile);
@@ -1830,7 +1835,10 @@ end;
 function TProteusCompiler.ParseToken: string;
 begin
   if not Parser.NextWord then
-    raise Exception.Create(UNEXCEPTED_EOLN);
+  begin
+    Error(errUnexceptedEOLN);
+//    raise Exception.Create(UNEXCEPTED_EOLN);
+  end;
 
   Result := Parser.token;
 end;
