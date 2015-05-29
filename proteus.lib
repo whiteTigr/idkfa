@@ -373,10 +373,48 @@ VARIABLE WriteAddr
  WriteAddr @ 1 + WriteAddr !
 ;
 
-: WriteWord, // word --
+: WriteWordBE, // word --
  DUP 8 >> 0xFF AND WriteByte, 0xFF AND WriteByte,
 ;
 
-: WriteInt, // int --
- DUP 16 >> 0xFFFF AND WriteWord, 0xFFFF AND WriteWord,
+: WriteIntBE, // int --
+ DUP 16 >> 0xFFFF AND WriteWordBE, 0xFFFF AND WriteWordBE,
 ;
+
+: WriteWordLE, // word --
+ DUP 0xFF AND WriteByte, 8 >> 0xFF AND WriteByte,
+;
+
+: WriteIntLE, // int --
+ DUP 0xFFFF AND WriteWordLE, 16 >> 0xFFFF AND WriteWordLE,
+;
+
+: LECombine // length addr -- value
+ SWAP DUP IF
+  0 SWAP
+  // addr value length
+  0 DO
+   OVER @ I 8 * << +
+   SWAP 1 + SWAP
+  LOOP
+  SWAP DROP
+ ELSE
+  DROP DROP 0
+ THEN
+;
+
+: BECombine // length addr -- value
+ SWAP DUP IF
+  0 SWAP
+  // addr value length
+  0 DO
+   8 <<
+   OVER @ +
+   SWAP 1 + SWAP
+  LOOP
+  SWAP DROP
+ ELSE
+  DROP DROP 0
+ THEN
+;
+
