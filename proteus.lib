@@ -316,3 +316,67 @@ VARIABLE 'J
 : ON // addr --
  -1 SWAP !
 ;
+
+VARIABLE MemoryFunction.Source
+VARIABLE MemoryFunction.Dest
+VARIABLE MemoryFunction.Result
+: CopyMemory // length source dest --
+ MemoryFunction.Dest ! MemoryFunction.Source !
+ DUP IF
+  MemoryFunction.Source @ MemoryFunction.Dest @ < IF
+   MemoryFunction.Source @ OVER + 1 - SWAP
+   MemoryFunction.Dest @ OVER + 1 - SWAP
+   // source+length-1 dest+length-1
+   0 DO
+    OVER @ OVER !
+    1 - SWAP 1 - SWAP
+   LOOP
+   DROP DROP
+  ELSE
+   MemoryFunction.Source @ SWAP MemoryFunction.Dest @ SWAP
+   0 DO
+    // source dest
+    OVER @ OVER !
+    1 + SWAP 1 + SWAP
+   LOOP
+   DROP DROP
+  THEN
+ ELSE
+  DROP
+ THEN
+;
+
+: CompareMemory // length source1 source2 -- boolean
+ -1 MemoryFunction.Result !
+ MemoryFunction.Source !
+ SWAP DUP IF
+  MemoryFunction.Source @ SWAP
+  0 DO
+   OVER @ OVER @ = MemoryFunction.Result @ AND MemoryFunction.Result !
+   1 + SWAP 1 + SWAP
+  LOOP
+  DROP DROP
+  MemoryFunction.Result @
+ ELSE
+  DROP DROP -1
+ THEN
+;
+
+VARIABLE WriteAddr
+: Write, // length source --
+ OVER OVER WriteAddr @ CopyMemory
+ DROP WriteAddr @ + WriteAddr !
+;
+
+: WriteByte, // byte --
+ WriteAddr @ !
+ WriteAddr @ 1 + WriteAddr !
+;
+
+: WriteWord, // word --
+ DUP 8 >> 0xFF AND WriteByte, 0xFF AND WriteByte,
+;
+
+: WriteInt, // int --
+ DUP 16 >> 0xFFFF AND WriteWord, 0xFFFF AND WriteWord,
+;
