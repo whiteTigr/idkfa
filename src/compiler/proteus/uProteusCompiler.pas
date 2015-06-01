@@ -20,6 +20,7 @@ const
 type
   TCodeCell = record
     value: integer;
+    controlDepth: integer;
   end;
   PCodeArray = ^TCodeArray;
   TCodeArray = array[0..MaxCode-1] of TCodeCell;
@@ -324,11 +325,13 @@ begin
   if ToTempCode then
   begin
     FTempCode[TCP].value := code;
+    FTempCode[TCP].controlDepth := ControlStackTop;
     inc(TCP);
   end
   else
   begin
     FCode[CP].value := code;
+    FCode[CP].controlDepth := ControlStackTop;
     inc(CP);
   end;
 end;
@@ -1716,7 +1719,6 @@ end;
 function TProteusCompiler.GetPrevLiteral(var addr: integer; out valueGetted: boolean): integer;
 var
   cmdAddr: integer;
-  controlTop: TControlStackCell;
 begin
   cmdAddr := addr;
   dec(addr);
@@ -1726,13 +1728,8 @@ begin
     dec(addr);
   inc(addr);
 
-  if (ControlStackTop > 0) then
-    controlTop := ControlReadTop
-  else
-    controlTop := ControlStackCell(0, 0);
-
   valueGetted := (addr < cmdAddr) and CmdIsLiteral(FCode[addr].value)
-    and not ((controlTop.Source = sBEGIN) and (controlTop.Addr > addr));
+    and (ControlStackTop = FCode[addr].controlDepth);
   if valueGetted then
     Result := GetLiteralValue(addr);
 end;
