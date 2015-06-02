@@ -196,7 +196,7 @@ type
     procedure _Interpret;
     procedure _Z;
     procedure _String;
-    procedure _PLUS;
+    procedure _ArithmeticOptimization;
 
     procedure _DumpVocabulary;
 
@@ -260,7 +260,8 @@ const
   errFileNotFound = 10;
   errControlStackNotEmpty = 11;
   errUnexceptedEOLN = 12;
-  errCount = 13;
+  errRJumpTooLong = 13;
+  errCount = 14;
 
   ErrorMessage: array[0..errCount-1] of record
     code: integer;
@@ -278,7 +279,8 @@ const
    (code: errControlMismatch; msg: 'Control mismatch'),
    (code: errFileNotFound; msg: 'File not found'),
    (code: errControlStackNotEmpty; msg: 'Control stack not empty'),
-   (code: errUnexceptedEOLN; msg: 'Unexcepted end of line')
+   (code: errUnexceptedEOLN; msg: 'Unexcepted end of line'),
+   (code: errRJumpTooLong; msg: 'Relative jump too long')
   );
 
   stCompiling = 1;
@@ -390,6 +392,8 @@ begin
     CompileTo(position + i, cmdLIT + value and LitMask);
     value := shra(value, 5);
   end;
+  if value <> 0 then
+    Error(errRJumpTooLong);
 end;
 
 procedure TProteusCompiler.CompileNumber(_value: integer; ToTempCode: boolean = false);
@@ -642,9 +646,8 @@ begin
   AddForthToken('R>', cmdFROMR);
   AddImmToken  ('LOOP', _Loop, cmdLoop);
   AddForthToken('SYSREG@', cmdSYSREG);
-  AddImmToken('+', _PLUS, cmdPLUS);
-  //AddForthToken('+', cmdPLUS);
-  AddForthToken('-', cmdMINUS);
+  AddImmToken('+', _ArithmeticOptimization, cmdPLUS);
+  AddImmToken('-', _ArithmeticOptimization, cmdMINUS);
   AddForthToken('AND', cmdAND);
   AddForthToken('OR', cmdOR);
   AddForthToken('XOR', cmdXOR);
@@ -1264,7 +1267,7 @@ begin
 
   AddNopAfterLiteral;
   CompileRJmpTo(CP, CP + RJmpSize - ref.Addr);
-  inc(CP, 2);
+  inc(CP, RJmpSize);
   Compile(cmdUNTIL);
 end;
 
@@ -1329,7 +1332,7 @@ begin
   end;
 end;
 
-procedure TProteusCompiler._PLUS;
+procedure TProteusCompiler._ArithmeticOptimization;
 var
   addr: integer;
   A, B: integer;
@@ -1342,8 +1345,10 @@ begin
   if valid then
   begin
     CP := addr;
-    if Token.tag = cmdPLUS then
-      CompileNumber(A + B);
+    case Token.tag of
+      cmdPLUS: CompileNumber(A + B);
+      cmdMINUS: CompileNumber(A - B);
+    end;
   end
   else
     Compile(Token.tag);
@@ -1493,7 +1498,7 @@ begin
   FVocabulary[VP-1].memory := GetMemory(length);
 
   for i := 0 to length - 1 do
-    PByteArray(FVocabulary[VP-1].memory)[i] := FCode[CP + i].value;
+    PByteArray(FVocabulary[VP-1].memory)[i] := Byte(FCode[CP + i].value);
 end;
 
 procedure TProteusCompiler._LoadFile;
@@ -1868,7 +1873,8 @@ end;
 
 procedure TProteusCompiler.Optimize;
 begin
-  ClearJumps;
+//  bugged
+//  ClearJumps;
 end;
 
 end.
