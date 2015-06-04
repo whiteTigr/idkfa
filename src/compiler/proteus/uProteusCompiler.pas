@@ -1801,8 +1801,8 @@ end;
 
 procedure TProteusCompiler.Evaluate(const tib: string);
 begin
-  writeln(LogFile, tib);
-  Flush(LogFile);
+//  writeln(LogFile, tib);
+//  Flush(LogFile);
   inc(LineCount);
   Parser.tib := tib;
   while (FError = errOk) and Parser.NextWord do
@@ -2069,8 +2069,8 @@ begin
 end;
 
 initialization
-  AssignFile(LogFile, 'ProteusCompiler.log');
-  Rewrite(LogFile);
+//  AssignFile(LogFile, 'ProteusCompiler.log');
+//  Rewrite(LogFile);
 finalization
-  CloseFile(LogFile);
+//  CloseFile(LogFile);
 end.
