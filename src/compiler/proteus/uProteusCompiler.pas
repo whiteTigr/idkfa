@@ -49,6 +49,15 @@ type
   PControlStack = ^TControlStack;
   TControlStack = array[0..MaxControlStackSize-1] of TControlStackCell;
 
+  PStructCell = ^TStructCell;
+  TStructCell = record
+    name: string[255];
+    size: integer;
+    root: boolean;
+    nested: PStructCell;
+    next: PStructCell;
+  end;
+
   TProteusCompiler = class(TTargetCompiler)
   private
     Parser: TParserCore;
@@ -102,6 +111,12 @@ type
 
     FHere: integer;
     FCHere: integer;
+
+    isStructure: boolean;
+    StructureName: string[255];
+    StructureRoot: PStructCell;
+    StructureOffset: integer;
+    StructurePrefix: AnsiString;
 
     procedure Compile(code: integer; ToTempCode: boolean = false); overload;
     procedure Compile(code: array of integer; ToTempCode: boolean = false); overload;
@@ -203,11 +218,20 @@ type
     procedure _WriteData;
     procedure _WriteCode;
     procedure _ALLOT;
+
+    procedure _STRUCT;
+    procedure _CompileSTRUCT;
+    procedure _ENDSTRUCT;
+    procedure _StructElement;
+    function GetLastStructureElement: PStructCell;
+    function GetStructureSize(_cell: PStructCell): integer;
+    procedure CompileStruct(_cell: PStructCell);
+    procedure FreeStructMemory(_cell: PStructCell);
   public
     procedure BeginInitCommandSystem;
     procedure EndInitCommandSystem;
     procedure AddToken(value: TTokenWord);
-    procedure AddImmToken(name: string; proc: TProc; tag: integer = 0);
+    procedure AddImmToken(name: string; proc: TProc; tag: integer = 0; memory: pointer = nil);
     procedure AddForthToken(name: string; tag: integer);
     procedure AddCmd2Token(name: string; tag: integer);
     procedure AddCmd3Token(name: string; tag: integer);
@@ -296,6 +320,7 @@ const
 
 var
   PredefinedVariablePos: array[Low(PredefinedVariable)..High(PredefinedVariable)] of integer;
+  LogFile: TextFile;
 
 const
   sNone = 0;
@@ -593,9 +618,9 @@ begin
   inc(VP);
 end;
 
-procedure TProteusCompiler.AddImmToken(name: string; proc: TProc; tag: integer = 0);
+procedure TProteusCompiler.AddImmToken(name: string; proc: TProc; tag: integer = 0; memory: pointer = nil);
 begin
-  AddToken(TokenWord(name, tag, true, proc, nil));
+  AddToken(TokenWord(name, tag, true, proc, memory));
   AddSynlightWord(name, tokImmediate);
 end;
 
@@ -693,6 +718,11 @@ begin
   AddImmToken(',', _WriteData);
   AddImmToken('[C],', _WriteCode);
   AddImmToken('ALLOT', _ALLOT);
+
+  AddImmToken('STRUCT', _STRUCT);
+  AddImmToken('--', _StructElement);
+  AddImmToken('END-STRUCT', _ENDSTRUCT);
+
 
   AddImmToken('{', _Interpret);
   AddImmToken('}', _RET);
@@ -1596,6 +1626,158 @@ begin
   end;
 end;
 
+procedure TProteusCompiler._STRUCT;
+var
+  rootElement: PStructCell;
+begin
+  ParseToken;
+  isStructure := true;
+  rootElement := AllocMem(sizeof(TStructCell));
+  rootElement.name := Parser.token;
+  rootElement.size := 0;
+  rootElement.root := true;
+  rootElement.nested := nil;
+  rootElement.next := nil;
+  AddImmToken(Parser.token, _CompileSTRUCT, 0, rootElement);
+end;
+
+procedure TProteusCompiler._StructElement;
+var
+  getted: boolean;
+  addr: integer;
+  value: integer;
+  lastElement, nextElement: PStructCell;
+begin
+  addr := CP;
+  value := GetPrevLiteral(addr, getted);
+  if not getted then
+  begin
+    Error(14);
+    Exit;
+  end;
+  CP := addr;
+
+  lastElement := GetLastStructureElement;
+  nextElement := AllocMem(sizeof(TStructCell));
+  nextElement^.name := ParseToken;
+  nextElement^.root := false;
+  nextElement^.next := nil;
+  lastElement^.next := nextElement;
+
+  if value and $80000000 = 0 then
+  begin
+    nextElement^.size := value;
+    nextElement^.nested := nil;
+  end
+  else
+  begin
+    value := GetPrevLiteral(addr, getted);
+    if not getted then
+    begin
+      Error(14);
+      Exit;
+    end;
+    CP := addr;
+    nextElement^.size := 0;
+    nextElement^.nested := PStructCell(value);
+  end;
+end;
+
+procedure TProteusCompiler._CompileSTRUCT;
+begin
+  if isStructure then
+  begin
+    CompileNumber(integer(Token.memory));
+    CompileNumber($80000000);
+  end
+  else
+  begin
+    ParseToken;
+    StructureRoot := Token.memory;
+    StructureName := Parser.Token;
+    StructureOffset := 0;
+    StructurePrefix := Parser.Token;
+    if StructureRoot <> nil then
+    begin
+      Evaluate(format('VARIABLE p%s', [StructureName]));
+      Evaluate(format(': %s p%s @ ; INLINE', [StructureName, StructureName]));
+      if StructureRoot.next <> nil then
+        CompileStruct(StructureRoot.next);
+    end;
+  end;
+end;
+
+procedure TProteusCompiler.CompileStruct(_cell: PStructCell);
+var
+  PrefixStore: AnsiString;
+  cell: PStructCell;
+begin
+  cell := _cell;
+  while cell <> nil do
+  begin
+    if not cell.root then
+    begin
+      Evaluate(format(': %s.%s p%s @ %d + ; INLINE', [StructurePrefix, cell.name, StructureName, StructureOffset]));
+      inc(StructureOffset, cell.size);
+      if cell.nested <> nil then
+      begin
+        PrefixStore := StructurePrefix;
+        StructurePrefix := StructurePrefix + '.' + cell.name;
+        CompileStruct(cell.nested);
+        StructurePrefix := PrefixStore;
+      end;
+    end;
+    cell := cell.next;
+  end;
+end;
+
+procedure TProteusCompiler.FreeStructMemory(_cell: PStructCell);
+var
+  cell: PStructCell;
+  next: PStructCell;
+begin
+  cell := _cell;
+  while cell <> nil do
+  begin
+    next := cell.next;
+    cell.next := nil;
+    FreeMemory(cell);
+    cell := next;
+  end;
+end;
+
+function TProteusCompiler.GetLastStructureElement: PStructCell;
+begin
+  Result := PStructCell(FVocabulary[VP-1].memory);
+  while (Result <> nil) and (Result^.next <> nil) do
+    Result := Result^.next;
+end;
+
+function TProteusCompiler.GetStructureSize(_cell: PStructCell): integer;
+var
+  cell: PStructCell;
+  res: integer;
+begin
+  cell := _cell;
+  res := 0;
+  while cell <> nil do
+  begin
+    res := res + cell.size + GetStructureSize(cell.nested);
+    cell := cell.next;
+  end;
+  Result := res;
+end;
+
+procedure TProteusCompiler._ENDSTRUCT;
+var
+  cell: PStructCell;
+  size: integer;
+begin
+  isStructure := false;
+  size := GetStructureSize(PStructCell(FVocabulary[VP-1].memory));
+  Evaluate(format(': %s.Size %d ; INLINE', [FVocabulary[VP-1].name, size]));
+end;
+
 function TProteusCompiler.GetCmdColor(cmd: integer): cardinal;
 begin
   case cmd of
@@ -1618,6 +1800,8 @@ end;
 
 procedure TProteusCompiler.Evaluate(const tib: string);
 begin
+  writeln(LogFile, tib);
+  Flush(LogFile);
   inc(LineCount);
   Parser.tib := tib;
   while (FError = errOk) and Parser.NextWord do
@@ -1783,6 +1967,7 @@ end;
 procedure TProteusCompiler.BeginCompile;
 var
   i: integer;
+  procStructure: TProc;
 begin
   inherited;
 
@@ -1797,9 +1982,14 @@ begin
   DP := HardwiredDataCount;
   FillMemory(@FData[DP], sizeof(TDataCell) * (MaxData - HardwiredDataCount), 0);
   ControlStackTop := 0;
+  isStructure := false;
+
+  procStructure := _CompileStruct;
   for i := HardwiredWordsCount to VP-1 do
     if FVocabulary[i].memory <> nil then
     begin
+      if PInteger(integer(pointer(@FVocabulary[i].proc)) + 4)^ = PInteger(integer(pointer(@procStructure)) + 4)^ then
+        FreeStructMemory(PStructCell(FVocabulary[i].memory));
       FreeMemory(FVocabulary[i].memory);
       FVocabulary[i].memory := nil;
     end;
@@ -1877,4 +2067,9 @@ begin
 //  ClearJumps;
 end;
 
+initialization
+  AssignFile(LogFile, 'ProteusCompiler.log');
+  Rewrite(LogFile);
+finalization
+  CloseFile(LogFile);
 end.
