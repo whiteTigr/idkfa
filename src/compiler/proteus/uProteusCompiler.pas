@@ -1663,6 +1663,7 @@ begin
   nextElement^.root := false;
   nextElement^.next := nil;
   lastElement^.next := nextElement;
+  AddSynlightWord(nextElement^.name, tokVar);
 
   if value and $80000000 = 0 then
   begin
