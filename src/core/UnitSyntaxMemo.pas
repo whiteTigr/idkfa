@@ -4866,12 +4866,22 @@ begin
   CharWidthLow := Low(fCharWidths[False]);
   CharWidthHigh := High(fCharWidths[False]);
 
-  Canvas.Font.Style := [];
-  for c := CharWidthLow to CharWidthHigh do
-    fCharWidths[False][c] := Byte(Canvas.TextWidth(c));
-  Canvas.Font.Style := [fsBold];
-  for c := CharWidthLow to CharWidthHigh do
-    fCharWidths[True][c] := Byte(Canvas.TextWidth(c));
+  // wt: try to boost initialization
+  if Canvas.Font.Pitch <> fpVariable then
+  begin
+    Canvas.Font.Style := [];
+    CharWidth := Byte(Canvas.TextWidth(' '));
+    FillMemory(@fCharWidths, sizeof(TCharWidths), CharWidth);
+  end
+  else
+  begin
+    Canvas.Font.Style := [];
+    for c := CharWidthLow to CharWidthHigh do
+      fCharWidths[False][c] := Byte(Canvas.TextWidth(c));
+    Canvas.Font.Style := [fsBold];
+    for c := CharWidthLow to CharWidthHigh do
+      fCharWidths[True][c] := Byte(Canvas.TextWidth(c));
+  end;
 
   CopyMemory(@CacheWidthTable, @fCharWidths, sizeof(TCharWidths));
   CacheFontName := Canvas.Font.Name;

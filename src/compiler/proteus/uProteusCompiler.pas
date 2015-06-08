@@ -1449,12 +1449,12 @@ begin
   AssignFile(f, 'dump.txt');
   Rewrite(f);
   writeln(f,
-      format('%32s %10s %8s %5s %8s',
-      ['name', 'tag dec', 'tag hex', 'imm', 'proc']));
+      format('%32s %10s %8s %5s %8s %8s',
+      ['name', 'tag dec', 'tag hex', 'imm', 'proc', 'memory']));
   for i := 0 to VP-1 do
     writeln(f,
-        format('%32s %10d %8x %5s %8x',
-        [FVocabulary[i].name, FVocabulary[i].tag, FVocabulary[i].tag, BoolToStr(FVocabulary[i].immediate), integer(TMethod(FVocabulary[i].proc).Code)]));
+        format('%32s %10d %8x %5s %8x %8x',
+        [FVocabulary[i].name, FVocabulary[i].tag, FVocabulary[i].tag, BoolToStr(FVocabulary[i].immediate), integer(TMethod(FVocabulary[i].proc).Code), integer(FVocabulary[i].memory)]));
   CloseFile(f);
 end;
 
@@ -1989,7 +1989,7 @@ begin
   for i := HardwiredWordsCount to VP-1 do
     if FVocabulary[i].memory <> nil then
     begin
-      if PInteger(integer(pointer(@FVocabulary[i].proc)) + 4)^ = PInteger(integer(pointer(@procStructure)) + 4)^ then
+      if integer(TMethod(FVocabulary[i].proc).Code) = integer(TMethod(procStructure).Code) then
         FreeStructMemory(PStructCell(FVocabulary[i].memory));
       FreeMemory(FVocabulary[i].memory);
       FVocabulary[i].memory := nil;
