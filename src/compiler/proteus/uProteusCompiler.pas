@@ -211,6 +211,7 @@ type
     procedure _Interpret;
     procedure _Z;
     procedure _String;
+    procedure _USE;
     procedure _ArithmeticOptimization;
 
     procedure _DumpVocabulary;
@@ -718,6 +719,8 @@ begin
   AddImmToken(',', _WriteData);
   AddImmToken('[C],', _WriteCode);
   AddImmToken('ALLOT', _ALLOT);
+  AddImmToken('''', _USE);
+  AddImmToken('USE', _USE);
 
   AddImmToken('STRUCT', _STRUCT);
   AddImmToken('--', _StructElement);
@@ -1368,6 +1371,14 @@ begin
     LastStringCodeSize := CP - LastStringCodeSize;
     LastStringDataSize := DP - LastStringDataSize;
   end;
+end;
+
+procedure TProteusCompiler._USE;
+begin
+  ParseToken;
+  FindToken;
+  if TokenID <> -1 then
+    CompileNumber(Token.tag);
 end;
 
 procedure TProteusCompiler._ArithmeticOptimization;
