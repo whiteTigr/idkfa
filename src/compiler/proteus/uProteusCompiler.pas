@@ -168,7 +168,7 @@ type
     function isCompiling: boolean;
     function isInterpreting: boolean;
 
-//    function GetLastNumber: integer;
+    function GetLastNumber: integer;
     function GetLastString: string;
 
     procedure DeleteCode(fromPos, toPos: integer);
@@ -1066,11 +1066,19 @@ begin
     end;
 end;
 
-//function TProteusCompiler.GetLastNumber: integer;
-//begin
-//  dec(CP, LastNumberSize);
-//  Result := LastNumber;
-//end;
+function TProteusCompiler.GetLastNumber: integer;
+var
+  addr: integer;
+  getted: boolean;
+  value: integer;
+begin
+  addr := CP;
+  value := GetPrevLiteral(addr, getted);
+  CP := addr;
+  if not getted then
+    Error(errInvalideNumber);
+  Result := value;
+end;
 
 function TProteusCompiler.GetLastString: string;
 var
@@ -1585,19 +1593,15 @@ begin
 end;
 
 procedure TProteusCompiler._Z;
-var
-  dummy: boolean;
 begin
-  Compile(GetPrevLiteral(CP, dummy) and $3F);
+  Compile(GetLastNumber and $3F);
 end;
 
 procedure TProteusCompiler._WriteCode;
-var
-  dummy: boolean;
 begin
   if isInterpreting then
   begin
-    Compile(GetPrevLiteral(CP, dummy) and $3F);
+    Compile(GetLastNumber and $3F);
   end
   else
   begin
@@ -1611,7 +1615,7 @@ var
 begin
   if isInterpreting then
   begin
-    FData[DP].value := GetPrevLiteral(CP, dummy);
+    FData[DP].value := GetLastNumber;
     inc(DP);
   end
   else
@@ -1626,7 +1630,7 @@ var
 begin
   if isInterpreting then
   begin
-    inc(DP, GetPrevLiteral(CP, dummy));
+    inc(DP, GetLastNumber);
   end
   else
   begin
