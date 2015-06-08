@@ -168,7 +168,7 @@ type
     function isCompiling: boolean;
     function isInterpreting: boolean;
 
-    function GetLastNumber: integer;
+//    function GetLastNumber: integer;
     function GetLastString: string;
 
     procedure DeleteCode(fromPos, toPos: integer);
@@ -1066,11 +1066,11 @@ begin
     end;
 end;
 
-function TProteusCompiler.GetLastNumber: integer;
-begin
-  dec(CP, LastNumberSize);
-  Result := LastNumber;
-end;
+//function TProteusCompiler.GetLastNumber: integer;
+//begin
+//  dec(CP, LastNumberSize);
+//  Result := LastNumber;
+//end;
 
 function TProteusCompiler.GetLastString: string;
 var
@@ -1585,15 +1585,19 @@ begin
 end;
 
 procedure TProteusCompiler._Z;
+var
+  dummy: boolean;
 begin
-  Compile(GetLastNumber and $3F);
+  Compile(GetPrevLiteral(CP, dummy) and $3F);
 end;
 
 procedure TProteusCompiler._WriteCode;
+var
+  dummy: boolean;
 begin
   if isInterpreting then
   begin
-    Compile(GetLastNumber and $3F);
+    Compile(GetPrevLiteral(CP, dummy) and $3F);
   end
   else
   begin
@@ -1602,10 +1606,12 @@ begin
 end;
 
 procedure TProteusCompiler._WriteData;
+var
+  dummy: boolean;
 begin
   if isInterpreting then
   begin
-    FData[DP].value := GetLastNumber;
+    FData[DP].value := GetPrevLiteral(CP, dummy);
     inc(DP);
   end
   else
@@ -1615,10 +1621,12 @@ begin
 end;
 
 procedure TProteusCompiler._ALLOT;
+var
+  dummy: boolean;
 begin
   if isInterpreting then
   begin
-    inc(DP, GetLastNumber);
+    inc(DP, GetPrevLiteral(CP, dummy));
   end
   else
   begin
@@ -1876,7 +1884,7 @@ begin
   SetVocabularySize(defaultVocabularySize);
 
   HardwiredWords := TStringList.Create;
-  Parser.separators := ' ';
+  Parser.separators := ' '#9;
 end;
 
 destructor TProteusCompiler.Destroy;
