@@ -171,6 +171,9 @@ type
     function GetLastNumber: integer;
     function GetLastString: string;
 
+    procedure CodeAllot(value: integer);
+    procedure DataAllot(value: integer);
+
     procedure DeleteCode(fromPos, toPos: integer);
     procedure CorrectJumps(delPos, delCount: integer);
     function FindJump(from: integer): integer;
@@ -348,6 +351,20 @@ end;
 
 { TProteusCompiler }
 
+procedure TProteusCompiler.CodeAllot(value: integer);
+begin
+  inc(CP, value);
+  if value > UserMaxCode then
+    Error(errCodeMemoryIsFull);
+end;
+
+procedure TProteusCompiler.DataAllot(value: integer);
+begin
+  inc(DP, value);
+  if value > UserMaxData then
+    Error(errDataMemoryIsFull);
+end;
+
 procedure TProteusCompiler.Compile(code: integer; ToTempCode: boolean = false);
 begin
   if ToTempCode then
@@ -360,7 +377,7 @@ begin
   begin
     FCode[CP].value := code;
     FCode[CP].controlDepth := ControlStackTop;
-    inc(CP);
+    CodeAllot(1);
   end;
 end;
 
@@ -654,7 +671,7 @@ begin
   AddToken(TokenWord(name, DP, true, _VariableProc, nil));
   AddSynlightWord(name, tokVar);
   Result := DP;
-  inc(DP, size);
+  DataAllot(size);
 end;
 
 procedure TProteusCompiler.InitBasicCommands;
@@ -1349,7 +1366,7 @@ var
 //    Compile(cmdNop, true);
 //    Compile(cmdSTORE, true);
     FData[DP].value := integer(AnsiString(value)[1]);
-    inc(DP);
+    DataAllot(1);
   end;
 begin
   with Parser do
@@ -1486,7 +1503,7 @@ begin
   size := ParseInt;
   AddToken(TokenWord(name, DP, true, _VariableProc, nil));
   AddSynlightWord(name, tokVar);
-  inc(DP, size);
+  DataAllot(size);
 end;
 
 procedure TProteusCompiler._VariableProc;
@@ -1627,7 +1644,7 @@ begin
   if isInterpreting then
   begin
     FData[DP].value := GetLastNumber;
-    inc(DP);
+    DataAllot(1);
   end
   else
   begin
@@ -1641,7 +1658,7 @@ var
 begin
   if isInterpreting then
   begin
-    inc(DP, GetLastNumber);
+    DataAllot(GetLastNumber);
   end
   else
   begin
