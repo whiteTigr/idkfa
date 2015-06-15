@@ -3303,8 +3303,8 @@ begin
   begin
     fRichMemo.Lines.BeginUpdate;
     for i := StartY to EndY do
-      if Copy(fRichMemo.Lines[i], 1, Length(LitILComment)) <> LitILComment then
-        fRichMemo.Lines[i] := LitILComment + ' ' + fRichMemo.Lines[i]; // wt: адаптация для форта
+      // if Copy(fRichMemo.Lines[i], 1, Length(LitILComment)) <> LitILComment then // wt: добавляем комментарий вне зависимости от его наличия
+      fRichMemo.Lines[i] := LitILComment + ' ' + fRichMemo.Lines[i]; // wt: адаптация для форта
     fRichMemo.Lines.EndUpdate;
   end
   else
