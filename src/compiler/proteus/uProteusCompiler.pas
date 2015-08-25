@@ -1725,6 +1725,8 @@ begin
 end;
 
 procedure TProteusCompiler._CompileSTRUCT;
+var
+  size: integer;
 begin
   if isStructure then
   begin
@@ -1738,10 +1740,12 @@ begin
     StructureName := Parser.Token;
     StructureOffset := 0;
     StructurePrefix := Parser.Token;
+    size := GetStructureSize(StructureRoot);
     if StructureRoot <> nil then
     begin
       Evaluate(format('VARIABLE p%s', [StructureName]));
       Evaluate(format(': %s p%s @ ; INLINE', [StructureName, StructureName]));
+      Evaluate(format(': sizeof(%s) %d ; INLINE', [StructureName, size]));
       if StructureRoot.next <> nil then
         CompileStruct(StructureRoot.next);
     end;
