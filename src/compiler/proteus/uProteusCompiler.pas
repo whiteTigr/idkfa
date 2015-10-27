@@ -691,13 +691,13 @@ begin
   AddForthToken('SYSREG@', cmdSYSREG);
   AddImmToken('+', _ArithmeticOptimization, cmdPLUS);
   AddImmToken('-', _ArithmeticOptimization, cmdMINUS);
+  AddImmToken('*', _ArithmeticOptimization, cmdMULT);
   AddForthToken('AND', cmdAND);
   AddForthToken('OR', cmdOR);
   AddForthToken('XOR', cmdXOR);
   AddForthToken('=', cmdEQUAL);
   AddForthToken('<', cmdLESSER);
   AddForthToken('>', cmdGREATER);
-  AddCmd3Token ('*', cmdMULT);
   AddForthToken('DROP', cmdDROP);
   AddForthToken('JMP', cmdJMP);
   AddForthToken('CALL', cmdCALL);
@@ -1412,8 +1412,9 @@ begin
   begin
     CP := addr;
     case Token.tag of
-      cmdPLUS: CompileNumber(A + B);
+      cmdPLUS:  CompileNumber(A + B);
       cmdMINUS: CompileNumber(A - B);
+      cmdMULT:  CompileNumber(A * B);
     end;
   end
   else
