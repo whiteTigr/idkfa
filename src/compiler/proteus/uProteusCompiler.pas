@@ -1414,7 +1414,7 @@ begin
     case Token.tag of
       cmdPLUS:  CompileNumber(A + B);
       cmdMINUS: CompileNumber(A - B);
-      cmdMULT:  CompileNumber(A * B);
+      cmdMULT:  begin Compile([cmdNOP, cmdNOP]); CompileNumber(A * B); end;
     end;
   end
   else
