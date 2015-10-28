@@ -1414,11 +1414,15 @@ begin
     case Token.tag of
       cmdPLUS:  CompileNumber(A + B);
       cmdMINUS: CompileNumber(A - B);
-      cmdMULT:  begin Compile([cmdNOP, cmdNOP]); CompileNumber(A * B); end;
+      cmdMULT:  CompileNumber(A * B);
     end;
   end
   else
+  begin
+    if Token.tag = cmdMULT then
+      Compile([cmdNOP, cmdNOP]);
     Compile(Token.tag);
+  end;
 end;
 
 procedure TProteusCompiler._PROC;
