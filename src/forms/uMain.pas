@@ -182,7 +182,6 @@ implementation
 uses uDownload, AboutWindow, StrUtils;
 
 {$R *.dfm}
-{$R WindowsXP.res}
 
 procedure RunOptimize; forward;
 function GetVersion: string; forward;
