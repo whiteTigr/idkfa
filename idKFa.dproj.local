@@ -17,14 +17,14 @@
     <File Path="src\compiler\forth\uForthDevice.pas"/>
     <File Path="src\compiler\forth\uForthDevice.dfm"/>
     <File Path="src\compiler\forth\uForthDeviceCore.pas"/>
-    <File Path="src\compiler\forth\uForthHardDebuger.pas"/>
     <File Path="src\compiler\forth\uForthSoftDebuger.pas"/>
+    <File Path="src\compiler\forth\uForthHardDebuger.pas"/>
     <File Path="src\compiler\proteus"/>
-    <File Path="src\compiler\proteus\uProteusCompiler.pas"/>
+    <File Path="src\compiler\proteus\uProteusDeviceCore.pas"/>
     <File Path="src\compiler\proteus\uProteusDevice.pas"/>
     <File Path="src\compiler\proteus\uProteusDevice.dfm"/>
-    <File Path="src\compiler\proteus\uProteusDeviceCore.pas"/>
     <File Path="src\compiler\proteus\uProteusSoftDebuger.pas"/>
+    <File Path="src\compiler\proteus\uProteusCompiler.pas"/>
     <File Path="src\compiler\proteus\uProteusComModel.pas"/>
     <File Path="src\compiler\proteus\uProteusComModel.dfm"/>
     <File Path="src\compiler\proteus\uProteusDownloader.pas"/>

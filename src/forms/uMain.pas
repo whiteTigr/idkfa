@@ -120,6 +120,7 @@ type
     procedure CloseBtnMouseLeave(Sender: TObject);
   private
     procedure ForthCom;
+    procedure ForthBaudrate;
     procedure ForthPackSize;
     procedure ForthWaitCoef;
     procedure ForthCore;
@@ -415,6 +416,23 @@ begin
   end;
 
   FormDownload.cbComName.ItemIndex := comIndex - 1;
+end;
+
+procedure TfMain.ForthBaudrate;
+var
+  baudrate: integer;
+begin
+  baudrate := 115200;
+  if currentCompiler = compilerForth then
+  begin
+    baudrate := (compiler as TForthCompiler).ParseInt;
+    if (compiler as TForthCompiler).LastError <> 0 then
+      Exit;
+  end
+  else if currentCompiler = compilerProteus then
+    baudrate := (compiler as TProteusCompiler).ParseInt;
+
+  FormDownload.cbBaudrate.Text := IntToStr(baudrate);
 end;
 
 procedure TfMain.ForthPackSize;
@@ -1155,6 +1173,7 @@ begin
   begin
     BeginInitCommandSystem;
     AddImmToken('#COM', fMain.ForthCom);
+    AddImmToken('#BAUDRATE', fMain.ForthBaudrate);
     AddImmToken('#PACKSIZE=', fMain.ForthPackSize);
     AddImmToken('#WAITCOEF=', fMain.ForthWaitCoef);
     EndInitCommandSystem;

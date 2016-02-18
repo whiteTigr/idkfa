@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, SysUtils, uGlobal, uProteusDeviceCore, uCommonFunctions, Classes,
-  uCompilerCore, StrUtils;
+  uCompilerCore, StrUtils, math;
 
 const
   defaultCodeSize = 1 * 1024 * 1024; // 1 mb
@@ -682,7 +682,8 @@ begin
   AddForthToken('SHL', cmdSHL);
   AddForthToken('SHR', cmdSHR);
   AddForthToken('SHRA', cmdSHRA);
-  AddCmd2Token ('INPORT', cmdINPORT);
+  AddCmd2Token ('INPORT', cmdFETCH);
+  AddForthToken('FP', cmdFP);
   AddForthToken('SWAP', cmdSWAP);
   AddForthToken('DUP', cmdDUP);
   AddForthToken('OVER', cmdOVER);
@@ -2093,11 +2094,12 @@ end;
 function TProteusCompiler.NewFileText: string;
 begin
   Result := '// for Proteus compiler' +#13#10
-    + '                // Запись программы' +#13#10
-    + '#COM 1          // по нужному COM-порту' +#13#10
-    + '#PACKSIZE= 1    // пакетами по PACKSIZE байт' +#13#10
-    + '#WAITCOEF= 2    // с задержкой, вычисляемой по формуле' +#13#10
-    + '                // (PackSize * 8 / BaudRate) * WaitCoef секунд' +#13#10
+    + '                 // Запись программы' +#13#10
+    + '#COM 1           // по нужному COM-порту' +#13#10
+    + '#BAUDRATE 115200 // с нужной скоростью' +#13#10
+    + '#PACKSIZE= 1     // пакетами по PACKSIZE байт' +#13#10
+    + '#WAITCOEF= 2     // с задержкой, вычисляемой по формуле' +#13#10
+    + '                 // (PackSize * 8 / BaudRate) * WaitCoef секунд' +#13#10
     + '// Если программа не зашивается, попробуйте уменьшить размер пакетов' +#13#10
     + '// и увеличить задержку' +#13#10
     + '' +#13#10
@@ -2116,6 +2118,7 @@ begin
 //  bugged
 //  ClearJumps;
 end;
+
 
 initialization
 //  AssignFile(LogFile, 'ProteusCompiler.log');

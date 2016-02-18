@@ -164,10 +164,11 @@ begin
     cmdSHRA:
       DStack.Push(shra(DStack.Pop, 1));
 
-    cmdINPORT:
+    cmdFP:
     begin
       int1 := DStack.Pop;
-      DStack.Push(Inport(int1));
+// todo: floating point command
+//      DStack.Push(Inport(int1));
     end;
 
     cmdSWAP:

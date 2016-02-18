@@ -18,7 +18,7 @@ const
   cmdSHL     = 3;
   cmdSHR     = 4;
   cmdSHRA    = 5;
-  cmdINPORT  = 6; // cmd2
+  cmdFP      = 6;
 
   cmdSWAP    = 7;
 
