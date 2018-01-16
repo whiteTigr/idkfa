@@ -890,6 +890,7 @@ begin
   end;
 
   Number := sign * res;
+  CompileNumber(Number);
   Result := true;
 end;
 
@@ -908,7 +909,16 @@ begin
 
   Result := TryStrToFloat(instr, fvalue);
   if Result then
+  begin
     Number := PInt(@fvalue)^;
+    CompileNumber(Number);
+    TokenID := FindToken('FPUSH');
+    if (TokenID <> -1) then
+    begin
+      Token := @FVocabulary[TokenID];
+      Token.proc();
+    end;
+  end;
 end;
 
 procedure TProteusCompiler.TryDispatchNumber;
@@ -1862,10 +1872,8 @@ begin
     begin
       TryDispatchNumber;
       if FError = errInvalideNumber then
-        Error(errUnknownToken)
-      else
       begin
-        CompileNumber(Number);
+        Error(errUnknownToken);
       end;
     end else begin
       with FVocabulary[TokenID] do
