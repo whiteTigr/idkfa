@@ -106,6 +106,18 @@
 			<DCCReference Include="src\compiler\proteus\uProteusDownloader.pas">
 				<Form>fProteusDownloader</Form>
 			</DCCReference>
+			<DCCReference Include="src\compiler\kf7\uKf7ComModel.pas">
+				<Form>fKf7ComModel</Form>
+			</DCCReference>
+			<DCCReference Include="src\compiler\kf7\uKf7Compiler.pas"/>
+			<DCCReference Include="src\compiler\kf7\uKf7Device.pas">
+				<Form>fKf7Device</Form>
+			</DCCReference>
+			<DCCReference Include="src\compiler\kf7\uKf7DeviceCore.pas"/>
+			<DCCReference Include="src\compiler\kf7\uKf7Downloader.pas">
+				<Form>fKf7Downloader</Form>
+			</DCCReference>
+			<DCCReference Include="src\compiler\kf7\uKf7SoftDebuger.pas"/>
 			<RcItem Include="bmp\CloseBtn.bmp">
 				<ResourceType>Bitmap</ResourceType>
 				<ResourceId>CloseBtnBmp</ResourceId>
@@ -148,6 +160,7 @@
 						<Parameters Name="UseLauncher">False</Parameters>
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+						<Parameters Name="RunParams">kf7xx_test.kf</Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>

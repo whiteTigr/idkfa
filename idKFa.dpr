@@ -34,7 +34,13 @@ uses
   uSimVga in 'src\simforms\uSimVga.pas' {fSimVga},
   uLed in 'src\simforms\uLed.pas' {fLed},
   uComModel in 'src\simforms\uComModel.pas' {fComModel},
-  uProteusDownloader in 'src\compiler\proteus\uProteusDownloader.pas' {fProteusDownloader};
+  uProteusDownloader in 'src\compiler\proteus\uProteusDownloader.pas' {fProteusDownloader},
+  uKf7ComModel in 'src\compiler\kf7\uKf7ComModel.pas' {fKf7ComModel},
+  uKf7Compiler in 'src\compiler\kf7\uKf7Compiler.pas',
+  uKf7Device in 'src\compiler\kf7\uKf7Device.pas' {fKf7Device},
+  uKf7DeviceCore in 'src\compiler\kf7\uKf7DeviceCore.pas',
+  uKf7Downloader in 'src\compiler\kf7\uKf7Downloader.pas' {fKf7Downloader},
+  uKf7SoftDebuger in 'src\compiler\kf7\uKf7SoftDebuger.pas';
 
 // {fProteusDownloader},
 //  uComTerminal in 'src\forms\uComTerminal.pas' {fComTerminal};
@@ -53,6 +59,9 @@ begin
   Application.CreateForm(TfComModel, fComModel);
   Application.CreateForm(TfProteusComModel, fProteusComModel);
   Application.CreateForm(TfLed, fLed);
+  Application.CreateForm(TfKf7ComModel, fKf7ComModel);
+  Application.CreateForm(TfKf7Device, fKf7Device);
+  Application.CreateForm(TfKf7Downloader, fKf7Downloader);
   Application.Run;
 end.
 

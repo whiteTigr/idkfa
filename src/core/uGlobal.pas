@@ -15,14 +15,16 @@ type
    devForth,
    devBrainfuck,
    devProteus,
-   devQuark);
+   devQuark,
+   devKf7);
 
   TCompilerType =
   (compilerNone,
    compilerForth,
    compilerBrainfuck,
    compilerProteus,
-   compilerQuark);
+   compilerQuark,
+   compilerKf7);
 
   PProc = ^TProc;
   TProc = procedure;

@@ -8,7 +8,7 @@ uses
   Gauges, uRecordList, ActnList, ImgList, Buttons,
   uLed, uComModel, uGlobal, TabNotBk, uForthDevice,
   uForthSoftDebuger, uForthHardDebuger, uBrainfuckDevice, uProteusDevice,
-  uProteusSoftDebuger, uQuarkDevice, uSimVga, uProteusComModel;
+  uProteusSoftDebuger, uQuarkDevice, uKf7Device, uKf7SoftDebuger, uSimVga, uProteusComModel;
 
 type
   TfSimulator = class(TForm)
@@ -528,6 +528,13 @@ begin
   ProteusSoftDebuger.AddPeriferal(-1, -1, @uProteusComModel.Inport, @uProteusComModel.Outport);
 end;
 
+procedure Kf7SoftDebugInit;
+var
+  Kf7SoftDebuger: TKf7SoftDebuger absolute debuger;
+begin
+  Kf7SoftDebuger := TKf7SoftDebuger.Create;
+end;
+
 procedure Init;
 begin
   ShowDevice := DoNothing;
@@ -701,6 +708,16 @@ begin
   ChangeDebuger(0);
 end;
 
+procedure OpenKf7Device;
+begin
+  OpenDeviceForm(TfKf7Device, fKf7Device);
+
+  ClearDebugers;
+  AddDebuger('Soft', @Kf7SoftDebugInit);
+
+  ChangeDebuger(0);
+end;
+
 procedure ChangeDevice(newDevice: TDeviceType);
 begin
   if newDevice = currentDevice then Exit;
@@ -712,6 +729,7 @@ begin
     devBrainfuck: OpenBrainfuckDevice;
     devProteus: OpenProteusDevice;
     devQuark: OpenQuarkDevice;
+    devKf7: OpenKf7Device;
   end;
 end;
 

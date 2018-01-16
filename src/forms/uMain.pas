@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ActnList, ComCtrls, Menus, Grids, StdCtrls, ExtCtrls,
   ToolWin, ImgList, uForthCompiler, Gauges, UnitSyntaxMemo, uStyleEditor, Buttons, uRecordList, uSimulator, uGlobal,
-  ShellAPI, uBrainfuckCompiler, uDownloadCom, uCommonFunctions, uProteusCompiler, uQuarkCompiler,
+  ShellAPI, uBrainfuckCompiler, uDownloadCom, uCommonFunctions, uProteusCompiler, uQuarkCompiler, uKf7Compiler,
   TabNotBk, ActnMan, ActnCtrls;
 
 type
@@ -79,6 +79,7 @@ type
     ToolButton1: TToolButton;
     CloseCurrentTab: TAction;
     SpeedButton1: TSpeedButton;
+    changeCompilerToKf7: TMenuItem;
     procedure CompileExecute(Sender: TObject);
     procedure GotoDownloadExecute(Sender: TObject);
     procedure ExportCoeExecute(Sender: TObject);
@@ -106,9 +107,10 @@ type
     procedure changeCompilerToForthClick(Sender: TObject);
     procedure changeCompilerToBrainfuckClick(Sender: TObject);
     procedure changeCompilerToProteusClick(Sender: TObject);
+    procedure changeCompilerToQuarkClick(Sender: TObject);
+    procedure changeCompilerToKf7Click(Sender: TObject);
 
     procedure ChangeCompilerTo(newCompiler: TCompilerType; NeedCreateNewFile: boolean = false);
-    procedure changeCompilerToQuarkClick(Sender: TObject);
 
     procedure ToLog(Sender: TObject; LogStr: string);
     procedure CloseTabClick(Sender: TObject);
@@ -395,19 +397,26 @@ begin
     Result := true;
 end;
 
+function CompilerParseInt: integer;
+begin
+  Result := 0;
+  if currentCompiler = compilerForth then
+  begin
+    Result := (compiler as TForthCompiler).ParseInt;
+    if (compiler as TForthCompiler).LastError <> 0 then
+      Exit(0);
+  end
+  else if currentCompiler = compilerProteus then
+    Result := (compiler as TProteusCompiler).ParseInt
+  else if currentCompiler = compilerKf7 then
+    Result := (compiler as TKf7Compiler).ParseInt;
+end;
+
 procedure TfMain.ForthCom;
 var
   comIndex: integer;
 begin
-  comIndex := 0;
-  if currentCompiler = compilerForth then
-  begin
-    comIndex := (compiler as TForthCompiler).ParseInt;
-    if (compiler as TForthCompiler).LastError <> 0 then
-      Exit;
-  end
-  else if currentCompiler = compilerProteus then
-    comIndex := (compiler as TProteusCompiler).ParseInt;
+  comIndex := CompilerParseInt;
 
   if (comIndex < 1) or (comIndex > 19) then
   begin
@@ -422,15 +431,7 @@ procedure TfMain.ForthBaudrate;
 var
   baudrate: integer;
 begin
-  baudrate := 115200;
-  if currentCompiler = compilerForth then
-  begin
-    baudrate := (compiler as TForthCompiler).ParseInt;
-    if (compiler as TForthCompiler).LastError <> 0 then
-      Exit;
-  end
-  else if currentCompiler = compilerProteus then
-    baudrate := (compiler as TProteusCompiler).ParseInt;
+  baudrate := CompilerParseInt;
 
   FormDownload.cbBaudrate.Text := IntToStr(baudrate);
 end;
@@ -439,15 +440,7 @@ procedure TfMain.ForthPackSize;
 var
   int: integer;
 begin
-  int := 0;
-  if currentCompiler = compilerForth then
-  begin
-    int := (compiler as TForthCompiler).ParseInt;
-    if (compiler as TForthCompiler).LastError <> 0 then
-      Exit;
-  end
-  else if currentCompiler = compilerProteus then
-    int := (compiler as TProteusCompiler).ParseInt;
+  int := CompilerParseInt;
 
   FormDownload.eCountPackage.Text := IntToStr(int);
 end;
@@ -456,15 +449,7 @@ procedure TfMain.ForthWaitCoef;
 var
   int: integer;
 begin
-  int := 0;
-  if currentCompiler = compilerForth then
-  begin
-    int := (compiler as TForthCompiler).ParseInt;
-    if (compiler as TForthCompiler).LastError <> 0 then
-      Exit;
-  end
-  else if currentCompiler = compilerProteus then
-    int := (compiler as TProteusCompiler).ParseInt;
+  int := CompilerParseInt;
 
   FormDownload.eWaitingCoef.Text := IntToStr(int);
 end;
@@ -635,7 +620,7 @@ begin
     Writeln(f, 'signal program : TProgramMem := (');
     for i := 0 to compiler.CodeCount-1 do
     begin
-      Writeln(f, '  ', i, ' => conv_std_logic_vector(', compiler.Code(i), ', 6),');
+      Writeln(f, '  ', i, ' => conv_std_logic_vector(', compiler.Code(i), ', CODEWIDTH),');
     end;
     Writeln(f, '  others => (others => ''0''));');
     CloseFile(f);
@@ -1191,6 +1176,24 @@ begin
   ChangeDevice(devQuark);
 end;
 
+procedure Kf7Init;
+var
+  kf7Compiler: TKf7Compiler absolute compiler;
+begin
+  kf7Compiler := TKf7Compiler.Create;
+  with kf7Compiler do
+  begin
+    BeginInitCommandSystem;
+    AddImmToken('#COM', fMain.ForthCom);
+    AddImmToken('#BAUDRATE', fMain.ForthBaudrate);
+    AddImmToken('#PACKSIZE=', fMain.ForthPackSize);
+    AddImmToken('#WAITCOEF=', fMain.ForthWaitCoef);
+    EndInitCommandSystem;
+  end;
+
+  ChangeDevice(devKf7);
+end;
+
 procedure CloseCurrentCompiler;
 begin
   if compiler <> nil then
@@ -1220,6 +1223,7 @@ begin
     compilerBrainfuck: BrainfuckInit;
     compilerProteus: ProteusInit;
     compilerQuark: QuarkInit;
+    compilerKf7: Kf7Init;
   end;
 
   if NeedCreateNewFile then
@@ -1230,6 +1234,12 @@ procedure TfMain.changeCompilerToForthClick(Sender: TObject);
 begin
   changeCompilerToForth.Checked := true;
   ChangeCompilerTo(compilerForth);
+end;
+
+procedure TfMain.changeCompilerToKf7Click(Sender: TObject);
+begin
+  changeCompilerToKf7.Checked := true;
+  ChangeCompilerTo(compilerKf7);
 end;
 
 procedure TfMain.changeCompilerToBrainfuckClick(Sender: TObject);
@@ -1243,6 +1253,7 @@ begin
   changeCompilerToProteus.Checked := true;
   ChangeCompilerTo(compilerProteus);
 end;
+
 
 procedure DownloadComInit;
 var
@@ -1260,8 +1271,7 @@ begin
     TimerInit := nil;
   end;
 
-  changeCompilerToProteus.Checked := true;
-  ChangeCompilerTo(compilerProteus, false);
+  changeCompilerToProteusClick(Sender);
 
   if ParamCount > 0 then
     OpenKfFile(ParamStr(1));

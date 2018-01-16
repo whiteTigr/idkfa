@@ -387,6 +387,12 @@ object fMain: TfMain
           RadioItem = True
           OnClick = changeCompilerToQuarkClick
         end
+        object changeCompilerToKf7: TMenuItem
+          Caption = 'kf7xx'
+          GroupIndex = 128
+          RadioItem = True
+          OnClick = changeCompilerToKf7Click
+        end
       end
     end
     object Help1: TMenuItem
@@ -417,7 +423,7 @@ object fMain: TfMain
     Left = 224
     Top = 416
     Bitmap = {
-      494C010116001800080010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010116001800240010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000006000000001002000000000000060
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

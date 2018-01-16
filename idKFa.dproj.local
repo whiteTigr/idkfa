@@ -2,9 +2,9 @@
 <BorlandProject>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="bmp"/>
+    <File Path="bmp\ABORT.BMP"/>
     <File Path="bmp\CloseBtn.bmp"/>
     <File Path="bmp\CloseBtnFocused.bmp"/>
-    <File Path="bmp\ABORT.BMP"/>
     <File Path="src"/>
     <File Path="src\compiler"/>
     <File Path="src\compiler\brainfuck"/>
@@ -17,18 +17,28 @@
     <File Path="src\compiler\forth\uForthDevice.pas"/>
     <File Path="src\compiler\forth\uForthDevice.dfm"/>
     <File Path="src\compiler\forth\uForthDeviceCore.pas"/>
-    <File Path="src\compiler\forth\uForthSoftDebuger.pas"/>
     <File Path="src\compiler\forth\uForthHardDebuger.pas"/>
+    <File Path="src\compiler\forth\uForthSoftDebuger.pas"/>
+    <File Path="src\compiler\kf7"/>
+    <File Path="src\compiler\kf7\uKf7ComModel.pas"/>
+    <File Path="src\compiler\kf7\uKf7ComModel.dfm"/>
+    <File Path="src\compiler\kf7\uKf7Compiler.pas"/>
+    <File Path="src\compiler\kf7\uKf7Device.pas"/>
+    <File Path="src\compiler\kf7\uKf7Device.dfm"/>
+    <File Path="src\compiler\kf7\uKf7DeviceCore.pas"/>
+    <File Path="src\compiler\kf7\uKf7Downloader.pas"/>
+    <File Path="src\compiler\kf7\uKf7Downloader.dfm"/>
+    <File Path="src\compiler\kf7\uKf7SoftDebuger.pas"/>
     <File Path="src\compiler\proteus"/>
-    <File Path="src\compiler\proteus\uProteusDeviceCore.pas"/>
-    <File Path="src\compiler\proteus\uProteusDevice.pas"/>
-    <File Path="src\compiler\proteus\uProteusDevice.dfm"/>
-    <File Path="src\compiler\proteus\uProteusSoftDebuger.pas"/>
-    <File Path="src\compiler\proteus\uProteusCompiler.pas"/>
     <File Path="src\compiler\proteus\uProteusComModel.pas"/>
     <File Path="src\compiler\proteus\uProteusComModel.dfm"/>
+    <File Path="src\compiler\proteus\uProteusCompiler.pas"/>
+    <File Path="src\compiler\proteus\uProteusDevice.pas"/>
+    <File Path="src\compiler\proteus\uProteusDevice.dfm"/>
+    <File Path="src\compiler\proteus\uProteusDeviceCore.pas"/>
     <File Path="src\compiler\proteus\uProteusDownloader.pas"/>
     <File Path="src\compiler\proteus\uProteusDownloader.dfm"/>
+    <File Path="src\compiler\proteus\uProteusSoftDebuger.pas"/>
     <File Path="src\compiler\quark"/>
     <File Path="src\compiler\quark\uQuarkCompiler.pas"/>
     <File Path="src\compiler\quark\uQuarkDevice.pas"/>
@@ -67,5 +77,7 @@
     <Transaction>2012.09.11 11:38:29.609.dfm,D:\projects\git\idkfa\Unit1.dfm=D:\projects\git\idkfa\src\compiler\proteus\uSimVga.dfm</Transaction>
     <Transaction>2012.09.12 10:17:28.593.coe,D:\projects\git\idkfa\src\compiler\proteus\symbols.coe=</Transaction>
     <Transaction>2013.07.12 16:26:43.890.BMP,D:\Zzz\ABORT.BMP=</Transaction>
+    <Transaction>2016.05.16 14:36:09.639.pas,D:\git\idkfa\src\compiler\kf7\uKf7ComModel.pas=</Transaction>
+    <Transaction>2016.05.16 14:36:09.639.dfm,D:\git\idkfa\src\compiler\kf7\uKf7ComModel.dfm=</Transaction>
   </Transactions>
 </BorlandProject>
