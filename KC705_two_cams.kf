@@ -1,0 +1,446 @@
+// for Proteus compiler
+                // Запись программы
+#COM 3          // по нужному COM-порту
+#PACKSIZE= 16   // пакетами по PACKSIZE байт
+#WAITCOEF= 2    // с задержкой, вычисляемой по формуле
+                // (PackSize * 8 / BaudRate) * WaitCoef секунд
+// Если программа не зашивается, попробуйте уменьшить размер пакетов
+// и увеличить задержку
+
+// подгрузка библиотек
+" proteus.lib" L
+
+: BaseAddr 0x40000 ; INLINE
+" vga.lib" L
+" gvga.lib" L
+
+: SYSTEMBaseAddr 0x20000 ; INLINE
+
+ : CamLeftSpiBaseAddr 0x60000 ; INLINE // left
+ : CamLeftCaptureBaseAddr 0x70000 ; INLINE // left
+// : CamLeftSpiBaseAddr 0xA0000 ; INLINE // right
+// : CamLeftCaptureBaseAddr 0x90000 ; INLINE // right
+{
+ // camselect - 1 - left
+ 0 0x20000 OUTPORT
+}
+
+
+VARIABLE ?.SPACE
+: . // value --
+ IntToStr PRINT
+ ?.SPACE @ IF 32 EMIT THEN
+;
+{ -1 ?.SPACE ! }
+
+: str " Hello, world!" ; INLINE
+// : str " Привет, Мир!" ; INLINE
+
+VARIABLE SymbolOffset
+
+: SetSymbolOffset // offset -->
+ DUP SymbolOffset !
+ VGA_SetSymbolOffset
+;
+
+: CamLeft_SetWrite CamLeftSpiBaseAddr 1 + OUTPORT ;
+: CamLeft_SetAddr CamLeftSpiBaseAddr 2 + OUTPORT ;
+: CamLeft_SetData CamLeftSpiBaseAddr 3 + OUTPORT ;
+: CamLeft_SetReg  CamLeftSpiBaseAddr 4 + OUTPORT ;
+: CamLeft_Ready CamLeftSpiBaseAddr INPORT ;
+: CamLeft_Reg CamLeftSpiBaseAddr 1 + INPORT ;
+: CamLeft_Data CamLeftSpiBaseAddr 2 + INPORT ;
+: CamLeft_Send BEGIN CamLeft_Ready UNTIL 1 CamLeftSpiBaseAddr OUTPORT 0 CamLeftSpiBaseAddr OUTPORT ;
+: CamLeft_WriteReg // data reg --
+ 1 CamLeft_SetWrite
+ CamLeft_SetAddr
+ CamLeft_SetData
+ CamLeft_Send
+;
+: CamLeft_ReadReg // reg -- data
+ 0 CamLeft_SetWrite
+ CamLeft_SetAddr
+ CamLeft_Send
+ BEGIN CamLeft_Ready UNTIL
+ CamLeft_Data
+;
+
+: CamLeftCapture_SetChannels CamLeftCaptureBaseAddr 2 + OUTPORT ; INLINE
+: CamLeft_SynchroTime CamLeftCaptureBaseAddr 9 + INPORT ; INLINE
+: CamLeft_Reset 0 SYSTEMBaseAddr 7 + OUTPORT 1 SYSTEMBaseAddr 7 + OUTPORT ;
+
+: CamLeft_Channels // value
+ DUP 1 = IF 3 57 CamLeft_WriteReg 1 CamLeftCapture_SetChannels DROP EXIT THEN
+ DUP 2 = IF 2 57 CamLeft_WriteReg 2 CamLeftCapture_SetChannels DROP EXIT THEN
+     4 = IF 0 57 CamLeft_WriteReg 4 CamLeftCapture_SetChannels EXIT THEN
+;
+
+: CamLeft_SetWrite CamLeftSpiBaseAddr 1 + OUTPORT ;
+: CamLeft_SetAddr CamLeftSpiBaseAddr 2 + OUTPORT ;
+: CamLeft_SetData CamLeftSpiBaseAddr 3 + OUTPORT ;
+: CamLeft_SetReg  CamLeftSpiBaseAddr 4 + OUTPORT ;
+: CamLeft_Ready CamLeftSpiBaseAddr INPORT ;
+: CamLeft_Reg CamLeftSpiBaseAddr 1 + INPORT ;
+: CamLeft_Data CamLeftSpiBaseAddr 2 + INPORT ;
+: CamLeft_Send BEGIN CamLeft_Ready UNTIL 1 CamLeftSpiBaseAddr OUTPORT 0 CamLeftSpiBaseAddr OUTPORT ;
+: CamLeft_WriteReg // data reg --
+ 1 CamLeft_SetWrite
+ CamLeft_SetAddr
+ CamLeft_SetData
+ CamLeft_Send
+;
+: CamLeft_ReadReg // reg -- data
+ 0 CamLeft_SetWrite
+ CamLeft_SetAddr
+ CamLeft_Send
+ BEGIN CamLeft_Ready UNTIL
+ CamLeft_Data
+;
+
+: CamLeftCapture_SetChannels CamLeftCaptureBaseAddr 2 + OUTPORT ; INLINE
+: CamLeft_SynchroTime CamLeftCaptureBaseAddr 9 + INPORT ; INLINE
+: CamLeft_Reset 0 SYSTEMBaseAddr 7 + OUTPORT 1 SYSTEMBaseAddr 7 + OUTPORT ;
+
+: CamLeft_Channels // value
+ DUP 1 = IF 3 57 CamLeft_WriteReg 1 CamLeftCapture_SetChannels DROP EXIT THEN
+ DUP 2 = IF 2 57 CamLeft_WriteReg 2 CamLeftCapture_SetChannels DROP EXIT THEN
+     4 = IF 0 57 CamLeft_WriteReg 4 CamLeftCapture_SetChannels EXIT THEN
+;
+
+
+
+: ReadAllCamLeftRegs
+ 0 0 GOTOXY
+ 8 0 DO
+  I 1 + 16 * GOTOX
+  I HEXPRINTBYTE
+ LOOP
+
+ 0 CamLeft_SetWrite
+ 0
+ 16 0 DO
+  I 1 + GOTOY
+  0 GOTOX
+  I 8 * HEXPRINTBYTE
+  8 0 DO
+   I 1 + 16 * GOTOX
+   DUP IntToStr PRINT 32 EMIT
+   DUP CamLeft_ReadReg HEXPRINTBYTE
+   1 +
+  LOOP
+ LOOP
+ DROP
+;
+
+VARIABLE test11
+VARIABLE test01
+VARIABLE test10
+{ 0 test11 ! 0 test01 ! 0 test10 ! }
+
+VARIABLE data
+VARIABLE LastFrameRequest
+VARIABLE LastDelaing
+
+VARIABLE GridHeight
+{ 9 GridHeight ! }
+
+VARIABLE FrameReqs
+{ 1 FrameReqs ! }
+
+VARIABLE ExpoTime
+{ 5 256 * ExpoTime ! }
+
+: VGA_TEST
+ 0 2 GOTOXY
+ GREEN SETCOLOR
+
+ 80 20 GOTOXY
+ WHITE SETCOLOR
+ str PRINT
+ 80 21 GOTOXY
+ RED SETCOLOR
+ str PRINT
+ 80 22 GOTOXY
+ GREEN SETCOLOR
+ str PRINT
+ 80 23 GOTOXY
+ BLUE SETCOLOR
+ str PRINT
+
+ WHITE SETCOLOR
+
+ 0 SetSymbolOffset
+// TestSymbol
+ 0 3 GOTOXY
+ 8 0 DO I EMIT LOOP
+
+ 0 4 GOTOXY
+ 160 0 DO I 2 AND 0 = IF I 1 AND 2 + EMIT ELSE 0 EMIT THEN LOOP
+
+ 0 5 GOTOXY
+ 256 0 DO
+  I 15 AND NOT IF CR THEN
+  I EMIT
+ LOOP
+
+ 20 6 GOTOXY
+ str
+ BEGIN
+  DUP @
+ WHILE
+  DUP @ HEXPRINTBYTE
+  1 + 0x20 EMIT
+ REPEAT
+ DROP
+
+ 20 7 GOTOXY
+ str
+ BEGIN
+  DUP @
+ WHILE
+  0x20 EMIT
+  DUP @ EMIT
+  1 +
+  0x20 EMIT
+ REPEAT
+ DROP
+
+ WHITE SETCOLOR
+ 0 24 GOTOXY
+ 160 0 DO I 2 AND 0 = IF WHITE SETCOLOR 2 I 1 AND + EMIT ELSE BLACK SETCOLOR 0 EMIT THEN LOOP
+ 0 25 GOTOXY
+ 160 0 DO I 2 AND 0 = IF WHITE SETCOLOR 3 I 1 AND - EMIT ELSE BLACK SETCOLOR 0 EMIT THEN LOOP
+ 0 26 GOTOXY
+ 160 0 DO I 2 AND 0 = IF RED SETCOLOR 2 I 1 AND + EMIT ELSE BLACK SETCOLOR 0 EMIT THEN LOOP
+ 0 27 GOTOXY
+ 160 0 DO I 2 AND 0 = IF RED SETCOLOR 3 I 1 AND - EMIT ELSE BLACK SETCOLOR 0 EMIT THEN LOOP
+ 0 28 GOTOXY
+ 160 0 DO I 2 AND 0 = IF GREEN SETCOLOR 2 I 1 AND + EMIT ELSE BLACK SETCOLOR 0 EMIT THEN LOOP
+ 0 29 GOTOXY
+ 160 0 DO I 2 AND 0 = IF GREEN SETCOLOR 3 I 1 AND - EMIT ELSE BLACK SETCOLOR 0 EMIT THEN LOOP
+ 0 30 GOTOXY
+ 160 0 DO I 2 AND 0 = IF BLUE SETCOLOR 2 I 1 AND + EMIT ELSE BLACK SETCOLOR 0 EMIT THEN LOOP
+ 0 31 GOTOXY
+ 160 0 DO I 2 AND 0 = IF BLUE SETCOLOR 3 I 1 AND - EMIT ELSE BLACK SETCOLOR 0 EMIT THEN LOOP
+ 0 32 GOTOXY
+ WHITE SETCOLOR
+ 160 0 DO I 2 AND IF 4 EMIT ELSE 0x20 EMIT THEN LOOP
+ 0 33 GOTOXY
+ RED SETCOLOR
+ 160 0 DO I 2 AND IF 4 EMIT ELSE 0x20 EMIT THEN LOOP
+ 0 34 GOTOXY
+ GREEN SETCOLOR
+ 160 0 DO I 2 AND IF 4 EMIT ELSE 0x20 EMIT THEN LOOP
+ 0 35 GOTOXY
+ BLUE SETCOLOR
+ 160 0 DO I 2 AND IF 4 EMIT ELSE 0x20 EMIT THEN LOOP
+ 0 36 GOTOXY
+ WHITE SETCOLOR
+ 160 0 DO I 2 AND NOT IF 5 EMIT ELSE 0x20 EMIT THEN LOOP
+ 0 37 GOTOXY
+ RED SETCOLOR
+ 160 0 DO I 2 AND NOT IF 5 EMIT ELSE 0x20 EMIT THEN LOOP
+ 0 38 GOTOXY
+ GREEN SETCOLOR
+ 160 0 DO I 2 AND NOT IF 5 EMIT ELSE 0x20 EMIT THEN LOOP
+ 0 39 GOTOXY
+ BLUE SETCOLOR
+ 160 0 DO I 2 AND NOT IF 5 EMIT ELSE 0x20 EMIT THEN LOOP
+
+ 0 0 GOTOXY
+ 8 0 DO I SETBGCOLOR 0x20 EMIT LOOP CR
+ 8 0 DO 7 I - SETBGCOLOR 0x20 EMIT LOOP CR
+;
+
+: SETDELAY // value channel --
+ SWAP
+ DUP 62 > IF DROP 62 THEN OVER 0x20000 + 1 + OUTPORT
+ 1 SWAP << 0x20000 6 + OUTPORT
+ 0 0x20000 6 + OUTPORT
+;
+
+: CamLeft_ReadData // channel -- value
+ 0x70000 + 5 + INPORT
+;
+
+: LVDS_JITTER
+ // training pattern
+ 0xA5 61 CamLeft_WriteReg
+
+ YELLOW SETCOLOR
+ USCOUNTER
+ DUP LastDelaing !
+ BEGIN
+  DUP LastDelaing @ - 10000 > IF
+   DUP LastDelaing !
+   4 0 DO
+    I J!
+
+    32 4 SETDELAY
+    0 J 6 * GOTOXY
+    63 0 DO
+//     I 32 = IF CR THEN
+     I J SETDELAY
+     CamLeft_SynchroTime HEXDIGIT 32 EMIT J CamLeft_ReadData HEXPRINTBYTE 32 EMIT
+    LOOP
+
+    CR
+    0 4 SETDELAY
+    63 0 DO
+//     I 32 = IF CR THEN
+     I J SETDELAY
+     CamLeft_SynchroTime HEXDIGIT 32 EMIT J CamLeft_ReadData HEXPRINTBYTE 32 EMIT
+    LOOP
+   LOOP
+  THEN
+  0 40 GOTOXY " loop time = " PRINT USCOUNTER SWAP OVER SWAP - . SWAP " us" PRINT 4 0 DO 32 EMIT LOOP CR
+  " DEPTH = " PRINT DEPTH .
+ AGAIN
+;
+
+VARIABLE delay0
+VARIABLE delay1
+VARIABLE delay2
+VARIABLE delay3
+VARIABLE channels
+{
+ 4 0 DO
+  0 delay0 I + !
+ LOOP
+ 1 channels !
+}
+
+VARIABLE new_frame_time
+{
+ 0 new_frame_time !
+}
+
+VARIABLE ImageX
+VARIABLE ImageY
+{
+ 0 ImageX !
+ 0 ImageY !
+}
+
+
+: CamLeft_SetMemoryStart
+ ImageY @ 640 * ImageX @ + CamLeftCaptureBaseAddr 3 + OUTPORT
+;
+
+: MAIN
+ STDCARET
+ CLS
+ BLACK SETBGCOLOR
+ GREEN SETCOLOR
+ 0 0 GOTOXY
+
+ CamLeft_Reset
+
+ // spi init
+ 44  58 CamLeft_WriteReg
+ 240 59 CamLeft_WriteReg
+ 10  60 CamLeft_WriteReg
+ 9   69 CamLeft_WriteReg
+ 2   80 CamLeft_WriteReg
+ 240 97 CamLeft_WriteReg
+ 10  98 CamLeft_WriteReg
+ 112 100 CamLeft_WriteReg
+ 98  101 CamLeft_WriteReg
+ 34  102 CamLeft_WriteReg
+ 64  103 CamLeft_WriteReg
+ 90  106 CamLeft_WriteReg
+ 110 107 CamLeft_WriteReg
+ 91  108 CamLeft_WriteReg
+ 82  109 CamLeft_WriteReg
+ 80  110 CamLeft_WriteReg
+ 91  117 CamLeft_WriteReg
+
+ // disable pll, use external lvds clk
+ 0x00 83 CamLeft_WriteReg
+ 0x01 84 CamLeft_WriteReg
+ 0x8C 63 CamLeft_WriteReg
+ 0x7F 81 CamLeft_WriteReg
+ 0x88 82 CamLeft_WriteReg
+
+ // enable pll
+//  187  83 CamLeft_WriteReg
+//  0    84 CamLeft_WriteReg
+//  0x0C 63 CamLeft_WriteReg
+//  0x7E 81 CamLeft_WriteReg
+//  0x80 82 CamLeft_WriteReg
+
+ 4 CamLeft_Channels
+ // color
+ 0 39 CamLeft_WriteReg
+ 1 GraphMode
+
+ // image flip
+ 0b00 40 CamLeft_WriteReg
+
+ // external exp
+ 0 41 CamLeft_WriteReg
+
+ // exptime
+ 0x00 42 CamLeft_WriteReg // low
+ 0x04 43 CamLeft_WriteReg // middle
+ 0x00 44 CamLeft_WriteReg // high
+
+ 0 30 GOTOXY
+ 42 CamLeft_ReadReg HEXPRINTBYTE 32 EMIT
+ 43 CamLeft_ReadReg HEXPRINTBYTE 32 EMIT
+ 44 CamLeft_ReadReg HEXPRINTBYTE 32 EMIT
+ 55 CamLeft_ReadReg HEXPRINTBYTE 32 EMIT
+ 56 CamLeft_ReadReg HEXPRINTBYTE 32 EMIT
+ 68 CamLeft_ReadReg HEXPRINTBYTE 32 EMIT
+
+ GCLS
+ CLS
+
+ 0 CamLeftCaptureBaseAddr 3 + OUTPORT
+ 648 CamLeftCaptureBaseAddr 4 + OUTPORT
+
+ 8 0x80000 OUTPORT
+
+ USCOUNTER 0
+ OVER LastFrameRequest !
+ BEGIN
+  CHECKCOM IF
+   GETCOMDATA
+   COMDATA @ 0x30 = IF delay0 @ 1 - 31 AND DUP delay0 ! 0 SETDELAY THEN
+   COMDATA @ 0x31 = IF delay0 @ 1 + 31 AND DUP delay0 ! 0 SETDELAY THEN
+   COMDATA @ 0x32 = IF ImageY @ 4 + ImageY ! CamLeft_SetMemoryStart THEN
+   COMDATA @ 0x33 = IF  THEN
+   COMDATA @ 0x34 = IF ImageX @ 4 - ImageX ! CamLeft_SetMemoryStart THEN
+   COMDATA @ 0x35 = IF  THEN
+   COMDATA @ 0x36 = IF ImageX @ 4 + ImageX ! CamLeft_SetMemoryStart THEN
+   COMDATA @ 0x37 = IF  THEN
+   COMDATA @ 0x38 = IF ImageY @ 4 - ImageY ! CamLeft_SetMemoryStart THEN
+   COMDATA @ 0x39 = IF  THEN
+  THEN
+  // ReadAllCamLeftRegs
+  0 31 GOTOXY
+  DUP " Counter = " PRINT HEXPRINT 1 + CR
+  " DEPTH = " PRINT DEPTH HEXPRINT CR
+  CR
+  OVER LastFrameRequest @ - 6700 > IF
+   LastFrameRequest @ 6700 + LastFrameRequest !
+   0x80000 INPORT new_frame_time !
+    " ColorMean = " PRINT 0x70001 INPORT 316224 / DUP . 100 * 4096 / . " %     " PRINT CR
+    " TestCounter = " PRINT 0x70002 INPORT . CR
+  ELSE
+    CR CR
+  THEN
+  LastFrameRequest @ . CR
+  " frame time = " PRINT 0x80002 INPORT . CR
+  " blank start time = " PRINT 0x80001 INPORT . CR
+  " new frame time = " PRINT new_frame_time @ . CR
+  " delay3 = " PRINT delay3 @ . CR
+  " channels = " PRINT channels @ . CR
+  " GridHeight = " PRINT GridHeight @ . CR
+  " FrameReqs = " PRINT FrameReqs @ . CR
+   " loop time = " PRINT SWAP USCOUNTER SWAP OVER SWAP - . SWAP " us" PRINT 4 0 DO 32 EMIT LOOP CR
+ AGAIN
+;
+
+MAIN:
+MAIN

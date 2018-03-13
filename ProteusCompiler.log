@@ -1,0 +1,5 @@
+: DP++ HERE @ 1 + HERE ! ;
+: CP++ [C]HERE @ 1 + [C]HERE ! ;
+: _ALLOT HERE @ + HERE ! ;
+: _[C]ALLOT [C]HERE @ + [C]HERE ! ;
+: _, HERE @ ! DP++ ;

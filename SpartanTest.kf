@@ -1,0 +1,101 @@
+// for Proteus compiler
+                // Запись программы
+#COM 1          // по нужному COM-порту
+#PACKSIZE= 1    // пакетами по PACKSIZE байт
+#WAITCOEF= 1    // с задержкой, вычисляемой по формуле
+                // (PackSize * 8 / BaudRate) * WaitCoef секунд
+// Если программа не зашивается, попробуйте уменьшить размер пакетов
+// и увеличить задержку
+#MaxCode= 16384
+#MaxData= 1024
+
+// подгрузка библиотек
+
+" proteus.lib" L
+" vga.lib" L
+
+: hello " Hello, world" ; INLINE
+
+VARIABLE PassedTime
+{ 0 PassedTime ! }
+
+: PrintStrings
+ 0 0 GOTOXY
+ GREEN SETCOLOR
+ "  SYSTIMER " VGA_PRINT CR
+ "  PassedTime " VGA_PRINT CR
+ CR
+ "   ddr_a" VGA_PRINT CR
+ "   ddr_ba" VGA_PRINT CR
+ "   ddr_cke" VGA_PRINT CR
+ "   ddr_cs_n" VGA_PRINT CR
+ "   ddr_ras_n" VGA_PRINT CR
+ "   ddr_cas_n" VGA_PRINT CR
+ "   ddr_we_n" VGA_PRINT CR
+ "   ddr_dm" VGA_PRINT CR
+ "   rst_dqs_div_out" VGA_PRINT CR
+ "   init_val" VGA_PRINT CR
+ "   ar_done" VGA_PRINT CR
+ "   user_data_valid" VGA_PRINT CR
+ "   auto_ref_req" VGA_PRINT CR
+ "   user_cmd_ack" VGA_PRINT CR
+ "   sys_rst_tb" VGA_PRINT CR
+ "   sys_rst90_tb" VGA_PRINT CR
+ "   sys_rst180_tb" VGA_PRINT CR
+ "   user_output_data" VGA_PRINT CR
+ "   ddr_dq" VGA_PRINT CR
+ CR
+ "   DEPTH = " VGA_PRINT
+;
+
+: DDRDump
+ 0 0 GOTOXY
+ GREEN SETCOLOR
+ 10 0 GOTOXY SYSTIMER_HI HEX32->VGA " _" @ EMIT SYSTIMER_LOW HEX32->VGA
+ 13 1 GOTOXY PassedTime @ HEX32->VGA CR
+ 0x30000
+ 19 0 DO
+  19 I 3 + GOTOXY DUP INPORT HEX32->VGA
+  1 +
+ LOOP
+ DROP
+ 10 23 GOTOXY DEPTH IntToStr VGA_PRINT
+;
+
+: cycle_time_str " cycle time = " ; INLINE
+
+MAIN:
+ CLS
+ 0 0x2000A OUTPORT
+ GREEN SETCOLOR
+ PrintStrings
+ 40 0 GOTOXY 48 EMIT
+ 40 1 GOTOXY cycle_time_str VGA_PRINT
+ SYSTIMER_LOW
+BEGIN
+ SYSTIMER_HI 0 = IF
+  10000000  SYSTIMER_LOW OVER > >R PassedTime @ OVER < R> AND IF PassedTime ! 1 0x30000 OUTPORT 41 0 GOTOXY 49 EMIT ELSE DROP THEN
+  20000000  SYSTIMER_LOW OVER > >R PassedTime @ OVER < R> AND IF PassedTime ! 0 0x30000 OUTPORT 41 0 GOTOXY 49 EMIT ELSE DROP THEN
+  500000000  SYSTIMER_LOW OVER > >R PassedTime @ OVER < R> AND IF PassedTime ! 0x100 0x30011 OUTPORT 1 0x30010 OUTPORT 41 0 GOTOXY 49 EMIT ELSE DROP THEN
+  1000000000 SYSTIMER_LOW OVER > >R PassedTime @ OVER < R> AND IF PassedTime ! 2 0x30010 OUTPORT 42 0 GOTOXY 48 EMIT ELSE DROP THEN
+  1500000000 SYSTIMER_LOW OVER > >R PassedTime @ OVER < R> AND IF PassedTime ! 1 0x30010 OUTPORT 43 0 GOTOXY 49 EMIT ELSE DROP THEN
+  2000000000 SYSTIMER_LOW OVER > >R PassedTime @ OVER < R> AND IF PassedTime ! 2 0x30010 OUTPORT 44 0 GOTOXY 50 EMIT ELSE DROP THEN
+  2500000000 SYSTIMER_LOW OVER > >R PassedTime @ OVER < R> AND IF PassedTime !
+    0xD 0x30020 OUTPORT
+    0xE 0x30021 OUTPORT
+    0xA 0x30022 OUTPORT
+    0xD 0x30023 OUTPORT
+    0xB 0x30024 OUTPORT
+    0xE 0x30025 OUTPORT
+    0xE 0x30026 OUTPORT
+    0xF 0x30027 OUTPORT
+    3 0x30010 OUTPORT
+    45 0 GOTOXY 51 EMIT
+  ELSE DROP THEN
+  3000000000 SYSTIMER_LOW OVER > >R PassedTime @ OVER < R> AND IF PassedTime ! 2 0x30010 OUTPORT 45 0 GOTOXY 51 EMIT ELSE DROP THEN
+ THEN
+ DDRDump
+ 53 1 GOTOXY
+ SYSTIMER_LOW SWAP OVER SWAP - HEX32->VGA
+// 50000000 0 DO LOOP
+AGAIN

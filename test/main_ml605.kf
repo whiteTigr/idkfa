@@ -1,0 +1,181 @@
+// for Proteus compiler
+                // Запись программы
+#COM 3          // по нужному COM-порту
+#PACKSIZE= 16    // пакетами по PACKSIZE байт
+#WAITCOEF= 1    // с задержкой, вычисляемой по формуле
+                // (PackSize * 8 / BaudRate) * WaitCoef секунд
+// Если программа не зашивается, попробуйте уменьшить размер пакетов
+// и увеличить задержку
+
+// подгрузка библиотек
+ " proteus.lib" L
+ " wait.lib" L
+ " dvi.lib" L
+
+: BaseAddr 0x40000 ; INLINE
+" vga.lib" L
+" gvga.lib" L
+
+: BaseAddr    0x10000 ; INLINE
+: SysBaseAddr 0x20000 ; INLINE
+
+: '0x' " 0x" PRINT ;
+: ':'  " :" @ EMIT ;
+
+CREATE I2C_addr_start
+CREATE I2C_addr[]
+0x1C , 0x1D , 0x1E , 0x1F , 0x20 , 0x21 ,
+0x23 , 0x31 , 0x33 , 0x34 , 0x35 , 0x36 ,
+0x37 , 0x48 , 0x49 , 0x4A , 0x4B , 0x56 ,
+CREATE I2C_addr_stop
+
+: I2C_Write // regData, regAddr ->
+  BEGIN I2C_sending@ NOT UNTIL
+  I2C_packet_low! I2C_packet_high!
+  0 I2C_wr!
+  1 I2C_sendThis! 0 I2C_sendThis!
+;
+
+: I2C_Read  // regAddr ->
+  '0x' DUP HEXPRINTBYTE ':' 32 EMIT
+  BEGIN I2C_sending@ NOT UNTIL
+  I2C_packet_low!
+  1 I2C_wr!
+  1 I2C_sendThis! 0 I2C_sendThis!
+  BEGIN I2C_sending@ NOT UNTIL
+  1 I2C_sendThis! 0 I2C_sendThis!
+  BEGIN I2C_sending@ NOT UNTIL
+  // I2C_data0@ INV8 DUP BIN->VGA 32 EMIT HEXPRINTBYTE 32 EMIT
+  I2C_data1@ INV8 DUP BIN->VGA '0x' HEXPRINTBYTE // CR
+;
+
+: I2C_ReadAll
+  184 37 GOTOXY " I2C DVI Reg" PRINT
+  I2C_addr_stop I2C_addr_start DO
+    180 38 I I2C_addr_start - + GOTOXY
+    I @ I2C_Read
+  LOOP
+;
+
+: Test
+ 900 0 DO
+  I J!
+  1600 0 DO
+   I 3 >> 0x7 AND J 3 >> 0x7 AND 3 << + I 3 >> J 3 >> + 0x7 AND 6 << + I J GPIXEL
+  LOOP
+ LOOP
+;
+
+VARIABLE X
+VARIABLE Y
+
+: Test
+ ModePallete GraphMode
+ 10 CHOOSE 5 - X !
+ 10 CHOOSE 5 - Y !
+ 0
+ 900 0 DO
+  I J!
+  1600 0 DO
+    DUP GVGA_SetAddr 1 +
+    I X @ * J Y @ * + GVGA_SetData
+    GVGA_WriteData
+  LOOP
+ LOOP
+ DROP
+;
+
+: DVI_INIT
+  0b00000000 0x1C I2C_Write
+  0x4F 0x1D I2C_Write
+  0b10001000 0x1F I2C_Write
+  0b00001001 0x21 I2C_Write
+  0x06 0x33 I2C_Write
+  0x26 0x34 I2C_Write
+  0xA0 0x36 I2C_Write
+  0b00011000 0x48 I2C_Write
+  0x00 0x49 I2C_Write
+;
+
+VARIABLE CLK_OFFSET
+{ 8 CLK_OFFSET ! }
+
+: CHECK-COM
+ CHECKCOM IF
+  GETCOMDATA
+   COMDATA @ 0x30 = IF I2C_ReadAll THEN
+   COMDATA @ 0x31 = IF GCLS THEN
+   COMDATA @ 0x34 = IF CLK_OFFSET @ 1 - DUP CLK_OFFSET ! 0xF AND 0x40 OR 0x1D I2C_Write THEN
+   COMDATA @ 0x36 = IF CLK_OFFSET @ 1 + DUP CLK_OFFSET ! 0xF AND 0x40 OR 0x1D I2C_Write THEN
+   COMDATA @ 0x38 = IF SCREEN_UP THEN
+   COMDATA @ 0x35 = IF Test THEN
+ THEN
+;
+
+: ShowUpTime
+  0 2 GOTOXY
+  " UpTime: " PRINT
+  HOUR IntToStr PRINT ':'
+  MIN  IntToStr PRINT ':'
+  SEC  IntToStr PRINT " ." @ EMIT
+  USEC IntToStr PRINT CR
+  " SYS_TIMER: " PRINT
+  SYSTIMER_HI HEXPRINT 32 EMIT SYSTIMER_LOW HEXPRINT
+;
+
+: ADC@ SysBaseAddr INPORT ; INLINE
+
+// : 0 32 ,Z ; INLINE
+
+ARRAY Arr[] 1600
+VARIABLE CUR_X
+{
+ Arr[]
+ 1600 0 DO
+  0 OVER !
+  1 +
+ LOOP
+ DROP
+ 0 CUR_X !
+}
+
+: ADD_Y // value --
+  0 CUR_X @ Arr[] OVER + @ GPIXEL
+  DUP Arr[] CUR_X @ + !
+  0b111000 SWAP CUR_X @ SWAP GPIXEL
+  CUR_X @ DUP 1599 = IF
+    DROP 0 CUR_X !
+    USCOUNTER SWAP OVER SWAP - 0 GOTOX HEXPRINTWORD
+  ELSE
+    1 + CUR_X !
+  THEN
+;
+
+MAIN:
+  0 CUR_X !
+//  DVI_INIT
+  GREEN SETCOLOR
+  NOCARET
+//  CLS GCLS
+  0 55 GOTOXY
+  " Vexilurz ML605 DVI testing." PRINT
+  0
+  BEGIN
+   1 +
+  AGAIN
+
+  54 GOTOY
+  USCOUNTER
+BEGIN
+//  SCREEN_UP
+//  0 55 GOTOXY
+  ADC@ // DUP HEXPRINT
+  SHR SHR SHR SHR SHR SHR ADD_Y // 10 WAIT_MSEC
+AGAIN
+BEGIN
+  CHECK-COM
+  SEC 0x37 I2C_Write // just for testing
+  I2C_ReadAll
+  ShowUpTime
+  512 CHOOSE 1600 CHOOSE 900 CHOOSE GPIXEL
+AGAIN

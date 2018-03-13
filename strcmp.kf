@@ -1,0 +1,48 @@
+// for Proteus compiler
+                // Запись программы
+#COM 1          // по нужному COM-порту
+#PACKSIZE= 1    // пакетами по PACKSIZE байт
+#WAITCOEF= 2    // с задержкой, вычисляемой по формуле
+                // (PackSize * 8 / BaudRate) * WaitCoef секунд
+// Если программа не зашивается, попробуйте уменьшить размер пакетов
+// и увеличить задержку
+
+// подгрузка библиотек
+// " proteus.lib" L
+
+VARIABLE StrCmpRes
+: StrCmp \ addr1, addr2 --> res
+ 1 - SWAP 1 - SWAP
+ 0 StrCmpRes !
+ BEGIN
+  1 + SWAP 1 + SWAP // 6
+  OVER @ OVER @ = NOT // 8. @ = cmdFETCH + cmdNOP
+  IF 1 StrCmpRes ! THEN //
+  OVER @ 0 =
+  OVER @ 0 = OR
+  StrCmpRes @ OR
+ UNTIL
+ @ SWAP @ =
+;
+
+: StrCmp2
+ 1 - SWAP 1 - SWAP
+ BEGIN
+  1 + SWAP 1 + SWAP
+  OVER @ OVER @
+  OVER OVER = NOT >R
+  NOT SWAP NOT OR
+  R> OR
+ UNTIL
+ @ SWAP @ =
+;
+
+: Test
+ " test" " test2" StrCmp2
+;
+
+MAIN:
+ Test
+BEGIN
+
+AGAIN

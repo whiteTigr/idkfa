@@ -1,0 +1,37 @@
+// Graph VGA
+//
+// ***including***
+// : BaseAddr 0x30000 ; INLINE
+// " gvga.lib" L
+//
+
+: ScreenWidth 1280 ; INLINE
+: ScreenHeight 720 ; INLINE
+
+: GVGA_Reset BaseAddr 256 + OUTPORT ; INLINE
+: GVGA_SetAddr BaseAddr 257 + OUTPORT ; INLINE
+: GVGA_SetData BaseAddr 258 + OUTPORT ; INLINE
+: GVGA_WriteData 0 BaseAddr 259 + OUTPORT ; INLINE
+: GraphMode BaseAddr 260 + OUTPORT ; INLINE
+
+: ModeColor 0 ; INLINE
+: ModeMonochrome 1 : INLINE
+: ModePallete 2 ; INLINE
+
+: GPIXEL // color x y --
+ ScreenWidth * + GVGA_SetAddr
+ GVGA_SetData
+ GVGA_WriteData
+;
+
+: GCLS
+ 0b000000000 GVGA_SetData
+ 0
+ ScreenWidth ScreenHeight * 0 DO
+  DUP GVGA_SetAddr
+  GVGA_WriteData
+  1 +
+ LOOP
+ DROP
+;
+

@@ -1,0 +1,238 @@
+VARIABLE RulBuksir
+{ 1 RulBuksir ! }
+VARIABLE Ma4taBuksir
+{ 0 Ma4taBuksir ! }
+
+
+// Ethernet library
+
+: EthBaseAddr 50000 ; INLINE
+// : ETH_ADDR_READ! EthBaseAddr OUTPORT ; INLINE
+// : buf_adr_tx_cpu EthBaseAddr 1 + OUTPORT ; INLINE
+// : ETH_DATA_READ EthBaseAddr INPORT ; INLINE
+: buf_adr_rx EthBaseAddr 1 + INPORT ; INLINE
+: ETH_TRANSMIT 160000 + OUTPORT ; INLINE // data addr ->
+: ETH_RECEIVE 160000 + INPORT ; INLINE
+: eth_debug_ON  1 29999 OUTPORT ; INLINE
+: eth_debug_OFF 0 29999 OUTPORT ; INLINE
+
+: eth_reset 0 EthBaseAddr 148 + OUTPORT NOP NOP 1 EthBaseAddr 148 + OUTPORT ;
+
+// sending
+
+: EthMemorySize 16384 ; INLINE
+: EthPacketSize 471 ; INLINE
+: EthHeaderSize 42 ; INLINE
+VARIABLE UDP_port
+{ 50123  UDP_port ! }
+ARRAY IP_source[] 4
+ARRAY IP_dest[] 4
+ARRAY MAC_source[] 6
+ARRAY MAC_dest[] 6
+{
+ HERE @
+ IP_source[] HERE !
+ 192 , 168 , 0 , 177 ,                     // source IP
+ 192 , 168 , 0 , 14  ,                     // dest IP  - only thing that changed!!!
+ 0x00 , 0x50 , 0x79 , 0x00 , 0 , 177 , // source MAC
+// 0x00 , 0x11 , 0xCF , 0x02 , 0x44 , 0x94 , // dest MAC    - TARELKA
+// 0x00 , 0x40 , 0xf4 , 0x70 , 0x52 , 0xd1 , // dest mac physics
+ 0x00 , 0x26 , 0x82 , 0x9B , 0x24 , 0x55 , // dest mac nout
+ HERE !
+}
+
+: ETH_PACKET_INDEX++ // addr -->
+// DUP @ EthPacketSize -1 XOR AND EthPacketSize + 1 + EthMemorySize 1 - AND SWAP !
+ DUP @ 0x3E00 AND 0x200 + 0x3E00 AND SWAP !
+;
+
+: IP_crc // --> crc
+  0xC511 EthPacketSize +
+  IP_source[]     @ 8 << +
+  IP_source[] 1 + @ +
+  IP_source[] 2 + @ 8 << +
+  IP_source[] 3 + @ +
+  IP_dest[]     @ 8 << +
+  IP_dest[] 1 + @ +
+  IP_dest[] 2 + @ 8 << +
+  IP_dest[] 3 + @ +
+  DUP
+  0xFFFF AND
+  SWAP 16 >> +
+  -1 XOR
+;
+
+: packet_pref " MSYST_YACHT" ; INLINE
+
+VARIABLE ETH_BUF_IND
+{ 0 ETH_BUF_IND ! }
+: ETH, // byte to send -->
+  ETH_BUF_IND @ ETH_TRANSMIT
+  ETH_BUF_IND @ 1 + ETH_BUF_IND !
+;
+: ETH16, DUP 8 >> ETH, ETH, ;
+: ETH32, DUP 16 >> ETH16, ETH16, ;
+
+: ETH16,INV DUP ETH, 8 >> ETH, ;
+: ETH32,INV DUP ETH16,INV 16 >> ETH16,INV ;
+
+
+: STR->ETH
+ BEGIN
+  DUP @ ETH,
+  1 +
+  DUP @ NOT IF DROP EXIT THEN
+ AGAIN
+;
+
+: HEXDIGIT->ETH
+ 48 + DUP 57 > IF 7 + THEN ETH,
+;
+: HEX->ETH
+ DUP
+  0xF0 AND SHR SHR SHR SHR HEXDIGIT->ETH
+  0xF AND HEXDIGIT->ETH
+;
+: HEX16->ETH
+ DUP
+  8 >> HEX->ETH
+  HEX->ETH
+;
+: HEX32->ETH
+ DUP
+  16 >> HEX16->ETH
+  HEX16->ETH
+;
+
+: ETH_CR
+  BEGIN
+   0 ETH,
+  ETH_BUF_IND @ 15 AND 0 = UNTIL
+;
+
+
+: SEND_PACKET
+  IncPacket#
+  6 0 DO MAC_dest[]   I + @ ETH, LOOP
+  6 0 DO MAC_source[] I + @ ETH, LOOP
+  0x0800 ETH16,
+  0x4500 ETH16,
+  EthPacketSize ETH16, // total len
+  0x0000 ETH16,
+  0x0000 ETH16,
+  0x8011 ETH16,
+  IP_crc ETH16,
+  4 0 DO IP_source[] I + @ ETH, LOOP
+  4 0 DO IP_dest[]   I + @ ETH, LOOP
+  UDP_port @ ETH16,
+  UDP_port @ ETH16,
+  EthPacketSize 34 - ETH16, // udp len
+  0x0000 ETH16, // crc
+  // data (981 bytes max.)
+//  10 0 DO  0x30 I + ETH,  LOOP
+  packet_pref STR->ETH
+  TIME @        ETH32,INV
+  DAY @         ETH32,INV
+  MONTH @       ETH32,INV
+  YEAR @        ETH32,INV
+  SEC MIN 100 * + HOUR 10000 * + ETH32,INV // uptime
+  lat1 @        ETH32,INV
+  lon1 @        ETH32,INV
+  lat2 @        ETH32,INV
+  lon2 @        ETH32,INV
+  D @           ETH32,INV
+  D2 @          ETH32,INV
+  TC1 @         ETH32,INV
+  COURSE_GPS @  ETH32,INV
+  WIND_SPD @    ETH32,INV
+  WIND_DIR @    ETH32,INV
+  SPEED @       ETH32,INV
+  BAR_PRES @    ETH32,INV
+  AIR_TEMP @    ETH32,INV
+  Óà @          ETH32,INV
+  Ïâ @          ETH32,INV
+  Ïï @          ETH32,INV
+  ENCODER@      ETH32,INV
+  Óêë @         ETH32,INV
+  êóäà_âåòåð? @ ETH32,INV
+  GET_NEXT_COORDS_INDEX ETH32,INV
+  Reserve_GPS?  ETH,
+  su1_or_su2 @  ETH,
+  IsEncWork? @  ETH,
+  ðóëèì_ìà÷òîé? @ ETH,
+  ðóëèì_ðóëåì?  @ ETH,
+  ADC_A_VOLT    ETH32,INV
+  ADC_B_VOLT    ETH32,INV
+  ADC_C_VOLT    ETH32,INV
+  ADC_A@ ETH32,INV
+  ADC_B@ ETH32,INV
+  ADC_C@ ETH32,INV
+  GetMode ETH32,INV
+//  GetStart ETH32,INV
+  RulBuksir @ ETH32,INV
+  Ma4taBuksir @ ETH32,INV
+  GetPacket# ETH32,INV
+  ETH_CR
+  " IP dest = " STR->ETH
+  ETH_CR
+  4 0 DO IP_dest[]   I + @ HEX->ETH LOOP
+
+//   ETH_CR
+//   " addr = " STR->ETH
+//   ETH_BUF_IND @ HEX16->ETH
+//   ETH_CR
+//   " depth = " STR->ETH
+//   DEPTH HEX16->ETH
+
+  ETH_BUF_IND ETH_PACKET_INDEX++
+  0 ETH_BUF_IND @ ETH_TRANSMIT
+;
+
+// reading
+
+VARIABLE ReadAddr
+{ buf_adr_rx 511 -1 XOR AND
+  ReadAddr ! }
+ARRAY temp_str[] 12
+
+: ETHERNET_LISTEN
+ buf_adr_rx 511 -1 XOR AND ReadAddr @ 511 -1 XOR AND XOR IF
+  ReadAddr @ 20 + ETH_RECEIVE 16 <<
+  ReadAddr @ 21 + ETH_RECEIVE 8  << +
+  ReadAddr @ 31 + ETH_RECEIVE       +
+  0x080011 = IF // 0800 - Type: IP ; 11 - UDP
+    12 0 DO ReadAddr @ 50 + I + ETH_RECEIVE  temp_str[] I + ! LOOP
+    temp_str[] packet_pref StrCmp IF
+//      6 0 DO ReadAddr @ 14 + I + ETH_RECEIVE   MAC_dest[] I + ! LOOP // save MAC dest
+      4 0 DO ReadAddr @ 34 + I + ETH_RECEIVE   IP_dest[]  I + ! LOOP // save IP dest
+      // 4 0 DO ReadAddr @ 62 + I + ETH_RECEIVE   LOOP
+      ReadAddr @ 62 + ETH_RECEIVE 24 <<
+      ReadAddr @ 63 + ETH_RECEIVE 16 << +
+      ReadAddr @ 64 + ETH_RECEIVE 8  << +
+      ReadAddr @ 65 + ETH_RECEIVE       +
+      // cmd
+      DUP 0x30303031 = IF SEND_PACKET THEN         // 0001
+      DUP 0x30303032 = IF cAuto ProgramMode THEN         // 0002
+      DUP 0x30303033 = IF SaveEncZero THEN         // 0003
+      DUP 0x30303034 = IF cDreif ProgramMode THEN         // 0004 // dreif
+      DUP 0x30303035 = IF cBuksir ProgramMode THEN         // 0005 // buksir
+      DUP 0x30303036 = IF 1 RulBuksir ! THEN         // 0006 // buksir:rul_pryamo
+      DUP 0x30303037 = IF 2 RulBuksir ! THEN         // 0007 // buksir:rul_vlevo
+      DUP 0x30303038 = IF 3 RulBuksir ! THEN         // 0008 // buksir:rul_vpravo
+      DUP 0x30303039 = IF
+        ReadAddr @ 66 + ETH_RECEIVE 48 - 100000000 *
+        ReadAddr @ 67 + ETH_RECEIVE 48 - 10000000 * +
+        ReadAddr @ 68 + ETH_RECEIVE 48 - 1000000 * +
+        Ma4taBuksir !
+      THEN         // 0009
+
+       DUP 0x30303130 = IF ÏÅÐÅÊËÞ×ÈÒÜ_ÑÓ THEN // 0010 
+
+      DUP 0x39383736 = IF ERASE_PASSED_COORDS GET_NEXT_COORDS THEN // 9876
+      DROP
+    THEN
+  THEN
+  ReadAddr ETH_PACKET_INDEX++
+ THEN
+;
+

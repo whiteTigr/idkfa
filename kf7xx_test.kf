@@ -1,0 +1,214 @@
+// for Kf7 compiler
+                 // Запись программы
+#COM 1           // по нужному COM-порту
+#BAUDRATE 115200 // с нужной скоростью
+#PACKSIZE= 1     // пакетами по PACKSIZE байт
+#WAITCOEF= 2     // с задержкой, вычисляемой по формуле
+                 // (PackSize * 8 / BaudRate) * WaitCoef секунд
+// Если программа не зашивается, попробуйте уменьшить размер пакетов
+// и увеличить задержку
+
+// подгрузка библиотек
+" kf7.lib" L
+
+: L2
+ 2
+;
+
+: L3
+ 3
+;
+
+: PLUS
+ +
+;
+
+: 2+3 // -- 5
+ L2 L3 PLUS
+;
+
+: IFTEST // if1 if0 -- value
+ IF
+  IF
+   400 // 1 1
+  ELSE
+   200 // 0 1
+  THEN
+ ELSE
+  IF
+   300 // 1 0
+  ELSE
+   100 // 0 0
+  THEN
+ THEN
+;
+
+: UNTILTEST // -- value index
+ 0 10
+ BEGIN
+  SWAP 1 + SWAP 1 -
+ DUP NOT UNTIL
+;
+
+: WHILETEST // -- value index
+ 0 10
+ BEGIN
+  DUP
+ WHILE
+  SWAP 1 + SWAP 1 -
+ REPEAT
+;
+
+: ARG0 // a -- a+10
+ 0 ARG@ 10 + SWAP DROP
+;
+
+: ARG1 // a -- a+20
+ 0 ARG@ 20 + SWAP DROP
+;
+
+: ARG2 // a -- a+30
+ 0 ARG@ 30 + SWAP DROP
+;
+
+: ARGTEST // a b c -- a b c c+10 b+20 a+30
+ 0 ARG@ ARG0
+ 1 ARG@ ARG1
+ 2 ARG@ ARG2
+;
+
+: ARGSTORETEST // a b c -- c b a
+ 0 ARG@ 2 ARG@ 0 ARG! 2 ARG!
+;
+
+: LOOPTEST // -- sum
+ 0
+ 10 0 DO
+  I +
+ LOOP
+;
+
+: LOOPTEST2 // -- mult
+ 0
+ 3 0 DO
+  7 0 DO
+   I J * +
+  LOOP
+ LOOP
+;
+
+: RETSTEST // a b c -- a b c
+ 1 2 3 4 5
+;S
+
+MAIN:
+
+// literals
+
+DEPTH >DEBUG
+0 >DEBUG
+1 >DEBUG
+-1 >DEBUG
+0x7FFFFFFF >DEBUG
+0x80000000 >DEBUG
+127 >DEBUG
+-127 >DEBUG
+DEPTH >DEBUG
+
+// mult values push
+1 2 3 4 5
+DEPTH >DEBUG
+>DEBUG >DEBUG >DEBUG >DEBUG >DEBUG
+DEPTH >DEBUG
+
+// stack operations
+5 4 3 2 1 DEPTH >DEBUG
+DUP >DEBUG DEPTH >DEBUG
+OVER >DEBUG DEPTH >DEBUG
+OVER OVER SWAP >DEBUG >DEBUG DEPTH >DEBUG
+0 PICK >DEBUG DEPTH >DEBUG
+1 PICK >DEBUG
+2 PICK >DEBUG
+DROP DROP DROP DROP DROP DEPTH >DEBUG
+10 SETDEPTH DEPTH >DEBUG
+0 SETDEPTH DEPTH >DEBUG
+123 LOCALW DEPTH >DEBUG // 0
+LOCALR >DEBUG DEPTH >DEBUG // 123 0
+
+// memory write
+1 2 3 4 5
+DEPTH >DEBUG
+STORE STORE DROP
+DEPTH >DEBUG
+
+// memory read
+5 @ >DEBUG
+3 @ >DEBUG
+DEPTH >DEBUG
+
+// outport & inport
+123 0x40000 OUTPORT
+0x40000 INPORT >DEBUG
+DEPTH >DEBUG
+
+// ALU
+148 42 DEPTH >DEBUG OVER >DEBUG DUP >DEBUG // 2 148 42
+DUP NOT >DEBUG 0 NOT >DEBUG // 0 -1
+DUP SHL >DEBUG // 84
+DUP SHR >DEBUG 0x80000000 SHR >DEBUG // 21 1073741824
+DUP SHRA >DEBUG 0x80000000 SHRA >DEBUG // 21 3221225472
+DUP SHL8 DUP >DEBUG SHR8 >DEBUG // 10752 42
+OVER OVER + >DEBUG // 190
+OVER OVER - >DEBUG // 106
+OVER OVER AND >DEBUG DUP 60 AND >DEBUG // 0 40
+OVER OVER OR >DEBUG // 190
+OVER OVER XOR >DEBUG DUP 60 XOR >DEBUG // 190 22
+OVER OVER = >DEBUG OVER OVER U> >DEBUG OVER OVER U< >DEBUG // 0 -1 0
+OVER OVER * >DEBUG // 6216
+DROP DROP DEPTH >DEBUG // 0
+
+// CALL
+2+3 >DEBUG
+DEPTH >DEBUG
+
+// IF
+0 0 IFTEST >DEBUG // 100
+0 1 IFTEST >DEBUG // 200
+1 0 IFTEST >DEBUG // 300
+1 1 IFTEST >DEBUG // 400
+DEPTH >DEBUG
+
+// UNTIL
+UNTILTEST >DEBUG >DEBUG // 0 10
+DEPTH >DEBUG
+
+// WHILE
+WHILETEST >DEBUG >DEBUG // 0 10
+DEPTH >DEBUG
+
+// ARG@
+100 200 300 ARGTEST
+>DEBUG >DEBUG >DEBUG // 130 220 310
+>DEBUG >DEBUG >DEBUG // 300 200 100
+DEPTH >DEBUG
+
+// ARG!
+150 250 350 ARGSTORETEST
+>DEBUG >DEBUG >DEBUG // 150 250 350
+DEPTH >DEBUG
+
+// LOOP
+LOOPTEST >DEBUG // 45
+LOOPTEST2 >DEBUG // 63
+DEPTH >DEBUG
+
+// RETS
+1 2 3
+RETSTEST
+DEPTH >DEBUG // 3
+DROP DROP DROP
+DEPTH >DEBUG // 0
+
+BEGIN
+
+AGAIN

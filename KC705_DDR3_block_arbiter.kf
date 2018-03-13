@@ -1,0 +1,163 @@
+// for Proteus compiler
+                // Запись программы
+#COM 3          // по нужному COM-порту
+#PACKSIZE= 1    // пакетами по PACKSIZE байт
+#WAITCOEF= 1    // с задержкой, вычисляемой по формуле
+                // (PackSize * 8 / BaudRate) * WaitCoef секунд
+// Если программа не зашивается, попробуйте уменьшить размер пакетов
+// и увеличить задержку
+
+// подгрузка библиотек
+" proteus.lib" L
+: BaseAddr 0x40000 ; INLINE
+" vga.lib" L
+" gvga.lib" L
+
+VARIABLE addr
+{ 0 addr ! }
+
+: DDRCacheBaseAddr 0xF0000 ; INLINE
+: DDRSimpleRead // addr --
+ DDRCacheBaseAddr 10 + OUTPORT
+;
+: DDRSimpleWrite // addr --
+ DDRCacheBaseAddr 11 + OUTPORT
+;
+: DDRGetValue // 0..15 -- data
+ DDRCacheBaseAddr 16 + + INPORT
+;
+: DDRSetValue // data 0..15 --
+ DDRCacheBaseAddr 16 + + OUTPORT
+;
+
+: FillInt // N=0..F -- 0xNNNNNNNN
+ DUP // N value
+ 7 0 DO
+  SWAP 4 << SWAP
+  OVER +
+ LOOP
+ SWAP DROP
+;
+
+: Clear
+ USCOUNTER
+
+ 0xF0000
+ 1920 0 DO
+  0 OVER OUTPORT
+  1 +
+ LOOP
+ DROP
+
+ 0 0xF8002 OUTPORT
+ 128 0xF8003 OUTPORT
+
+ 1080 0 DO
+  I 2048 * 0xF8001 OUTPORT
+  0 0xF8004 OUTPORT
+  0 0xF8000 OUTPORT
+  BEGIN 0xF8001 INPORT UNTIL
+ LOOP
+
+ USCOUNTER SWAP - 0 5 GOTOXY " Clear " PRINT 1000 /MOD SWAP . " ." PRINT . " ms" PRINT
+;
+
+: TestShit
+ USCOUNTER
+
+  0 0xF8002 OUTPORT
+  128 0xF8003 OUTPORT
+
+  1080 0 DO
+   I J!
+   0xF0000
+   1920 0 DO
+    I 0xFF AND J 0xFF AND 8 << + I J + 0xFF AND 16 << + OVER OUTPORT
+    1 +
+   LOOP
+   DROP
+   I 2048 * 0xF8001 OUTPORT
+   0 0xF8004 OUTPORT
+   0 0xF8000 OUTPORT
+   BEGIN 0xF8001 INPORT UNTIL
+  LOOP
+
+ USCOUNTER SWAP - 0 4 GOTOXY " TestShit " PRINT 1000 /MOD SWAP . " ." PRINT . " ms" PRINT
+;
+
+: TestLine
+ USCOUNTER
+
+  0 0xF8002 OUTPORT
+  128 0xF8003 OUTPORT
+
+//  720 0 DO
+   150 J!
+   0xF0000
+   1920 0 DO
+    I 0xFF AND J 0xFF AND 8 << + I J + 0xFF AND 16 << + OVER OUTPORT
+    1 +
+   LOOP
+   DROP
+   J 2048 * 0xF8001 OUTPORT
+   0 0xF8004 OUTPORT
+   0 0xF8000 OUTPORT
+   BEGIN 0xF8001 INPORT UNTIL
+//  LOOP
+
+ USCOUNTER SWAP - 0 6 GOTOXY " TestLine " PRINT 1000 /MOD SWAP . " ." PRINT . " ms" PRINT
+;
+
+
+MAIN:
+
+CLS GCLS
+0 0 GOTOXY
+GREEN SETCOLOR
+NOCARET
+// TestShit
+Clear
+
+0 0xF8001 OUTPORT
+0 0xF8002 OUTPORT
+128 0xF8003 OUTPORT
+0 0xF8004 OUTPORT
+1 0xF8000 OUTPORT
+BEGIN 0xF8001 INPORT UNTIL
+
+ 0 63 GOTOXY
+ " 7         | 8         | 9        " PRINT CR
+ " 4         | 5   CLS   | 6        " PRINT CR
+ " 1  Test   | 2         | 3        " PRINT
+
+20000000 0x20000 OUTPORT
+
+BEGIN
+ CHECKCOM IF
+  GETCOMDATA
+  COMDATA @ 0x35 = IF Clear THEN
+  COMDATA @ 0x38 = IF addr @ 8 +  addr ! THEN
+  COMDATA @ 0x32 = IF TestLine THEN
+  COMDATA @ 0x37 = IF addr @ 1 +  addr ! THEN
+  COMDATA @ 0x31 = IF TestShit THEN
+  COMDATA @ 0x39 = IF addr @ 8 +  addr ! THEN
+  COMDATA @ 0x33 = IF addr @ 8 -  addr ! THEN
+ THEN
+
+ 0 0 GOTOXY
+ " DEPTH" PRINT 16 GOTOX DEPTH HEXPRINT CR
+ " addr" PRINT 16 GOTOX addr @ HEXPRINT CR
+ " successes" PRINT 16 GOTOX 0xF8002 INPORT HEXPRINT CR
+ " addr" PRINT 16 GOTOX 0xF8002 INPORT HEXPRINT CR
+
+ 0 10 GOTOXY
+ addr @ 0xF0000 +
+ 16 0 DO
+  DUP INPORT HEXPRINT CR
+  1 +
+ LOOP
+ DROP
+
+ 0 66 GOTOXY
+ " DDR Usage = " PRINT 0x20000 INPORT 20000 / 1000 SWAP - 10 /MOD SWAP . " ." @ EMIT . " %   " PRINT
+AGAIN

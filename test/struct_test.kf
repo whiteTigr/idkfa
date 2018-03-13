@@ -1,0 +1,34 @@
+// for Proteus compiler
+                // Запись программы
+#COM 1          // по нужному COM-порту
+#PACKSIZE= 1    // пакетами по PACKSIZE байт
+#WAITCOEF= 2    // с задержкой, вычисляемой по формуле
+                // (PackSize * 8 / BaudRate) * WaitCoef секунд
+// Если программа не зашивается, попробуйте уменьшить размер пакетов
+// и увеличить задержку
+
+// подгрузка библиотек
+// " proteus.lib" L
+
+STRUCT Point
+ 1 -- X
+ 1 -- Y
+END-STRUCT
+
+STRUCT Line
+ Point -- Begin
+ Point -- End
+END-STRUCT
+
+STRUCT Lines
+ Line -- First
+ Line -- Second
+END-STRUCT
+
+Lines Test
+
+MAIN:
+
+BEGIN
+
+AGAIN

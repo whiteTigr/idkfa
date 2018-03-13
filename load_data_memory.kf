@@ -1,0 +1,30 @@
+// for Proteus compiler
+                // Запись программы
+#COM 1          // по нужному COM-порту
+#PACKSIZE= 1    // пакетами по PACKSIZE байт
+#WAITCOEF= 2    // с задержкой, вычисляемой по формуле
+                // (PackSize * 8 / BaudRate) * WaitCoef секунд
+// Если программа не зашивается, попробуйте уменьшить размер пакетов
+// и увеличить задержку
+
+// подгрузка библиотек
+// " proteus.lib" L
+
+: COMRECEIVED 6 SYSREG@ ; INLINE
+: COMNEWDATA 7 SYSREG@ ; INLINE
+: CHECKCOM COMNEWDATA ; INLINE
+: GETCOMDATA COMRECEIVED ; INLINE
+
+MAIN: 
+ 0 0 // addr data
+BEGIN
+ CHECKCOM IF
+  GETCOMDATA
+   DUP 0x80 AND IF // command
+    DROP OVER !
+    1 + 0
+   ELSE // number
+    SWAP 7 0 DO SHL LOOP +
+   THEN
+ THEN
+AGAIN

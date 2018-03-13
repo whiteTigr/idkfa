@@ -1,0 +1,347 @@
+// for Proteus compiler
+                // Запись программы
+#COM 3          // по нужному COM-порту
+#PACKSIZE= 1    // пакетами по PACKSIZE байт
+#WAITCOEF= 1    // с задержкой, вычисляемой по формуле
+                // (PackSize * 8 / BaudRate) * WaitCoef секунд
+// Если программа не зашивается, попробуйте уменьшить размер пакетов
+// и увеличить задержку
+
+#MaxCode= 16384
+#MaxData= 4096
+
+// подгрузка библиотек
+" proteus.lib" L
+: BaseAddr 0x40000 ; INLINE
+" vga.lib" L
+" crc32.lib" L
+// " gvga.lib" L
+: BaseAddr 0xA0000 ; INLINE
+" SimpleVideocard.lib" L
+: EthBaseAddr 0x60000 ; INLINE
+: BaseAddr EthBaseAddr ; INLINE
+" eth.lib" L
+
+VARIABLE addr
+{ 0 addr ! }
+
+: DDRCacheBaseAddr 0xF0000 ; INLINE
+: DDRSimpleRead // addr --
+ DDRCacheBaseAddr 10 + OUTPORT
+;
+: DDRSimpleWrite // addr --
+ DDRCacheBaseAddr 11 + OUTPORT
+;
+: DDRGetValue // 0..15 -- data
+ DDRCacheBaseAddr 16 + + INPORT
+;
+: DDRSetValue // data 0..15 --
+ DDRCacheBaseAddr 16 + + OUTPORT
+;
+
+: FillInt // N=0..F -- 0xNNNNNNNN
+ DUP // N value
+ 7 0 DO
+  SWAP 4 << SWAP
+  OVER +
+ LOOP
+ SWAP DROP
+;
+
+: Clear
+ USCOUNTER
+
+ 0xF0000
+ 1920 0 DO
+  0 OVER OUTPORT
+  1 +
+ LOOP
+ DROP
+
+ 0 0xF8002 OUTPORT
+ 128 0xF8003 OUTPORT
+
+ 1080 0 DO
+  I 2048 * 0xF8001 OUTPORT
+  0 0xF8004 OUTPORT
+  0 0xF8000 OUTPORT
+  BEGIN 0xF8001 INPORT UNTIL
+ LOOP
+
+ USCOUNTER SWAP - 0 5 GOTOXY " Clear " PRINT 1000 /MOD SWAP . " ." PRINT . " ms" PRINT
+;
+
+: TestShit
+ USCOUNTER
+
+  1080 0 DO
+   I J!
+   I SetPixelY
+   0 SetPixelX
+   1920 0 DO
+    I SetPixelRed
+    J SetPixelGreen
+    I J + SetPixelBlue
+    WritePixel(X++)
+   LOOP
+  LOOP
+
+ USCOUNTER SWAP - 0 4 GOTOXY " TestShit " PRINT 1000 /MOD SWAP . " ." PRINT . " ms" PRINT
+;
+
+: TestLine
+ USCOUNTER
+
+ 1080 0 DO
+  0 I 1920 0xC0FFC0 HLINE
+ LOOP
+
+
+ USCOUNTER SWAP - 0 6 GOTOXY " TestLine " PRINT 1000 /MOD SWAP . " ." PRINT . " ms" PRINT
+;
+
+: TestGraph
+ USCOUNTER
+
+ 0 SetPixelX
+ 0x00FF00 SetPixelColor
+ 1920 0 DO
+  I 2 << 1080 MOD YPIXEL
+ LOOP
+
+ USCOUNTER SWAP - 0 7 GOTOXY " TestGraph " PRINT 1000 /MOD SWAP . " ." PRINT . " ms" PRINT
+;
+
+: AnotherTest
+ 1920 0 DO
+  I I 0xFF80FF PIXEL
+ LOOP
+;
+
+
+: TestHLINE
+ 216 680 60 0x0000FF VLINE
+ 16 0 DO
+  I 700 I + I 201 + 0xFFFFFF HLINE
+  I 716 I + I 201 + 0xFFFFFF _HLINE
+ LOOP
+;
+
+: DUMP // addr len --
+ DUP NOT IF DROP DROP EXIT THEN
+ 200 0 GOTOXY " DUMP ADDR     DATA" PRINT
+ DUP 65 > IF DROP 65 THEN 0 DO
+  200 I 1 + GOTOXY
+  I HEXPRINTBYTE " :  " PRINT DUP I + DUP HEXPRINT 32 EMIT @ HEXPRINT
+ LOOP
+ DROP
+;
+
+: EthDump
+ 150 0 GOTOXY " Reg  Data" PRINT
+ 32 0 DO
+  150 I 1 + GOTOXY
+  I HEXPRINTBYTE " :  " PRINT I EthRead HEXPRINTWORD
+ LOOP
+;
+
+: EthReadByte // addr -- value
+ 0xFFFF AND
+ EthBaseAddr + 0x10000 + INPORT
+;
+
+: EthByteDump // addr len -- addr+len
+ DUP IF
+  0 DO
+   DUP EthReadByte HEXPRINTBYTE 32 EMIT
+   1 +
+  LOOP
+ ELSE
+  DROP
+ THEN
+;
+
+CREATE EthFramesCount 0 ,
+: EthFrameDump
+ 0 20 GOTOXY
+ CR
+
+ " Addr: " PRINT EthAddr @ . CR
+ " Size: " PRINT EthSize @ . CR
+
+ EthAddr @
+ " Preamble:    " PRINT 8 EthByteDump CR
+ " Dest MAC:    " PRINT 6 EthByteDump CR
+ " Source MAC:  " PRINT 6 EthByteDump CR
+ " Type/Length: " PRINT 2 EthByteDump CR
+ EthSize @ + 26 -
+ " CRC:      " PRINT 4 EthByteDump CR
+ DROP
+
+ CrcClear
+ EthSize @ DUP IF
+  8 DO
+   EthAddr @ I + 0xFFFF AND
+   EthBaseAddr + 0x10000 +
+   INPORT Crc32
+  LOOP
+ ELSE
+  DROP
+ THEN
+ " Calc CRC: " PRINT GetCrcResult 4 0 DO DUP HEXPRINTBYTE 8 >> 32 EMIT LOOP DROP CR
+
+ EthSize @ DUP IF
+  0 DO
+   EthAddr @ I + 0xFFFF AND
+   EthBaseAddr + 0x10000 +
+   INPORT HEXPRINTBYTE
+  LOOP
+ ELSE
+  DROP
+ THEN
+ 16 0 DO
+  32 EMIT
+ LOOP
+
+ 0 45 GOTOXY
+ EthSize @ DUP IF
+  0 DO
+   EthAddr @ I + 0xFFFF AND
+   EthBaseAddr + 0x10000 +
+   INPORT EMIT
+  LOOP
+ ELSE
+  DROP
+ THEN
+ 16 0 DO
+  32 EMIT
+ LOOP
+;
+
+: EthCheck
+ GetRxFifoEmpty NOT IF
+  GetRxFifoAddr EthAddr !
+  GetRxFifoSize EthSize !
+  RxFifoReaded
+  EthFrameDecode
+  // flag @ IF
+  // EthFrameDump
+  // THEN
+  EthAddr @ EthSize @ + SetRxRAddr
+ THEN
+;
+
+MAIN:
+
+CLS
+0 0 GOTOXY
+GREEN SETCOLOR
+NOCARET
+// TestShit
+// Clear
+
+// "disable" transparency
+0x010101 8 WritePallete
+8 SETBGCOLOR
+
+0xF0000
+2048 0 DO
+ I OVER OUTPORT
+ 1 +
+LOOP
+DROP
+
+0 0xF8001 OUTPORT
+0 0xF8002 OUTPORT
+128 0xF8003 OUTPORT
+0 0xF8004 OUTPORT
+0 0xF8000 OUTPORT
+
+// 0xE0000
+// 2048 0 DO
+//  -1 OVER OUTPORT
+//  1 +
+// LOOP
+// DROP
+//
+// 50 0 DO LOOP
+// BEGIN 0xF8000 INPORT NOT UNTIL
+//
+// 0 0xE8001 OUTPORT
+// 0 0xE8002 OUTPORT
+// 128 0xE8003 OUTPORT
+// 0 0xE8004 OUTPORT
+// 1 0xE8000 OUTPORT
+
+ 0 63 GOTOXY
+ " 7 AnotherTest | 8 TestGraph | 9 addr+1 " PRINT CR
+ " 4 TestHLINE   | 5   CLS     | 6 DUMP   " PRINT CR
+ " 1 EthDump     | 2 TestLine  | 3 addr-1 " PRINT
+
+20000000 0x20000 OUTPORT
+
+// 0 0 EthWrite
+
+0 SetPhyReset
+50 0 DO LOOP
+1 SetPhyReset
+
+// cs clk mux
+1 0x20001 OUTPORT
+
+
+0 SetRxRAddr
+0xFF80 SetRxCrcInit
+Clear
+
+?.SPACE OFF
+
+BEGIN
+ CHECKCOM IF
+  GETCOMDATA
+  COMDATA @ 0x31 = IF EthDump THEN
+  COMDATA @ 0x32 = IF TestLine THEN
+  COMDATA @ 0x33 = IF addr @ 1 - DUP addr ! SetPhyAddr EthDump THEN
+  COMDATA @ 0x34 = IF TestHLINE THEN
+  COMDATA @ 0x35 = IF Clear THEN
+  COMDATA @ 0x36 = IF PacketToSend[] 64 DUMP THEN
+  COMDATA @ 0x37 = IF AnotherTest THEN
+  COMDATA @ 0x38 = IF TestGraph THEN
+  COMDATA @ 0x39 = IF addr @ 1 + DUP addr ! SetPhyAddr EthDump THEN
+ THEN
+
+ 0 0 GOTOXY
+ " DEPTH" PRINT 16 GOTOX DEPTH HEXPRINT CR
+ " addr" PRINT 16 GOTOX addr @ HEXPRINT CR
+ " successes" PRINT 16 GOTOX 0xF8002 INPORT HEXPRINT CR
+ " done" PRINT 16 GOTOX 0xF8001 INPORT HEXPRINT CR
+ " USCOUNTER" PRINT 16 GOTOX USCOUNTER . CR
+ CR
+ CR
+ " Total frames: " PRINT GetFramesCount . CR
+ " Frame successes: " PRINT GetFramesSuccess . CR
+ " Memory full fails: " PRINT GetMemoryFull . CR
+ " Fifo full fails: " PRINT GetFifoFull . CR
+ " Crc fails: " PRINT GetCrcFailed . CR
+ " fifo empty: " PRINT GetRxFifoEmpty IF " yes" ELSE " no " THEN PRINT CR
+ " frame addr: " PRINT GetRxFifoAddr . 32 EMIT CR
+ " frame size: " PRINT GetRxFifoSize . 32 EMIT CR
+ " EthFrameHeader.Size: " PRINT EthFrameHeader.Size @ . CR
+ " EthFrameHeader[]: " PRINT EthFrameHeader[] HEXPRINTWORD CR
+ " EthFrameHeader.End: " PRINT EthFrameHeader.End HEXPRINTWORD CR
+ " ARPFrame[]: " PRINT ARPFrame[] HEXPRINTWORD CR
+ " OurIP: " PRINT OurIP[] 4 0 DO DUP I + @ . " ." @ EMIT LOOP DROP
+
+ EthCheck
+
+//  0 10 GOTOXY
+//  addr @ 0xE0000 +
+//  16 0 DO
+//   DUP INPORT HsEXPRINT CR
+//   1 +
+//  LOOP
+//  DROP
+
+ 0 66 GOTOXY
+ " DDR Usage = " PRINT 0x20000 INPORT 20000 / 1000 SWAP - 10 /MOD SWAP . " ." @ EMIT . " %   " PRINT
+AGAIN

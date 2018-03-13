@@ -1,0 +1,22 @@
+// for Proteus compiler
+                // Запись программы
+#COM 1          // по нужному COM-порту
+#PACKSIZE= 1    // пакетами по PACKSIZE байт
+#WAITCOEF= 5    // с задержкой, вычисляемой по формуле
+                // (PackSize * 8 / BaudRate) * WaitCoef секунд
+// Если программа не зашивается, попробуйте уменьшить размер пакетов
+// и увеличить задержку
+
+// подгрузка библиотек
+" proteus.lib" L
+
+MAIN:
+
+1 0x20000 OUTPORT
+
+0
+BEGIN
+ DUP 48 + ->COM
+ 1 + DUP 7 > IF DROP 0 THEN
+ 50000 0 DO LOOP
+AGAIN

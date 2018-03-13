@@ -1,0 +1,155 @@
+// for Proteus compiler
+                // Запись программы
+#COM 1          // по нужному COM-порту
+#PACKSIZE= 4    // пакетами по PACKSIZE байт
+#WAITCOEF= 1    // с задержкой, вычисляемой по формуле
+                // (PackSize * 8 / BaudRate) * WaitCoef секунд
+// Если программа не зашивается, попробуйте уменьшить размер пакетов
+// и увеличить задержку
+
+// подгрузка библиотек
+" proteus.lib" L
+// " vga.lib" L
+
+: WAIT_1Sec
+ 25000000 0 DO LOOP
+;
+
+: WAIT_2Sec
+ 50000000 0 DO LOOP
+;
+
+
+: WAIT_5Sec
+ 125000000 0 DO LOOP
+;
+
+: WAIT_10Sec
+ 250000000 0 DO LOOP
+;
+
+
+: WAIT_20Sec
+ 500000000 0 DO LOOP
+;
+
+VARIABLE res
+: BG
+ 0 res !
+ 0x80000000 0 >R // D: num mask R: lastbit
+ 32 0 DO
+  OVER OVER AND IF 1 ELSE 0 THEN // D: num mask curbit R: lastbit
+  R> OVER >R // D: num mask curbit lastbit R: curbit
+  XOR IF DUP res @ + res ! THEN
+  SHR
+ LOOP
+ R> DROP
+ DROP DROP
+ res @
+;
+
+: GB
+ 0 res !
+ 0x80000000 0 >R // D: num mask R: lastbit
+ 32 0 DO
+  OVER OVER AND IF 1 ELSE 0 THEN // D: num mask curbit R: lastbit
+  R> // D: num mask curbit lastbit
+  XOR DUP >R IF DUP res @ + res ! THEN
+  SHR
+ LOOP
+ R> DROP
+ DROP DROP
+ res @
+;
+
+VARIABLE EchoCount
+{ 0 EchoCount ! }
+
+ARRAY TableInv4Bit[] 16
+{
+ HERE @
+ TableInv4Bit[] HERE !
+  0b0000 , 0b1000 , 0b0100 , 0b1100 ,
+  0b0010 , 0b1010 , 0b0110 , 0b1110 ,
+  0b0001 , 0b1001 , 0b0101 , 0b1101 ,
+  0b0011 , 0b1011 , 0b0111 , 0b1111 ,
+ HERE !
+}
+: Inv4Bit // Number -- InvNumber
+ TableInv4Bit[] + @
+;
+
+: Inv8Bit // Number -- InvNumber
+ DUP 0xF AND Inv4Bit 4 << SWAP 4 >> 0xF AND Inv4Bit OR
+;
+
+: Inv16Bit // Number -- InvNumber
+ DUP 0xFF AND Inv8Bit 8 << SWAP 8 >> 0xFF AND Inv8Bit OR
+;
+
+: Inv32Bit // Number -- InvNumber
+ DUP 0xFFFF AND Inv16Bit 16 << SWAP 16 >> 0xFFFF AND Inv16Bit OR
+;
+
+: WriteLed 0x40002 OUTPORT ; INLINE
+
+VARIABLE EncoderData
+VARIABLE VerData
+
+: EncodeEtalonBaseAddr 0x50000 ; INLINE
+: EncoderEtalonNewData? EncodeEtalonBaseAddr 3 + INPORT ; INLINE
+: EncoderEtalonRead
+  EncodeEtalonBaseAddr 2 +
+   0 OVER OUTPORT
+   INPORT
+  SHRA SHRA SHRA SHRA GB 0x7FFF AND EncoderData !
+;
+
+: EngineControllerBaseAddr 0x60000 ; INLINE
+: EngineWriteOutPins EngineControllerBaseAddr OUTPORT ;
+
+: EncoderVerifyBaseAddr 0x70000 ; INLINE
+: EncoderVerifyNewData? EncoderVerifyBaseAddr 2 + INPORT ; INLINE
+: EncoderVerifyRead
+  EncoderVerifyBaseAddr 1 +
+   0 OVER OUTPORT
+   INPORT VerData !
+;
+: EncoderVerifyWriteMux
+ EncoderVerifyBaseAddr OUTPORT
+;
+
+: MainLoop
+ BEGIN
+  TXCOUNTER 0xF AND 4 << RXCOUNTER 0xF AND + WriteLed
+
+  CHECKCOM IF
+   GETCOMDATA
+   COMDATA @ 0xE0 AND 0x20 = IF COMDATA @ 0x1F AND EngineWriteOutPins THEN
+   COMDATA @ 0xE0 AND 0x40 = IF
+    COMDATA @ 0x1F AND
+    DUP 1 = IF 0x8000 EncoderData @ - ->COM32 THEN
+    DUP 2 = IF VerData @ ->COM32 THEN
+    DROP
+   THEN
+   COMDATA @ 0xE0 AND 0x60 = IF COMDATA @ 0x1F AND EncoderVerifyWriteMux THEN
+   COMDATA @ 10 = IF EchoCount @ DUP ->COM32 1 + EchoCount ! THEN
+   // COMDATA @ ->COM
+  THEN
+
+  EncoderEtalonNewData? IF
+   EncoderEtalonRead
+  THEN
+
+  EncoderVerifyNewData? IF
+   EncoderVerifyRead
+  THEN
+ AGAIN
+;
+
+MAIN:
+
+0 EncoderVerifyWriteMux
+0 0x40001 OUTPORT
+
+MainLoop

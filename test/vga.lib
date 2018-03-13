@@ -1,0 +1,147 @@
+// Text VGA
+//
+// ***including***
+// : BaseAddr 0x30000 ; INLINE
+// " vga.lib" L
+//
+
+: BLACK  0 ; INLINE
+: RED    1 ; INLINE
+: GREEN  2 ; INLINE
+: YELLOW 3 ; INLINE
+: BLUE   4 ; INLINE
+: PURPLE 5 ; INLINE
+: CYAN   6 ; INLINE
+: WHITE  7 ; INLINE
+
+: VGA_ReadData BaseAddr INPORT ; INLINE
+: VGA_WriteData BaseAddr OUTPORT ; INLINE
+: VGA_WriteData(A++) BaseAddr 9 + OUTPORT ; INLINE
+: VGA_SetAddr BaseAddr 1 + OUTPORT ; INLINE
+: VGA_SetLowLevel BaseAddr 7 + OUTPORT ; INLINE
+
+: GOTOX BaseAddr 2 + OUTPORT ; INLINE
+: GOTOY BaseAddr 3 + OUTPORT ; INLINE
+: GOTOXY GOTOY GOTOX ;
+: SETCOLOR BaseAddr 4 + OUTPORT ; INLINE
+: SETBGCOLOR BaseAddr 5 + OUTPORT ; INLINE
+: EMIT BaseAddr 6 + OUTPORT ; INLINE
+: CR 0 BaseAddr 8 + OUTPORT ; INLINE
+: VGA_SetCaret BaseAddr 10 + OUTPORT ; INLINE // Bits: 3 - VertLine; 2 - Blinking; 1 - BlackSquare; 0 - LowLine
+: VGA_SetCaretLowLine BaseAddr 11 + OUTPORT ; INLINE
+: VGA_SetCaretBlackSquare BaseAddr 12 + OUTPORT ; INLINE
+: VGA_SetCaretBlinking BaseAddr 13 + OUTPORT ; INLINE
+: VGA_SetCaretVertLine BaseAddr 14 + OUTPORT ; INLINE
+: SetCaretColor BaseAddr 20 + OUTPORT ; INLINE // 0xBBGGRR
+: SetCaretBlinkTotal BaseAddr 21 + OUTPORT ; INLINE // tacts
+: SetCaretBlinkOff BaseAddr 22 + OUTPORT ; INLINE // tacts
+: VGA_ShowTestGrid BaseAddr 23 + OUTPORT ; INLINE
+: VGA_SetSymbolOffset BaseAddr 24 + OUTPORT ; INLINE
+: SetPalleteAddr BaseAddr 30 + OUTPORT ; INLINE
+: SetPalleteColor BaseAddr 31 + OUTPORT ; INLINE
+: SetPalleteWe BaseAddr 32 + OUTPORT ; INLINE
+: WritePallete // color addr --
+ SetPalleteAddr
+ SetPalleteColor
+ 1 SetPalleteWe 0 SetPalleteWe
+;
+
+: SetSymbolAddr BaseAddr 35 + OUTPORT ; INLINE
+: WriteSymbol BaseAddr 37 + OUTPORT ; INLINE
+: SetSymbolL4x BaseAddr + 40 + OUTPORT ; INLINE // 4LineValue index --
+: SetSymbolLx BaseAddr + 50 + OUTPORT ; INLINE // LineValue line --
+// usage
+//
+// ** write 4 line of symbol at once **
+// 0x12345678 0 SetSymbolL4x
+// 0x81234567 1 SetSymbolL4x
+// 0x78123456 2 SetSymbolL4x
+// 0x67812345 3 SetSymbolL4x
+//
+// addr SetSymbolAddr
+// WriteSymbol
+//
+// **or**
+//
+// ** write one line of symbol at once **
+// 0b00110011 0 SetSymbolLx
+// 0b00110011 1 SetSymbolLx
+// ..
+// 0b00110011 14 SetSymbolLx
+// 0b00110011 15 SetSymbolLx
+//
+// addr SetSymbolAddr
+// WriteSymbol
+
+: STDCARET 0b0101 VGA_SetCaret ; INLINE
+: NOCARET 0 VGA_SetCaret ; INLINE
+
+: CLS
+ 1 VGA_SetLowLevel
+ 0 VGA_SetAddr
+ 11250 0 DO
+  0 VGA_WriteData(A++)
+ LOOP
+ 0 VGA_SetLowLevel
+;
+
+: SCREEN_UP
+ 1 VGA_SetLowLevel
+ 11000 0 DO
+  I 200 + VGA_SetAddr
+  VGA_ReadData
+  I VGA_SetAddr
+  VGA_WriteData
+ LOOP
+ 11000 VGA_SetAddr
+ 11200 11000 DO
+  0 VGA_WriteData(A++)
+ LOOP
+ 0 VGA_SetLowLevel
+;
+
+: PRINT
+ BEGIN
+  DUP @
+ WHILE
+  DUP @ EMIT
+  1 +
+ REPEAT
+ DROP
+;
+
+: . IntToStr PRINT 32 EMIT ;
+
+: HEXDIGIT
+ 0xF AND DUP 9 > IF 55 ELSE 48 THEN + EMIT
+;
+
+: HEXPRINTBYTE
+ DUP SHR SHR SHR SHR HEXDIGIT
+ HEXDIGIT
+;
+
+: HEXPRINTWORD
+ DUP SHR SHR SHR SHR SHR SHR SHR SHR HEXPRINTBYTE
+ HEXPRINTBYTE
+;
+
+: HEXPRINT
+ DUP 16 0 DO SHR LOOP HEXPRINTWORD
+ HEXPRINTWORD
+;
+
+: BINX->VGA // num N --
+ 1 OVER 1 - <<
+ SWAP 0 DO
+  OVER OVER AND IF 49 ELSE 48 THEN EMIT
+  SHR
+  I 7 AND 7 = IF 32 EMIT THEN
+ LOOP
+ DROP DROP
+;
+
+: BIN->VGA 8 BINX->VGA ; INLINE
+: BIN16->VGA 16 BINX->VGA ; INLINE
+: BIN32->VGA 32 BINX->VGA ; INLINE
+

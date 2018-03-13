@@ -1,0 +1,111 @@
+// for Proteus compiler
+                // Запись программы
+#COM 1          // по нужному COM-порту
+#PACKSIZE= 1    // пакетами по PACKSIZE байт
+#WAITCOEF= 2    // с задержкой, вычисляемой по формуле
+                // (PackSize * 8 / BaudRate) * WaitCoef секунд
+// Если программа не зашивается, попробуйте уменьшить размер пакетов
+// и увеличить задержку
+
+// подгрузка библиотек
+" proteus.lib" L
+
+VARIABLE CORDIC-X
+VARIABLE CORDIC-Y
+VARIABLE CORDIC-Z
+
+ARRAY ATG[] 27
+{
+ HERE @
+ ATG[] HERE !
+  45000000 , 26565051 , 14036243 , 7125016 , 3576334 , 1789911 , 895174 , 447614 ,
+  223811 , 111906 , 55953 , 27976 , 13988 , 6994 , 3497 , 1749 ,
+  874 , 437 , 219 , 109 , 55 , 27 , 14 , 7 , 3 , 2 , 1 ,
+ HERE !
+}
+ARRAY ACOS[] 27
+{
+ HERE @
+ ACOS[] HERE !
+  45000000 , 22500000 , 11250000 , 5625000 , 2812500 , 1406250 , 703125 , 351562 , 175781 , 87890 ,
+  43945 , 21973 , 10986 , 5493 , 2746 , 1373 , 686 , 343 , 172 , 86 , 43 , 22 , 11 , 5 , 3 , 2 , 1 ,
+ HERE !
+}
+
+: -TH + ; INLINE
+: NEGATE 0 1 - * ; INLINE
+
+: >>A // A B -- A shra B
+ DUP IF
+  0 DO SHRA LOOP
+ ELSE
+  DROP
+ THEN
+;
+
+: SINCOS // angle° * 10^6 --                 x - cos * 2^10 ; y - sin * 2^10
+ CORDIC-Z !
+ 922113738 CORDIC-X !
+ 0 CORDIC-Y !
+ 27 1 DO
+   CORDIC-Z @ 0< IF
+     CORDIC-Z @ ATG[] I -TH @ + CORDIC-Z !
+     CORDIC-X @ CORDIC-Y @ I >>A +
+     CORDIC-Y @ CORDIC-X @ I >>A - CORDIC-Y ! CORDIC-X !
+   ELSE
+     CORDIC-Z @ ATG[] I -TH @ - CORDIC-Z !
+     CORDIC-X @ CORDIC-Y @ I >>A -
+     CORDIC-Y @ CORDIC-X @ I >>A + CORDIC-Y ! CORDIC-X !
+   THEN
+ LOOP
+ CORDIC-X @ 10 >>A CORDIC-X !
+ CORDIC-Y @ 10 >>A CORDIC-Y !
+;
+
+VARIABLE ANGLE<0
+: SIN  // angle° * 10^6 --> sin * 2^10
+  DUP 0< ANGLE<0 !
+  ABS
+  DUP 45000000  < IF                  SINCOS CORDIC-Y @ ANGLE<0 @ IF NEGATE THEN EXIT THEN // 0..45    sin(a)=sin(a)
+  DUP 90000000  < IF 90000000  SWAP - SINCOS CORDIC-X @ ANGLE<0 @ IF NEGATE THEN EXIT THEN // 45..90   sin(a)=cos(90-a)
+  DUP 135000000 < IF 90000000  -      SINCOS CORDIC-X @ ANGLE<0 @ IF NEGATE THEN EXIT THEN // 90..135  sin(a)=cos(a-90)
+                     180000000 SWAP - SINCOS CORDIC-Y @ ANGLE<0 @ IF NEGATE THEN // 135..180 sin(a)=sin(180-a)
+;
+
+: COS  // angle° * 10^6 --> cos * 2^10)
+  ABS
+  DUP 45000000  < IF                  SINCOS CORDIC-X @ EXIT THEN // 0..45    cos(a)=cos(a)
+  DUP 90000000  < IF 90000000  SWAP - SINCOS CORDIC-Y @ EXIT THEN // 45..90   cos(a)=sin(90-a)
+  DUP 135000000 < IF 90000000  -      SINCOS CORDIC-Y @ NEGATE EXIT THEN // 90..135  cos(a)=-sin(a-90)
+                     180000000 SWAP - SINCOS CORDIC-X @ NEGATE // 135..180 cos(a)=-cos(180-a)
+;
+
+VARIABLE ANGLE>90
+VARIABLE ACOS_IN
+VARIABLE ANGLE_FIND
+: ACOS
+  DUP 0< ANGLE>90 !
+  ABS
+  ACOS_IN !
+  45000000 ANGLE_FIND !
+  27 1 DO
+    ACOS_IN @ ANGLE_FIND @ COS > IF
+      ANGLE_FIND @ ACOS[] I -TH @ - ANGLE_FIND !
+    ELSE
+      ANGLE_FIND @ ACOS[] I -TH @ + ANGLE_FIND !
+    THEN
+  LOOP
+  ANGLE>90 @ IF 180000000 ANGLE_FIND @ - ANGLE_FIND ! THEN
+  ANGLE_FIND @
+;
+
+
+MAIN:
+ 90001000 COS
+ 134990000 COS
+ 135010000 COS
+ 179990000 COS
+ 180010000 COS
+BEGIN
+
+AGAIN

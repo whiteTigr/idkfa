@@ -1,0 +1,114 @@
+: GetCmdFull BaseAddr 0 + INPORT ; INLINE
+: GetWriteFull BaseAddr 1 + INPORT ; INLINE
+: GetReadEmpty BaseAddr 2 + INPORT ; INLINE
+
+: SetPixelX BaseAddr 16 + OUTPORT ; INLINE
+: SetPixelY BaseAddr 17 + OUTPORT ; INLINE
+: SetPixelColor BaseAddr 18 + OUTPORT ; INLINE
+
+: SetPixelRed BaseAddr 19 + OUTPORT ; INLINE
+: SetPixelGreen BaseAddr 20 + OUTPORT ; INLINE
+: SetPixelBlue BaseAddr 21 + OUTPORT ; INLINE
+
+: SetMaskLow BaseAddr 22 + OUTPORT ; INLINE
+: SetMaskHi BaseAddr 23 + OUTPORT ; INLINE
+
+: WritePixel 0 BaseAddr 32 + OUTPORT ; INLINE
+: WritePixel(X++) 0 BaseAddr 33 + OUTPORT ; INLINE
+: WritePixel(Y++) 0 BaseAddr 34 + OUTPORT ; INLINE
+: WriteYPixel BaseAddr 35 + OUTPORT ; INLINE // y --
+: WriteMaskPixel 0 BaseAddr 36 + OUTPORT ; INLINE
+
+: SetPixelRGB // r g b --
+ SetPixelBlue SetPixelGreen SetPixelRed
+;
+
+: PIXEL // x y color --
+ SetPixelColor
+ SetPixelY
+ SetPixelX
+ WritePixel
+;
+
+: YPIXEL // y --
+ WriteYPixel
+; INLINE
+
+: _HLINE // x y len color --
+ SWAP DUP NOT IF DROP DROP DROP DROP EXIT THEN SWAP
+ SetPixelColor
+ SWAP SetPixelY
+ SWAP SetPixelX
+ 0 DO WritePixel(X++) LOOP
+;
+
+: VLINE // x y len color --
+ SWAP DUP NOT IF DROP DROP DROP DROP EXIT THEN SWAP
+ SetPixelColor
+ SWAP SetPixelY
+ SWAP SetPixelX
+ 0 DO WritePixel(Y++) LOOP
+;
+
+
+CREATE HlineStartMaskLow[]
+0x00000000 , 0x0000000F , 0x000000FF , 0x00000FFF ,
+0x0000FFFF , 0x000FFFFF , 0x00FFFFFF , 0x0FFFFFFF ,
+0xFFFFFFFF , 0xFFFFFFFF , 0xFFFFFFFF , 0xFFFFFFFF ,
+0xFFFFFFFF , 0xFFFFFFFF , 0xFFFFFFFF , 0xFFFFFFFF ,
+
+CREATE HlineStartMaskHi[]
+0x00000000 , 0x00000000 , 0x00000000 , 0x00000000 ,
+0x00000000 , 0x00000000 , 0x00000000 , 0x00000000 ,
+0x00000000 , 0x0000000F , 0x000000FF , 0x00000FFF ,
+0x0000FFFF , 0x000FFFFF , 0x00FFFFFF , 0x0FFFFFFF ,
+
+CREATE HlineStopMaskLow[]
+0xFFFFFFF0 , 0xFFFFFF00 , 0xFFFFF000 , 0xFFFF0000 ,
+0xFFF00000 , 0xFF000000 , 0xF0000000 , 0x00000000 ,
+0x00000000 , 0x00000000 , 0x00000000 , 0x00000000 ,
+0x00000000 , 0x00000000 , 0x00000000 , 0x00000000 ,
+
+CREATE HlineStopMaskHi[]
+0xFFFFFFFF , 0xFFFFFFFF , 0xFFFFFFFF , 0xFFFFFFFF ,
+0xFFFFFFFF , 0xFFFFFFFF , 0xFFFFFFFF , 0xFFFFFFFF ,
+0xFFFFFFF0 , 0xFFFFFF00 , 0xFFFFF000 , 0xFFFF0000 ,
+0xFFF00000 , 0xFF000000 , 0xF0000000 , 0x00000000 ,
+
+: HLINE // x y len color --
+  SWAP DUP NOT IF DROP DROP DROP DROP EXIT THEN SWAP
+  SetPixelColor
+  SWAP SetPixelY
+  OVER + 1 - // xstart xstop
+  OVER 0xFFFFFFF0 AND OVER 0xFFFFFFF0 AND = IF // one pixel block
+    OVER 0xF AND OVER 0xF AND // xstart xstop xstart&0xF xstop&0xF
+    OVER HlineStartMaskLow[] + @ OVER HlineStopMaskLow[] + @ OR SetMaskLow
+    HlineStopMaskHi[] + @ SWAP HlineStartMaskHi[] + @ OR SetMaskHi
+    DROP
+    SetPixelX
+    WriteMaskPixel
+  ELSE // several pixel blocks
+    OVER SetPixelX
+    OVER 0xF AND DUP
+      HlineStartMaskLow[] + @ SetMaskLow
+      HlineStartMaskHi[] + @ SetMaskHi
+    WriteMaskPixel
+    OVER 4 >> 1 + OVER 4 >> SWAP // xstop xstart+1
+    OVER OVER > IF
+      0 SetMaskLow 0 SetMaskHi
+      DO
+        I 16 * SetPixelX
+        WriteMaskPixel
+      LOOP
+    ELSE DROP DROP THEN
+    DUP SetPixelX
+    0xF AND DUP
+      HlineStopMaskLow[] + @ SetMaskLow
+      HlineStopMaskHi[] + @ SetMaskHi
+    WriteMaskPixel
+    DROP
+  THEN
+;
+
+
+

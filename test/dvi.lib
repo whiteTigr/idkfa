@@ -1,0 +1,20 @@
+// ML605 DVI Library
+
+: I2C_BaseAddr 0x50000 ; INLINE
+
+: I2C_addr!       I2C_BaseAddr     OUTPORT ; INLINE
+: I2C_packet!     I2C_BaseAddr 1 + OUTPORT ; INLINE
+: I2C_packetSize! I2C_BaseAddr 2 + OUTPORT ; INLINE
+: I2C_wr!         I2C_BaseAddr 3 + OUTPORT ; INLINE  // 0 write 1 read
+: I2C_sendThis!   I2C_BaseAddr 4 + OUTPORT ; INLINE
+: I2C_packet_low!      I2C_BaseAddr 5 + OUTPORT ; INLINE
+: I2C_packet_high!     I2C_BaseAddr 6 + OUTPORT ; INLINE
+
+: I2C_data0@      I2C_BaseAddr     INPORT  ; INLINE
+: I2C_data1@      I2C_BaseAddr 1 + INPORT  ; INLINE
+: I2C_sending@    I2C_BaseAddr 2 + INPORT  ; INLINE
+
+{
+  1 I2C_wr!
+  2 I2C_packetSize!
+}

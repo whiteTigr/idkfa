@@ -1,0 +1,741 @@
+: opcode_read 0b10 ; INLINE
+: opcode_write 0b01 ; INLINE
+
+: SetOpcode BaseAddr OUTPORT ; INLINE
+: SetPhyAddr BaseAddr 1 + OUTPORT ; INLINE
+: SetRegAddr BaseAddr 2 + OUTPORT ; INLINE
+: SetRegData BaseAddr 3 + OUTPORT ; INLINE
+: EthSend 0 BaseAddr 4 + OUTPORT ; INLINE
+: SetDataDelay BaseAddr 5 + OUTPORT ; INLINE
+: SetPhyReset BaseAddr 6 + OUTPORT ; INLINE
+: RxFifoReaded 0 BaseAddr 7 + OUTPORT ; INLINE
+: SetRxRAddr BaseAddr 8 + OUTPORT ; INLINE
+: TxFifoWrite 0 BaseAddr 9 + OUTPORT ; INLINE
+: SetTxAddr BaseAddr 10 + OUTPORT ; INLINE
+: SetTxSize BaseAddr 11 + OUTPORT ; INLINE
+: SetRxCrcInit BaseAddr 12 + OUTPORT ; INLINE
+: SetRxCrcIgnore BaseAddr 13 + OUTPORT ; INLINE
+
+: GetRegData BaseAddr 3 + INPORT ; INLINE
+: EthSending BaseAddr 4 + INPORT ; INLINE
+: GetFramesCount BaseAddr 5 + INPORT ; INLINE
+: GetRxFifoEmpty BaseAddr 7 + INPORT ; INLINE
+: GetRxFifoAddr BaseAddr 8 + INPORT ; INLINE
+: GetRxFifoSize BaseAddr 9 + INPORT ; INLINE
+: GetFramesSuccess BaseAddr 10 + INPORT ; INLINE
+: GetMemoryFull BaseAddr 11 + INPORT ; INLINE
+: GetFifoFull BaseAddr 12 + INPORT ; INLINE
+: GetCrcFailed BaseAddr 13 + INPORT ; INLINE
+: GetTxFifoFull BaseAddr 14 + INPORT ; INLINE
+: GetTxSending BaseAddr 15 + INPORT ; INLINE
+
+: EthRead // addr -- data
+ 0xFFFF AND BaseAddr 0x10000 + + INPORT ; INLINE
+;
+
+: EthWrite // data addr --
+ OVER Crc32
+ 0xFFFF AND BaseAddr 0x20000 + + OUTPORT ; INLINE
+;
+
+{
+ 0b00111 SetPhyAddr
+}
+
+: EthRegWait BEGIN EthSending NOT UNTIL ; INLINE
+
+: EthRegWrite // value addr --
+ SetRegAddr SetRegData opcode_write SetOpcode
+ EthRegWait
+ EthSend
+;
+
+: EthRegRead // addr -- value
+ SetRegAddr opcode_read SetOpcode
+ EthRegWait
+ EthSend
+ EthRegWait
+ GetRegData
+;
+
+VARIABLE CTM.Source
+VARIABLE CTM.Dest
+VARIABLE CTM.Length
+VARIABLE CTM.Result
+: EthToMemory // length source dest --
+ CTM.Dest ! CTM.Source !
+ DUP IF
+  CTM.Source @ SWAP CTM.Dest @ SWAP
+  0 DO
+   // source dest
+   OVER EthRead OVER !
+   1 + SWAP 1 + SWAP
+  LOOP
+  DROP DROP
+ ELSE
+  DROP
+ THEN
+;
+
+VARIABLE ETM.Addr
+: EthToMemory, // length dest --
+ OVER OVER ETM.Addr @ SWAP // length source dest
+ EthToMemory
+ DROP
+ ETM.Addr @ +  ETM.Addr !
+;
+
+: MemoryToEth // length source dest --
+ CTM.Dest ! CTM.Source !
+ DUP IF
+  CTM.Source @ SWAP CTM.Dest @ SWAP
+  0 DO
+   // source dest
+   OVER @ OVER EthWrite
+   1 + SWAP 1 + SWAP
+  LOOP
+  DROP DROP
+ ELSE
+  DROP
+ THEN
+;
+
+VARIABLE Eth,Addr
+: ETH,Clear
+ 0 Eth,Addr !
+;
+
+: LETH, // length source --
+ OVER OVER Eth,Addr @ MemoryToEth
+ DROP Eth,Addr @ + Eth,Addr !
+;
+
+: BETH, // byte --
+ Eth,Addr @ EthWrite
+ Eth,Addr @ 1 + Eth,Addr !
+;
+
+// frame decoding
+CREATE OurMAC[]       0x00 , 0x0A , 0x35 , 0x02 , 0x3E , 0xCF ,
+CREATE BroadcastMAC[] 0xFF , 0xFF , 0xFF , 0xFF , 0xFF , 0xFF ,
+CREATE EtalonPreamble[] 0x55 , 0x55 , 0x55 , 0x55 , 0x55 , 0x55 , 0x55 , 0xD5 ,
+CREATE OurIP[] 192 , 168 , 0 ,  1 ,
+CREATE PCIP[]  192 , 168 , 0 , 26 ,
+CREATE BroadcastIP[] 255 , 255 , 255 , 255 ,
+
+CREATE ARPPadding[]
+ 0x00 , 0x00 , 0x00 , 0x00 ,
+ 0x00 , 0x00 , 0x00 , 0x00 ,
+ 0x00 , 0x00 , 0x00 , 0x00 ,
+ 0x00 , 0x00 , 0xba , 0x81 ,
+ 0xde , 0xde ,
+CREATE ARPPadding.End
+VARIABLE ARPPadding.Size { ARPPadding.End ARPPadding[] - ARPPadding.Size ! }
+
+VARIABLE EthAddr
+VARIABLE EthSize
+
+CREATE EthFrameHeader[]
+CREATE Preamble[] 8 ALLOT
+CREATE DestMAC[] 6 ALLOT
+CREATE SourceMAC[] 6 ALLOT
+CREATE EthType[] 2 ALLOT
+CREATE EthFrameHeader.End
+VARIABLE EthFrameHeader.Size { EthFrameHeader.End EthFrameHeader[] - EthFrameHeader.Size ! }
+VARIABLE EthFrame.Offset { 0 EthFrame.Offset ! }
+
+CREATE EthTypeARP[] 0x08 , 0x06 ,
+CREATE EthTypeIP4[] 0x08 , 0x00 ,
+
+CREATE ARPFrame[]
+CREATE ARP.HardwareType[] 2 ALLOT
+CREATE ARP.ProtocolType[] 2 ALLOT
+CREATE ARP.MACLength[] 1 ALLOT
+CREATE ARP.IPLength[] 1 ALLOT
+CREATE ARP.Opcode[] 2 ALLOT
+CREATE ARP.SenderMAC[] 6 ALLOT // ARP.MACLength
+CREATE ARP.SenderIP[] 4 ALLOT // ARP.IPLength
+CREATE ARP.TargetMAC[] 6 ALLOT // ARP.MACLength
+CREATE ARP.TargetIP[] 4 ALLOT // ARP.IPLength
+CREATE ARPFrame.End
+VARIABLE ARPFrame.Size { ARPFrame.End ARPFrame[] - ARPFrame.Size ! }
+VARIABLE ARPFrame.Offset { EthFrameHeader.Size @ ARPFrame.Offset ! }
+
+CREATE ARP.Request 0 , 1 ,
+CREATE ARP.Reply 0 , 2 ,
+
+CREATE IP4Header[]
+CREATE IP4VersionAndLength 1 ALLOT
+CREATE IP4Services 1 ALLOT
+CREATE IP4TotalLength 2 ALLOT
+CREATE IP4Identification 2 ALLOT
+CREATE IP4FlagsAndOffset 2 ALLOT
+CREATE IP4TTL 1 ALLOT
+CREATE IP4Protocol 1 ALLOT
+CREATE IP4HeaderChecksum 2 ALLOT
+CREATE IP4SourceIP 4 ALLOT
+CREATE IP4DestIP 4 ALLOT
+CREATE IP4Header.End
+CREATE IP4Options 40 ALLOT // maximum
+VARIABLE IP4Header.Size { IP4Header.End IP4Header[] - IP4Header.Size ! }
+VARIABLE IP4Header.Offset { EthFrameHeader.Size @ IP4Header.Offset ! }
+VARIABLE IP4Options.Offset { IP4Header.Offset @ IP4Header.Size @ + IP4Options.Offset ! }
+
+VARIABLE IP4Version
+VARIABLE IP4Length
+VARIABLE IP4Flags
+VARIABLE IP4Offset
+
+CREATE IP4Protocol.ICMP   1 ,
+CREATE IP4Protocol.IGMP   2 ,
+CREATE IP4Protocol.TCP    6 ,
+CREATE IP4Protocol.UDP   17 ,
+CREATE IP4Protocol.ENCAP 41 ,
+CREATE IP4Protocol.OSPF  89 ,
+CREATE IP4Protocol.SCTP 132 ,
+
+
+CREATE ICMPHeader[]
+CREATE ICMPType 1 ALLOT
+CREATE ICMPCode 1 ALLOT
+CREATE ICMPChecksum 2 ALLOT
+CREATE ICMPHeaderData 4 ALLOT
+CREATE ICMPHeader.End
+VARIABLE ICMPHeader.Size { ICMPHeader.End ICMPHeader[] - ICMPHeader.Size ! }
+
+CREATE UDPHeader[]
+CREATE UDPSourcePortRaw 2 ALLOT
+CREATE UDPDestPortRaw 2 ALLOT
+CREATE UDPLengthRaw 2 ALLOT
+CREATE UDPChecksum 2 ALLOT
+CREATE UDPHeader.End
+VARIABLE UDPHeader.Size { UDPHeader.End UDPHeader[] - UDPHeader.Size ! }
+VARIABLE UDPSourcePort
+VARIABLE UDPDestPort
+VARIABLE UDPLength
+
+
+CREATE PacketToSend[] 1024 ALLOT
+CREATE PacketSize 0 ,
+
+: SendPacket
+ BEGIN GetTxSending NOT UNTIL
+ ETH,Clear
+ 8 EtalonPreamble[] LETH,
+ CrcClear
+ PacketSize @ 8 - PacketToSend[] 8 + LETH,
+ PacketSize @ 68 < IF // 64 bytes min size + 8 byte preamble - 4 byte crc
+  68 PacketSize @ DO
+   0 BETH,
+  LOOP
+ THEN
+ GetCrcResult 4 0 DO DUP 0xFF AND BETH, 8 >> LOOP DROP
+ 0 SetTxAddr
+ Eth,Addr @ SetTxSize
+ TxFifoWrite
+;
+
+: AttachEthHeader // EthTypeAddr DestMACAddr --
+ PacketSize @ PacketToSend[] DUP EthFrameHeader.Size @ + CopyMemory
+
+ PacketToSend[] WriteAddr !
+ 8 EtalonPreamble[] Write,
+ 6 SWAP Write, // dest mac
+ 6 OurMAC[] Write,
+ 2 SWAP Write, // eth type
+
+ PacketSize @ EthFrameHeader.Size @ + PacketSize !
+;
+
+: CalcChecksum // size addr -- value
+ OVER IF
+  SWAP 0 SWAP
+  // addr value size
+  0 DO
+   OVER @ I 1 AND NOT IF 8 << THEN +
+   SWAP 1 + SWAP
+  LOOP
+  SWAP DROP
+ ELSE
+  DROP
+ THEN
+;
+
+: ChecksumNormilize // 0x000XXXXX -- 0x0000XXXX
+ BEGIN
+  DUP 0xFFFF0000 AND
+ WHILE
+  DUP 0xFFFF0000 AND 16 >> SWAP 0xFFFF AND +
+ REPEAT
+;
+
+
+: AttachIPv4Header // destIpAddr Protocol --
+ PacketSize @ PacketToSend[] DUP IP4Header.Size @ + CopyMemory
+
+ PacketToSend[] WriteAddr !
+ 0x45 WriteByte, // version/length
+ 0x00 WriteByte, // services
+ PacketSize @ IP4Header.Size @ + WriteWordBE, // total length
+ IP4Identification @ -1 XOR WriteByte, IP4Identification 1 + @ -1 XOR WriteByte, // identification
+ 0x0000 WriteWordBE, // flags/offset
+ 0x40 WriteByte, // ttl
+ WriteByte, // protocol
+ 0x0000 WriteWordBE, // checksum
+ 4 OurIP[] Write,
+ 4 SWAP Write, // dest ip
+ PacketSize @ IP4Header.Size @ + PacketSize !
+
+ // magic 0x0101
+ IP4Header.Size @ PacketToSend[] CalcChecksum ChecksumNormilize -1 XOR 0x0101 -
+ IP4HeaderChecksum IP4Header[] - PacketToSend[] +
+ OVER 8 >> 0xFF AND OVER !
+ 1 + SWAP 0xFF AND SWAP !
+;
+
+: AttachUDPHeader // sourcePort destPort --
+ PacketSize @ PacketToSend[] DUP UDPHeader.Size @ + CopyMemory
+
+ PacketToSend[] WriteAddr !
+ SWAP WriteWordBE, // source port
+ WriteWordBE, // dest port
+ PacketSize @ UDPHeader.Size @ + WriteWordBE, // Length
+ 0x0000 WriteWordBE, // not used checksum
+ PacketSize @ UDPHeader.Size @ + PacketSize !
+;
+
+: ARPReply
+ PacketToSend[] WriteAddr !
+ 2 ARP.HardwareType[] Write,
+ 2 ARP.ProtocolType[] Write,
+ 1 ARP.MACLength[] Write,
+ 1 ARP.IPLength[] Write,
+ 2 ARP.Reply Write,
+ 6 OurMAC[] Write,
+ 4 OurIP[] Write,
+ 6 ARP.SenderMAC[] Write,
+ 4 ARP.SenderIP[] Write,
+ ARPFrame.Size @ PacketSize !
+
+ EthType[] SourceMAC[] AttachEthHeader
+ SendPacket
+;
+
+: ARPDecode
+ ARPFrame.Size @ ARPFrame[] EthToMemory,
+ 2 ARP.Opcode[] ARP.Request CompareMemory NOT IF EXIT THEN
+ 4 ARP.TargetIP[] OurIP[] CompareMemory NOT IF EXIT THEN
+ ARPReply
+;
+
+: IP4Get
+ IP4Header.Size @ IP4Header[] EthToMemory,
+ IP4VersionAndLength @ 4 >> 0xF AND IP4Version !
+ IP4VersionAndLength @ 0xF AND IP4Length !
+ IP4FlagsAndOffset @ 5 >> 0x7 AND IP4Flags !
+ IP4FlagsAndOffset 1 + @ 5 << IP4FlagsAndOffset @ 0x1F AND + IP4Offset !
+ IP4Length @ 5 > IF
+  IP4Length @ 4 * EthAddr @ IP4Options.Offset @ + IP4Options EthToMemory
+ THEN
+;
+
+: PingReply
+ PacketToSend[] WriteAddr !
+
+ 0 WriteByte, 0 WriteByte, // echo reply
+ 0 WriteByte, 0 WriteByte, // checksum
+ 4 ICMPHeaderData Write,
+ ICMPHeader.Size @ PacketSize !
+
+ EthSize @ ETM.Addr @ EthAddr @ - - 4 - DUP
+  PacketToSend[] PacketSize @ + EthToMemory,
+  PacketSize @ + PacketSize !
+
+ PacketSize @ PacketToSend[] CalcChecksum ChecksumNormilize -1 XOR
+ ICMPChecksum ICMPHeader[] - PacketToSend[] +
+ OVER 8 >> 0xFF AND OVER !
+ 1 + SWAP 0xFF AND SWAP !
+
+ IP4SourceIP IP4Protocol.ICMP @ AttachIPv4Header
+ EthType[] SourceMAC[] AttachEthHeader
+ SendPacket
+;
+
+: ICMPDecode
+ ICMPHeader.Size @ ICMPHeader[] EthToMemory,
+
+ ICMPType @ 8 = ICMPCode @ 0 = AND IF PingReply EXIT THEN
+;
+
+: UDPGet
+ UDPHeader.Size @ UDPHeader[] EthToMemory,
+ UDPSourcePortRaw DUP @ 8 << SWAP 1 + @ + UDPSourcePort !
+ UDPDestPortRaw DUP @ 8 << SWAP 1 + @ + UDPDestPort !
+ UDPLengthRaw DUP @ 8 << SWAP 1 + @ + UDPLength !
+;
+
+CREATE BOOTPHeader[]
+CREATE BOOTPOperation 1 ALLOT
+CREATE BOOTPHardwareType 1 ALLOT
+CREATE BOOTPHardwareAddrLength 1 ALLOT
+CREATE BOOTPHops 1 ALLOT
+CREATE BOOTPTransactionID 4 ALLOT
+CREATE BOOTPSecondsElapsed 2 ALLOT
+CREATE BOOTPFlags 2 ALLOT
+CREATE BOOTPClientIP 4 ALLOT
+CREATE BOOTPYourIP 4 ALLOT
+CREATE BOOTPServerIP 4 ALLOT
+CREATE BOOTPGatewayIP 4 ALLOT
+CREATE BOOTPClientMAC 6 ALLOT
+CREATE BOOTPClientMACPadding 10 ALLOT
+CREATE BOOTPServerName 64 ALLOT
+CREATE BOOTPFileName 128 ALLOT
+CREATE BOOTPMagicCookie 4 ALLOT
+CREATE DHCPOptions
+CREATE DHCPMessageType 3 ALLOT 340 3 -  ALLOT
+VARIABLE BOOTPHeader.Size { DHCPOptions BOOTPHeader[] - BOOTPHeader.Size ! }
+
+CREATE BOOTPPattern.DHCP 0x63 , 0x82 , 0x53 , 0x63 ,
+
+: DHCPDiscover 1 ; INLINE
+: DHCPOffer 2 ; INLINE
+: DHCPRequest 3 ; INLINE
+: DHCPAck 5 ; INLINE
+: DHCPInform 8 ; INLINE
+
+: SendDHCPOffer
+  PacketToSend[] WriteAddr !
+  0x02 WriteByte, // Message type: Boot Reply (2)
+  0x01 WriteByte, // Hardware type: Ethernet (0x01)
+  0x06 WriteByte, // Hardware address length: 6
+  0x00 WriteByte, // Hops: 0
+  4 BOOTPTransactionID Write, // Transaction ID
+  2 BOOTPSecondsElapsed Write, // Seconds elapsed
+  0x00 WriteByte, 0x00 WriteByte, // Bootp flags: 0x0000 (Unicast)
+  0x00 WriteByte, 0x00 WriteByte, 0x00 WriteByte, 0x00 WriteByte, // Client IP address: 0.0.0.0 (0.0.0.0)
+  4 PCIP[] Write, // Your (client) IP address: 192.168.0.26 (192.168.0.26)
+  4 OurIP[] Write, // Next server IP address: 192.168.0.1 (192.168.0.1)
+  0x00 WriteByte, 0x00 WriteByte, 0x00 WriteByte, 0x00 WriteByte, // Relay agent IP address: 0.0.0.0 (0.0.0.0)
+  6 SourceMAC[] Write, // Client MAC address
+  10 0 DO 0 WriteByte, LOOP // Client hardware address padding: 00000000000000000000
+  64 0 DO 0 WriteByte, LOOP // Server host name not given
+  128 0 DO 0 WriteByte, LOOP // Boot file name not given
+  4 BOOTPPattern.DHCP Write, // Magic cookie: DHCP
+  0x35 WriteByte, 0x01 WriteByte, DHCPOffer WriteByte, // Option: (53) DHCP Message Type (Offer)
+  0x36 WriteByte, 0x04 WriteByte, 4 OurIP[] Write, // Option: (54) DHCP Server Identifier
+  0x33 WriteByte, 0x04 WriteByte, 86400 WriteIntBE, // Option: (51) IP Address Lease Time
+  0x3A WriteByte, 0x04 WriteByte, 43200 WriteIntBE, // Option: (58) Renewal Time Value
+  0x3B WriteByte, 0x04 WriteByte, 75600 WriteIntBE, // Option: (59) Rebinding Time Value
+  0x01 WriteByte, 0x04 WriteByte, 0xFFFFFF00 WriteIntBE, // Option: (1) Subnet Mask
+  0x1C WriteByte, 0x04 WriteByte, 0xC0A800FF WriteIntBE, // Option: (28) Broadcast Address
+  0x06 WriteByte, 0x04 WriteByte, 4 OurIP[] Write, // Option: (6) Domain Name Server
+  0x2C WriteByte, 0x04 WriteByte, 4 OurIP[] Write, // Option: (44) NetBIOS over TCP/IP Name Server
+  0x03 WriteByte, 0x04 WriteByte, 4 OurIP[] Write, // Option: (3) Router
+  0xFF WriteByte, // Option: (255) End
+  0x0000 WriteWordBE, // Padding
+  WriteAddr @ PacketToSend[] - PacketSize !
+
+  67 68 AttachUDPHeader
+  PCIP[] IP4Protocol.UDP @ AttachIPv4Header
+  EthType[] SourceMAC[] AttachEthHeader
+  SendPacket
+;
+
+: SendDHCPAck
+  PacketToSend[] WriteAddr !
+  0x02 WriteByte, // Message type: Boot Reply (2)
+  0x01 WriteByte, // Hardware type: Ethernet (0x01)
+  0x06 WriteByte, // Hardware address length: 6
+  0x00 WriteByte, // Hops: 0
+  4 BOOTPTransactionID Write, // Transaction ID
+  2 BOOTPSecondsElapsed Write, // Seconds elapsed
+  0x00 WriteByte, 0x00 WriteByte, // Bootp flags: 0x0000 (Unicast)
+  0x00 WriteByte, 0x00 WriteByte, 0x00 WriteByte, 0x00 WriteByte, // Client IP address: 0.0.0.0 (0.0.0.0)
+  4 PCIP[] Write, // Your (client) IP address: 192.168.0.26 (192.168.0.26)
+  4 OurIP[] Write, // Next server IP address: 192.168.0.1 (192.168.0.1)
+  0x00 WriteByte, 0x00 WriteByte, 0x00 WriteByte, 0x00 WriteByte, // Relay agent IP address: 0.0.0.0 (0.0.0.0)
+  6 SourceMAC[] Write, // Client MAC address
+  10 0 DO 0 WriteByte, LOOP // Client hardware address padding: 00000000000000000000
+  64 0 DO 0 WriteByte, LOOP // Server host name not given
+  128 0 DO 0 WriteByte, LOOP // Boot file name not given
+  4 BOOTPPattern.DHCP Write, // Magic cookie: DHCP
+  0x35 WriteByte, 0x01 WriteByte, DHCPAck WriteByte, // Option: (53) DHCP Message Type (Offer)
+  0x36 WriteByte, 0x04 WriteByte, 4 OurIP[] Write, // Option: (54) DHCP Server Identifier
+  0x33 WriteByte, 0x04 WriteByte, 86400 WriteIntBE, // Option: (51) IP Address Lease Time
+  0x3A WriteByte, 0x04 WriteByte, 43200 WriteIntBE, // Option: (58) Renewal Time Value
+  0x3B WriteByte, 0x04 WriteByte, 75600 WriteIntBE, // Option: (59) Rebinding Time Value
+  0x01 WriteByte, 0x04 WriteByte, 0xFFFFFF00 WriteIntBE, // Option: (1) Subnet Mask
+  0x1C WriteByte, 0x04 WriteByte, 0xC0A800FF WriteIntBE, // Option: (28) Broadcast Address
+  0x06 WriteByte, 0x04 WriteByte, 4 OurIP[] Write, // Option: (6) Domain Name Server
+  DHCPMessageType 2 + @ DHCPRequest = IF
+   0x51 WriteByte, 0x08 WriteByte, 0x03 WriteByte, 0xFFFF WriteWordBE, 5 " Maxim" Write, // Option: (81) Client Fully Qualified Domain Name
+  THEN
+  0x2C WriteByte, 0x04 WriteByte, 4 OurIP[] Write, // Option: (44) NetBIOS over TCP/IP Name Server
+  0x03 WriteByte, 0x04 WriteByte, 4 OurIP[] Write, // Option: (3) Router
+  0xFF WriteByte, // Option: (255) End
+  0x0000 WriteWordBE, // Padding
+  WriteAddr @ PacketToSend[] - PacketSize !
+
+  67 68 AttachUDPHeader
+  PCIP[] IP4Protocol.UDP @ AttachIPv4Header
+  EthType[] SourceMAC[] AttachEthHeader
+  SendPacket
+
+;
+
+: DHCPDecode
+ 3 DHCPMessageType EthToMemory,
+
+ DHCPMessageType 2 + @ DHCPDiscover = IF SendDHCPOffer EXIT THEN
+ DHCPMessageType 2 + @ DHCPRequest = IF SendDHCPAck EXIT THEN
+ DHCPMessageType 2 + @ DHCPInform = IF SendDHCPAck EXIT THEN
+;
+
+: BOOTPDecode
+ BOOTPHeader.Size @ BOOTPHeader[] EthToMemory,
+
+ 4 BOOTPMagicCookie BOOTPPattern.DHCP CompareMemory IF DHCPDecode EXIT THEN
+;
+
+CREATE ReqHead[]
+CREATE ReqHeadRaw.Size 4 ALLOT
+CREATE ReqHeadRaw.Request 2 ALLOT
+CREATE ReqHeadRaw.Answer 2 ALLOT
+CREATE ReqHeadRaw.Moniker 4 ALLOT
+CREATE ReqHeadRaw.Param1 4 ALLOT
+CREATE ReqHeadRaw.Param2 4 ALLOT
+CREATE ReqHead.End
+VARIABLE ReqHead.HeaderSize { ReqHead.End ReqHead[] - ReqHead.HeaderSize ! }
+VARIABLE ReqHead.Size
+VARIABLE ReqHead.Request
+VARIABLE ReqHead.Answer
+VARIABLE ReqHead.Moniker
+VARIABLE ReqHead.Param1
+VARIABLE ReqHead.Param2
+
+// Public requests: 0x0000 ... 0x3FFF
+// accepted by both State/UDP and Control/TCP
+: reqEcho        0x0000 ; INLINE
+: reqRelay       0x0001 ; INLINE
+
+: reqRead        0x0010 ; INLINE
+: reqGet         0x0020 ; INLINE
+
+// Protected requests: 0x4000 ... 0x7FFF
+// can be accepted by Control/TCP only
+: reqControl     0x4000 ; INLINE
+: reqSave        0x4000 ; INLINE
+
+: reqWrite       0x4010 ; INLINE
+: reqSet         0x4020 ; INLINE
+
+: reqStart       0x7000 ; INLINE
+: reqCancel      0x7FFF ; INLINE
+
+// Callback requests: 0x8000 ... 0xBFFF
+// Device callbacks by Control/TCP
+: reqCallback    0x8000 ; INLINE
+: reqNotify      0x8000 ; INLINE
+
+// Private requests: 0xC000 ... 0xFFFF
+// Reserved for peer's internal usage
+: reqPrivate     0xC000 ; INLINE
+: reqConnect     0xC000 ; INLINE
+: reqDisconnect  0xD000 ; INLINE
+
+// 0x0000 ... 0x0FFF means success
+: ansOk          0x0000 ; INLINE // generic OK
+: ansFalse       0x0001 ; INLINE // generic FALSE
+
+// 0x4000 ... 0x4FFF means some information
+// 0x8000 ... 0x8FFF means some warning
+: ansWarning     0x8000 ; INLINE // generic warning
+: ansTruncated   0x8001 ; INLINE // answer is truncated
+: ansLimited     0x8002 ; INLINE // something cannot be set exactly
+
+// 0xC000 ... 0xCFFF means some error
+: ansFailed      0xC000 ; INLINE // generic fault
+: ansDenied      0xC001 ; INLINE // State/UDP received a Control/TCP request
+: ansNotImpl     0xC002 ; INLINE // the request is not implemented by device
+: ansBadPars     0xC003 ; INLINE // the request has some invalid parameter
+: ansOutOfRes    0xC004 ; INLINE // not enought resources to process the request
+
+: tagMACAddress      0x1000 ; INLINE // MAC-48 incapsulated in EUI-64, 8*UInt8
+: tagDeviceName      0x1001 ; INLINE // user friendly device name, provided by Host
+: tagDeviceID        0x1002 ; INLINE // unique device ID or SN, UInt32
+
+: tagProtocolVersion 0x1004 ; INLINE // protocol version, UInt32, (Major << 16) + Minor
+: tagFirmwareVersion 0x1005 ; INLINE // firmware version, UInt32, (Major << 16) + Minor
+: tagConfigVersion   0x1006 ; INLINE // configuration version, UInt32
+
+: tagDeviceState     0x1010 ; INLINE // current device state, UInt32, (stm << 16) + sts
+: tagConditions      0x1011 ; INLINE // current conditions, UInt32
+
+: tagControlPort     0x1014 ; INLINE // Control/TCP server port, UInt32
+: tagControlTimeout  0x1015 ; INLINE // Control/TCP watchdog timeout, ms, UInt32
+: tagCancelTimeout   0x1016 ; INLINE // Cancel timeout, ms, UInt32
+
+: tagNVMAddress      0x1020 ; INLINE // non-volatile memory adress, UInt32
+: tagNVMSize         0x1021 ; INLINE // non-volatile memory size in bytes, UInt32
+: tagRAMAddress      0x1022 ; INLINE // volatile memory adress, UInt32
+: tagRAMSize         0x1023 ; INLINE // volatile memory size in bytes, UInt32
+
+
+: EverHostUDPGet
+ ReqHead.HeaderSize @ ReqHead[] EthToMemory,
+ 4 ReqHeadRaw.Size LECombine ReqHead.Size !
+ 2 ReqHeadRaw.Request LECombine ReqHead.Request !
+ 2 ReqHeadRaw.Answer LECombine ReqHead.Answer !
+ 4 ReqHeadRaw.Moniker LECombine ReqHead.Moniker !
+ 4 ReqHeadRaw.Param1 LECombine ReqHead.Param1 !
+ 4 ReqHeadRaw.Param2 LECombine ReqHead.Param2 !
+ " ReqHead.Size " PRINT ReqHead.Size @ . CR
+ " ReqHead.Request " PRINT ReqHead.Request @ HEXPRINTWORD CR
+;
+
+: EverHostUDPGetAnswer
+ " EverHostUDPGetAnswer" PRINT CR
+ PacketToSend[] WriteAddr !
+ 20 WriteIntLE,
+ reqGet WriteWordLE,
+ ansOk WriteWordLE,
+ 4 ReqHeadRaw.Moniker Write,
+ 4 ReqHeadRaw.Param1 Write,
+ 0 WriteIntLE,
+
+ tagMACAddress WriteWordLE,
+  8 WriteWordLE,
+  OurMAC[] @ 2 OR WriteByte,
+  2 OurMAC[] 1 + Write,
+  0xFF WriteByte, 0xFE WriteByte,
+  3 OurMAC[] 3 + Write,
+
+ tagDeviceName WriteWordLE,
+  16 WriteWordLE,
+  " Kintex7" 7 0 DO DUP @ WriteByte, 0 WriteByte, 1 + LOOP DROP
+  0 WriteWordLE,
+
+ tagDeviceID WriteWordLE,
+  4 WriteWordLE,
+  0x12345678 WriteIntLE,
+
+ tagProtocolVersion  WriteWordLE,
+  4 WriteWordLE,
+  0x00010007 WriteIntLE,
+
+ tagFirmwareVersion  WriteWordLE,
+  4 WriteWordLE,
+  0x00000001 WriteIntLE,
+
+ tagConfigVersion  WriteWordLE,
+  4 WriteWordLE,
+  0x00000001 WriteIntLE,
+
+ tagDeviceState  WriteWordLE,
+  4 WriteWordLE,
+  0x00010002 WriteIntLE,
+
+ tagConditions  WriteWordLE,
+  4 WriteWordLE,
+  0x00000000 WriteIntLE,
+
+ tagControlPort  WriteWordLE,
+  4 WriteWordLE,
+  0x00001234 WriteIntLE,
+
+ tagControlTimeout  WriteWordLE,
+  4 WriteWordLE,
+  1000 WriteIntLE,
+
+ tagCancelTimeout  WriteWordLE,
+  4 WriteWordLE,
+  1000 WriteIntLE,
+
+ tagNVMAddress  WriteWordLE,
+  4 WriteWordLE,
+  0 WriteIntLE,
+
+ tagNVMSize  WriteWordLE,
+  4 WriteWordLE,
+  0 WriteIntLE,
+
+ tagRAMAddress  WriteWordLE,
+  4 WriteWordLE,
+  0 WriteIntLE,
+
+ tagRAMSize  WriteWordLE,
+  4 WriteWordLE,
+  0 WriteIntLE,
+ WriteAddr @ PacketToSend[] - PacketSize !
+
+ PacketToSend[] WriteAddr !
+ PacketSize @ WriteIntLE,
+
+ ReqHeadRaw.Param2 ReqHead[] - PacketToSend[] + WriteAddr !
+ PacketSize @ ReqHead.HeaderSize @ - WriteIntLE,
+
+ " PacketSize " PRINT PacketSize @ . CR
+
+ UDPDestPort @ UDPSourcePort @ AttachUDPHeader
+ PCIP[] IP4Protocol.UDP @ AttachIPv4Header
+ EthType[] SourceMAC[] AttachEthHeader
+ SendPacket
+;
+
+: EverHostUDPEchoAnswer
+ " EverHostUDPEchoAnswer" PRINT CR
+ PacketToSend[] WriteAddr !
+ 4 ReqHeadRaw.Size Write,
+ reqEcho WriteWordLE,
+ ansOk WriteWordLE,
+ 4 ReqHeadRaw.Moniker Write,
+ 4 ReqHeadRaw.Param1 Write,
+ 4 ReqHeadRaw.Param2 Write,
+ WriteAddr @ PacketToSend[] - PacketSize !
+
+ EthSize @ ETM.Addr @ EthAddr @ - - 4 - DUP
+  PacketToSend[] PacketSize @ + EthToMemory,
+  PacketSize @ + PacketSize !
+
+ UDPDestPort @ UDPSourcePort @ AttachUDPHeader
+ PCIP[] IP4Protocol.UDP @ AttachIPv4Header
+ EthType[] SourceMAC[] AttachEthHeader
+ SendPacket
+;
+
+: EverHostUDPDecode
+ " EverHostUDPDecode" PRINT CR
+ EverHostUDPGet
+
+ ReqHead.Request @ reqGet = IF EverHostUDPGetAnswer EXIT THEN
+ ReqHead.Request @ reqEcho = IF EverHostUDPEchoAnswer EXIT THEN
+;
+
+: UDPDecode
+ UDPGet
+ UDPSourcePort @ 68 = UDPDestPort @ 67 = AND IF BOOTPDecode EXIT THEN
+
+ UDPDestPort @ 27015 = IF EverHostUDPDecode EXIT THEN
+;
+
+: IP4Decode
+ IP4Get
+ IP4Length @ 4 * IP4Header[] CalcChecksum ChecksumNormilize
+ 0xFFFF XOR IF EXIT THEN
+ IP4Version @ 4 = NOT IF EXIT THEN
+ IP4Flags @ 0x4 AND IF EXIT THEN // can't process fragmented packet yet
+
+ IP4Protocol @ IP4Protocol.UDP @ = IF UDPDecode EXIT THEN
+ IP4Protocol @ IP4Protocol.ICMP @ = IF ICMPDecode EXIT THEN
+;
+
+: EthFrameDecode
+ EthAddr @ ETM.Addr !
+ EthFrameHeader.Size @ EthFrameHeader[] EthToMemory,
+
+ 0 30 GOTOXY
+ 8 Preamble[] EtalonPreamble[] CompareMemory NOT IF EXIT THEN
+ 6 DestMAC[] OurMAC[] CompareMemory 6 DestMAC[] BroadcastMAC[] CompareMemory OR NOT IF EXIT THEN
+ 2 EthType[] EthTypeARP[] CompareMemory IF ARPDecode EXIT THEN
+ 2 EthType[] EthTypeIP4[] CompareMemory IF IP4Decode EXIT THEN
+;

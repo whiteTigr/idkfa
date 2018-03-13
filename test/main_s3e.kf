@@ -1,0 +1,24 @@
+// for Proteus compiler
+                // Запись программы
+#COM 1          // по нужному COM-порту
+#PACKSIZE= 16    // пакетами по PACKSIZE байт
+#WAITCOEF= 1    // с задержкой, вычисляемой по формуле
+                // (PackSize * 8 / BaudRate) * WaitCoef секунд
+// Если программа не зашивается, попробуйте уменьшить размер пакетов
+// и увеличить задержку
+
+// подгрузка библиотек
+ " proteus.lib" L
+ " wait50MHz.lib" L
+ " lcd.lib" L
+
+: BaseAddr 0x8000 ; INLINE
+: DataPin! BaseAddr OUTPORT ; INLINE // 1/0 -->
+
+MAIN:
+  0
+BEGIN
+  DUP DataPin! 1 +
+  HOME SEC HEXPRINT
+  WAIT_1s
+AGAIN

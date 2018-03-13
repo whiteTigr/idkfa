@@ -1,0 +1,30 @@
+: DataStackSize 64 ; INLINE
+: RetStackSize 0 ; INLINE
+: LoopStackSize 0 ; INLINE
+
+DataStackSize ALLOT
+RetStackSize  ALLOT // Addr
+RetStackSize  ALLOT // Depth
+LoopStackSize ALLOT // Value
+LoopStackSize ALLOT // StopValue
+LoopStackSize ALLOT // Jump
+
+VARIABLE HERE
+VARIABLE [C]HERE
+
+: @ FETCH SAVEB ; INLINE
+: INPORT @ ; INLINE
+
+: PICK cmdPICK SAVEB ; INLINE
+: ARG@ ARGFETCH SAVEB ; INLINE
+: ARG! ARGSTORE NOP ; INLINE
+: J 1 NOP IX ; INLINE
+: K 2 NOP IX ; INLINE
+
+: DP++ HERE @ 1 + HERE ! ;
+: CP++ [C]HERE @ 1 + [C]HERE ! ;
+: _ALLOT HERE @ + HERE ! ;
+: _[C]ALLOT [C]HERE @ + [C]HERE ! ;
+: _, HERE @ ! DP++ ;
+: _[C], [C]HERE @ [C]! CP++ ;
+

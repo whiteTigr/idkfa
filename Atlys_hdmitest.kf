@@ -1,0 +1,859 @@
+// for Proteus compiler
+                // Запись программы
+#COM 13         // по нужному COM-порту
+#PACKSIZE= 256  // пакетами по PACKSIZE байт
+#WAITCOEF= 2    // с задержкой, вычисляемой по формуле
+                // (PackSize * 8 / BaudRate) * WaitCoef секунд
+// Если программа не зашивается, попробуйте уменьшить размер пакетов
+// и увеличить задержку
+#MaxCode= 49152
+#MaxData= 4096
+
+// подгрузка библиотек
+" proteus.lib" L
+
+: DDRBaseAddr 0xA0000 ; INLINE
+
+: p0_cmd_instr DDRBaseAddr 32 + OUTPORT ; INLINE
+: p0_cmd_bl DDRBaseAddr 35 + OUTPORT ; INLINE
+: p0_cmd_byte_addr DDRBaseAddr 36 + OUTPORT ; INLINE
+
+: p0_wr_mask DDRBaseAddr 37 + OUTPORT ; INLINE
+: p0_wr_data DDRBaseAddr 33 + OUTPORT ; INLINE
+//
+// : p0_cmd_empty 21 SYSREG@ ; INLINE
+// : p0_rd_data 22 SYSREG@ ; INLINE
+// : p0_rd_empty 23 SYSREG@ ; INLINE
+
+: p0_cmd_empty DDRBaseAddr 5 + INPORT ; INLINE
+: p0_cmd_full DDRBaseAddr 6 + INPORT ; INLINE
+: p0_wr_full DDRBaseAddr 20 + INPORT ; INLINE
+: p0_wr_empty DDRBaseAddr 21 + INPORT ; INLINE
+: p0_wr_count DDRBaseAddr 22 + INPORT ; INLINE
+: p0_wr_underrun DDRBaseAddr 23 + INPORT ; INLINE
+: p0_wr_error DDRBaseAddr 24 + INPORT ; INLINE
+: p0_rd_data DDRBaseAddr 34 + INPORT ; INLINE
+: p0_rd_full DDRBaseAddr 35 + INPORT ; INLINE
+: p0_rd_empty DDRBaseAddr 36 + INPORT ; INLINE
+: p0_rd_count DDRBaseAddr 37 + INPORT ; INLINE
+: p0_rd_overflow DDRBaseAddr 38 + INPORT ; INLINE
+: p0_rd_error DDRBaseAddr 39 + INPORT ; INLINE
+: p1_wr_underrun DDRBaseAddr 65 + INPORT ; INLINE
+: p2_wr_underrun DDRBaseAddr 66 + INPORT ; INLINE
+
+VARIABLE addr
+{ 0 addr ! }
+
+VARIABLE test1
+VARIABLE test2
+{ 0 test1 !
+  0 test2 !
+}
+
+: WriteDataInt // data --
+ addr @ 0x3 AND IF
+  0b0011 p0_wr_mask
+  16 << p0_wr_data
+ ELSE
+  0b1100 p0_wr_mask
+  p0_wr_data
+ THEN
+;
+
+: WriteToDDR
+ addr @ 0x3 -1 XOR AND p0_cmd_byte_addr
+ 0 p0_cmd_bl
+ 0b000 p0_cmd_instr
+;
+
+: ReadDataInt // -- data
+ addr @ 0x3 -1 XOR AND p0_cmd_byte_addr
+ 0 p0_cmd_bl
+ 0b001 p0_cmd_instr
+ BEGIN p0_rd_empty NOT UNTIL
+ p0_rd_data
+ addr @ 0x3 AND IF
+  16 >>
+ THEN
+ 0xFFFF AND
+;
+
+: ToWriteFIFO // data mask --
+ p0_wr_mask
+ p0_wr_data
+;
+
+: WriteDDR // addr count-1 --
+ BEGIN p0_cmd_empty UNTIL
+ p0_cmd_bl
+ p0_cmd_byte_addr
+ 0b000 p0_cmd_instr
+;
+
+: FromReadFIFO // -- data
+ BEGIN p0_rd_empty NOT UNTIL
+ p0_rd_data
+;
+
+: ReadDDR // addr count-1 --
+ BEGIN p0_cmd_empty UNTIL
+ p0_cmd_bl
+ p0_cmd_byte_addr
+ 0b001 p0_cmd_instr
+;
+
+// addr должен(!) быть выровнен (2 младших бита - нулевые)
+: ALLIGN_DDR! // data addr --
+ SWAP 0b0000 ToWriteFIFO
+ 0 WriteDDR
+;
+
+: ALLIGN_DDR@ // addr -- data
+ 0 ReadDDR
+ FromReadFIFO
+;
+
+// addr произвольный
+: DDR! // data addr --
+ DUP 0x3 AND
+
+ DUP 0 = IF
+  DROP
+  ALLIGN_DDR!
+  EXIT
+ THEN
+
+ DUP 1 = IF
+  DROP
+  OVER  8 << 0b0001 ToWriteFIFO
+  SWAP 24 >> 0b1110 ToWriteFIFO
+  1 - 1 WriteDDR
+  EXIT
+ THEN
+
+ 2 = IF
+  OVER 16 << 0b0011 ToWriteFIFO
+  SWAP 16 >> 0b1100 ToWriteFIFO
+  2 - 1 WriteDDR
+  EXIT
+ THEN
+
+ OVER 24 << 0b0111 ToWriteFIFO
+ SWAP  8 >> 0b1000 ToWriteFIFO
+ 3 - 1 WriteDDR
+;
+
+: DDR@ // addr --
+ DUP 0x3 AND
+
+ DUP 0 = IF
+  DROP
+  ALLIGN_DDR@
+  EXIT
+ THEN
+
+ DUP 1 = IF
+  DROP
+  1 - 1 ReadDDR
+  FromReadFIFO  8 >>
+  FromReadFIFO 24 << +
+  EXIT
+ THEN
+
+ 2 = IF
+  2 - 1 ReadDDR
+  FromReadFIFO 16 >>
+  FromReadFIFO 16 << +
+  EXIT
+ THEN
+
+ 3 - 1 ReadDDR
+ FromReadFIFO 24 >>
+ FromReadFIFO  8 << +
+;
+
+
+: DDRW! // word addr --
+ DUP 0x3 AND
+
+ DUP 0 = IF
+  DROP
+  SWAP 0b1100 ToWriteFIFO
+  0 WriteDDR
+  EXIT
+ THEN
+
+ DUP 1 = IF
+  DROP
+  SWAP 8 << 0b1001 ToWriteFIFO
+  1 - 0 WriteDDR
+  EXIT
+ THEN
+
+ 2 = IF
+  SWAP 16 << 0b0011 ToWriteFIFO
+  2 - 0 WriteDDR
+  EXIT
+ THEN
+
+ OVER 24 << 0b0111 ToWriteFIFO
+ SWAP  8 >> 0b1110 ToWriteFIFO
+ 3 - 1 WriteDDR
+;
+
+: DDRW@ // addr -- word
+ DUP 0x3 AND
+
+ DUP 0 = IF
+  DROP
+  0 ReadDDR
+  FromReadFIFO 0xFFFF AND
+  EXIT
+ THEN
+
+ DUP 1 = IF
+  DROP
+  1 - 0 ReadDDR
+  FromReadFIFO 8 >> 0xFFFF AND
+  EXIT
+ THEN
+
+ 2 = IF
+  2 - 0 ReadDDR
+  FromReadFIFO 16 >> 0xFFFF AND
+  EXIT
+ THEN
+
+ 3 - 1 ReadDDR
+ FromReadFIFO 24 >> 0xFF AND
+ FromReadFIFO 0xFF AND 8 << +
+;
+
+: DDRC! // byte addr --
+ DUP 0x3 AND
+
+ DUP 0 = IF
+  DROP
+  SWAP 0b1110 ToWriteFIFO
+  0 WriteDDR
+  EXIT
+ THEN
+
+ DUP 1 = IF
+  DROP
+  SWAP 8 << 0b1101 ToWriteFIFO
+  1 - 0 WriteDDR
+  EXIT
+ THEN
+
+ 2 = IF
+  SWAP 16 << 0b1011 ToWriteFIFO
+  2 - 0 WriteDDR
+  EXIT
+ THEN
+
+ SWAP 24 << 0b0111 ToWriteFIFO
+ 3 - 1 WriteDDR
+;
+
+: DDRC@ // addr -- byte
+ DUP 0x3 AND
+
+ DUP 0 = IF
+  DROP
+  0 ReadDDR
+  FromReadFIFO 0xFF AND
+  EXIT
+ THEN
+
+ DUP 1 = IF
+  DROP
+  1 - 0 ReadDDR
+  FromReadFIFO 8 >> 0xFF AND
+  EXIT
+ THEN
+
+ 2 = IF
+  2 - 0 ReadDDR
+  FromReadFIFO 16 >> 0xFF AND
+  EXIT
+ THEN
+
+ 3 - 0 ReadDDR
+ FromReadFIFO 24 >> 0xFF AND
+;
+
+VARIABLE CopyMemoryLengthRemaining
+VARIABLE CopyMemoryLengthCurrent
+: ToDDR // dest(in ddr) source(in cpu) length(integers) --
+ BEGIN
+  DUP // length > 0
+ WHILE
+  DUP 32 > IF
+   32 - CopyMemoryLengthRemaining !
+   32 CopyMemoryLengthCurrent !
+  ELSE
+   0 CopyMemoryLengthRemaining !
+   CopyMemoryLengthCurrent !
+  THEN
+
+  CopyMemoryLengthCurrent @ 0 DO
+   DUP @ 0 ToWriteFIFO
+   1 +
+  LOOP
+
+  OVER CopyMemoryLengthCurrent @ 1 - WriteDDR
+
+  SWAP CopyMemoryLengthCurrent @ 4 * + SWAP
+
+  CopyMemoryLengthRemaining @
+ REPEAT
+ DROP DROP DROP
+;
+
+: FillDDR // dest(in ddr) value(integer) length(integers) --
+ BEGIN
+  DUP // length > 0
+ WHILE
+  DUP 32 > IF
+   32 - CopyMemoryLengthRemaining !
+   32 CopyMemoryLengthCurrent !
+  ELSE
+   0 CopyMemoryLengthRemaining !
+   CopyMemoryLengthCurrent !
+  THEN
+
+  CopyMemoryLengthCurrent @ 0 DO
+   DUP 0 ToWriteFIFO
+  LOOP
+
+  OVER CopyMemoryLengthCurrent @ 1 - WriteDDR
+
+  SWAP CopyMemoryLengthCurrent @ 4 * + SWAP
+
+  CopyMemoryLengthRemaining @
+ REPEAT
+ DROP DROP DROP
+;
+
+: FromDDR // dest(in cpu) source(in ddr) length(integers) --
+ BEGIN
+  DUP // length > 0
+ WHILE
+  DUP 32 > IF
+   32 - CopyMemoryLengthRemaining !
+   32 CopyMemoryLengthCurrent !
+  ELSE
+   0 CopyMemoryLengthRemaining !
+   CopyMemoryLengthCurrent !
+  THEN
+
+  DUP CopyMemoryLengthCurrent @ 1 - ReadDDR
+  CopyMemoryLengthCurrent @ 4 * +
+
+  SWAP
+  CopyMemoryLengthCurrent @ 0 DO
+   FromReadFIFO OVER !
+   1 +
+  LOOP
+  SWAP
+
+  CopyMemoryLengthRemaining @
+ REPEAT
+ DROP DROP DROP
+;
+
+
+: WriteLength CpuBaseAddr 32 + OUTPORT ; INLINE
+: WriteCPUAddr CpuBaseAddr 33 + OUTPORT ; INLINE
+: WriteValue CpuBaseAddr 34 + OUTPORT ; INLINE
+: WriteDDRAddr CpuBaseAddr 35 + OUTPORT ; INLINE
+: DDRIsReady 24 SYSREG@ ; INLINE
+: ExecuteDDRCmd CpuBaseAddr 36 + OUTPORT ; INLINE
+
+: DDRState 25 SYSREG@ ; INLINE
+: DDRAddr 26 SYSREG@ ; INLINE
+: CPUAddr 27 SYSREG@ ; INLINE
+: DDRLength 28 SYSREG@ ; INLINE
+
+: Start_ToDDR 0 ExecuteDDRCmd ; INLINE
+: Start_FillDDR 1 ExecuteDDRCmd ; INLINE
+: Start_FromDDR 2 ExecuteDDRCmd ; INLINE
+: Start_WordToDDR 3 ExecuteDDRCmd ; INLINE
+: Start_WordFromDDR 4 ExecuteDDRCmd ; INLINE
+
+: __ToDDR // dest(in ddr) source(in cpu) length(integers) --
+ BEGIN DDRIsReady UNTIL
+ WriteLength
+ WriteCPUAddr
+ WriteDDRAddr
+ Start_ToDDR
+;
+
+: __FillDDR // dest(in ddr) value(integer) length(integers) --
+ BEGIN DDRIsReady UNTIL
+ WriteLength
+ WriteValue
+ WriteDDRAddr
+ Start_FillDDR
+;
+
+: __FromDDR // dest(in cpu) source(in ddr) length(integers) --
+ BEGIN DDRIsReady UNTIL
+ WriteLength
+ WriteDDRAddr
+ WriteCPUAddr
+ Start_FromDDR
+;
+
+: __WordToDDR // dest(in ddr) source(in cpu) length(words) --
+ BEGIN DDRIsReady UNTIL
+ WriteLength
+ WriteCPUAddr
+ WriteDDRAddr
+ Start_WordToDDR
+;
+
+: __WordFromDDR // dest(in cpu) source(in ddr) length(words) --
+ BEGIN DDRIsReady UNTIL
+ WriteLength
+ WriteDDRAddr
+ WriteCPUAddr
+ Start_WordFromDDR
+;
+
+: StatusReport
+ CR_COM
+ CR_COM
+ " p0_cmd_empty" PRINT TAB_COM p0_cmd_empty HEX->COM CR_COM
+ " p0_cmd_full" PRINT TAB_COM p0_cmd_full HEX->COM CR_COM
+ CR_COM
+ " p0_wr_full" PRINT TAB_COM p0_wr_full HEX->COM CR_COM
+ " p0_wr_empty" PRINT TAB_COM p0_wr_empty HEX->COM CR_COM
+ " p0_wr_count" PRINT TAB_COM p0_wr_count HEX->COM CR_COM
+ " p0_wr_underrun" PRINT TAB_COM p0_wr_underrun HEX->COM CR_COM
+ " p0_wr_error" PRINT TAB_COM p0_wr_error HEX->COM CR_COM
+ CR_COM
+ " p0_rd_data" PRINT TAB_COM p0_rd_data HEX32->COM CR_COM
+ " p0_rd_full" PRINT TAB_COM p0_rd_full HEX->COM CR_COM
+ " p0_rd_empty" PRINT TAB_COM p0_rd_empty HEX->COM CR_COM
+ " p0_rd_count" PRINT TAB_COM p0_rd_count HEX->COM CR_COM
+ " p0_rd_overflow" PRINT TAB_COM p0_rd_overflow HEX->COM CR_COM
+ " p0_rd_error" PRINT TAB_COM p0_rd_error HEX->COM CR_COM
+ CR_COM
+ " p0_wr_underrun" PRINT TAB_COM p0_wr_underrun HEX->COM CR_COM
+ " p1_wr_underrun" PRINT TAB_COM p1_wr_underrun HEX->COM CR_COM
+ " p2_wr_underrun" PRINT TAB_COM p2_wr_underrun HEX->COM CR_COM
+ CR_COM
+ " addr" PRINT TAB_COM addr @ HEX32->COM CR_COM
+ CR_COM
+ " DDRIsReady" PRINT TAB_COM DDRIsReady HEX->COM CR_COM
+ " DDRState" PRINT TAB_COM DDRState HEX32->COM CR_COM
+ " DDRAddr" PRINT TAB_COM DDRAddr HEX32->COM CR_COM
+ " CPUAddr" PRINT TAB_COM CPUAddr HEX32->COM CR_COM
+ " DDRLength" PRINT TAB_COM DDRLength HEX32->COM CR_COM
+ " DEPTH" PRINT TAB_COM DEPTH HEX->COM CR_COM
+;
+
+VARIABLE PIXEL_OFFSET
+VARIABLE GETPIXEL_OFFSET
+{
+ 0 PIXEL_OFFSET !
+ 8388608 GETPIXEL_OFFSET !
+}
+: SCREEN_WIDTH 1600 ; INLINE
+: SCREEN_HEIGHT 900 ; INLINE
+: BYTES_PER_PIXEL 2 ; INLINE
+: PIXELADDR // x y -- addr
+ SCREEN_WIDTH * + BYTES_PER_PIXEL *
+;
+
+VARIABLE color
+: PIXEL // x y color --
+ color !
+ PIXELADDR PIXEL_OFFSET @ + addr !
+ color @ WriteDataInt
+ WriteToDDR
+;
+
+: GETPIXEL // x y -- color
+ PIXELADDR GETPIXEL_OFFSET @ + addr !
+ ReadDataInt
+;
+
+VARIABLE x
+VARIABLE y
+
+: Test
+ 500 400 DO
+  I J!
+  600 400 DO
+   I J 0xF800 PIXEL
+  LOOP
+ LOOP
+ 500 400 DO
+  I I 0 PIXEL
+ LOOP
+;
+
+: Test2
+ 700 600 DO
+  I J!
+  900 700 DO
+   I J
+   I 300 - J 200 - GETPIXEL
+   PIXEL
+  LOOP
+ LOOP
+;
+
+: GrayValue // color -- value
+
+;
+
+: Grayscale
+ 900 0 DO
+  I J!
+  1600 0 DO
+   I J GETPIXEL
+    DUP 0xF800 AND 10 >> 19595 * SWAP
+    DUP 0x07E0 AND  5 >> 38469 * SWAP
+        0x001F AND  1 << 7471 *
+    + + // gray value (0-63) * 65536
+    10 >> // gray value 8 bytes
+    color !
+   I J color @ PIXEL
+  LOOP
+ LOOP
+;
+
+: Sharp
+ PIXEL_OFFSET @
+ GETPIXEL_OFFSET @
+ PIXEL_OFFSET !
+ GETPIXEL_OFFSET !
+ 899 1 DO
+  I J!
+  1599 1 DO
+   0
+   I 1 - J 1 - GETPIXEL -
+   I     J 1 - GETPIXEL -
+   I 1 + J 1 - GETPIXEL -
+   I 1 - J     GETPIXEL -
+   I     J     GETPIXEL 9 * +
+   I 1 + J     GETPIXEL -
+   I 1 - J 1 + GETPIXEL -
+   I     J 1 + GETPIXEL -
+   I 1 + J 1 + GETPIXEL -
+   10 >> color !
+   I J color @ PIXEL
+  LOOP
+ LOOP
+;
+
+: DDRTest
+ CR_COM
+ " DEPTH " PRINT TAB_COM DEPTH HEX32->COM CR_COM
+
+ " 1. Allign write/read" PRINT CR_COM
+ 0x12345678 0 ALLIGN_DDR!
+ 0x9ABCDEF0 4 ALLIGN_DDR!
+ 0 ALLIGN_DDR@ HEX32->COM TAB_COM
+ 4 ALLIGN_DDR@ HEX32->COM CR_COM
+ CR_COM
+
+ " 2. Write to not allign address (offset = 1)" PRINT CR_COM
+ -1 0 ALLIGN_DDR!
+ -1 4 ALLIGN_DDR!
+ 0x12345678 1 DDR!
+ 0 ALLIGN_DDR@ HEX32->COM TAB_COM
+ 4 ALLIGN_DDR@ HEX32->COM CR_COM
+ CR_COM
+
+ " 3. Write to not allign address (offset = 2)" PRINT CR_COM
+ -1 0 ALLIGN_DDR!
+ -1 4 ALLIGN_DDR!
+ 0x12345678 2 DDR!
+ 0 ALLIGN_DDR@ HEX32->COM TAB_COM
+ 4 ALLIGN_DDR@ HEX32->COM CR_COM
+ CR_COM
+
+ " 4. Write to not allign address (offset = 3)" PRINT CR_COM
+ -1 0 ALLIGN_DDR!
+ -1 4 ALLIGN_DDR!
+ 0x12345678 3 DDR!
+ 0 ALLIGN_DDR@ HEX32->COM TAB_COM
+ 4 ALLIGN_DDR@ HEX32->COM CR_COM
+ CR_COM
+
+ " 5. Read from not allign address (offset = 1)" PRINT CR_COM
+ -1 0 ALLIGN_DDR!
+ -1 4 ALLIGN_DDR!
+ 0x12345678 1 DDR!
+ 1 DDR@ HEX32->COM CR_COM
+ CR_COM
+
+ " 6. Read from not allign address (offset = 2)" PRINT CR_COM
+ -1 0 ALLIGN_DDR!
+ -1 4 ALLIGN_DDR!
+ 0x12345678 2 DDR!
+ 2 DDR@ HEX32->COM CR_COM
+ CR_COM
+
+ " 7. Read from not allign address (offset = 3)" PRINT CR_COM
+ -1 0 ALLIGN_DDR!
+ -1 4 ALLIGN_DDR!
+ 0x12345678 3 DDR!
+ 3 DDR@ HEX32->COM TAB_COM
+ CR_COM
+ CR_COM
+
+ " 8. Write word (offset = 0)" PRINT CR_COM
+ -1 0 ALLIGN_DDR!
+ -1 4 ALLIGN_DDR!
+ 0x1234 0 DDRW!
+ 0 ALLIGN_DDR@ HEX32->COM TAB_COM
+ 4 ALLIGN_DDR@ HEX32->COM CR_COM
+ CR_COM
+
+ " 9. Write word (offset = 1)" PRINT CR_COM
+ -1 0 ALLIGN_DDR!
+ -1 4 ALLIGN_DDR!
+ 0x1234 1 DDRW!
+ 0 ALLIGN_DDR@ HEX32->COM TAB_COM
+ 4 ALLIGN_DDR@ HEX32->COM CR_COM
+ CR_COM
+
+ " 10. Write word (offset = 2)" PRINT CR_COM
+ -1 0 ALLIGN_DDR!
+ -1 4 ALLIGN_DDR!
+ 0x1234 2 DDRW!
+ 0 ALLIGN_DDR@ HEX32->COM TAB_COM
+ 4 ALLIGN_DDR@ HEX32->COM CR_COM
+ CR_COM
+
+ " 11. Write word (offset = 3)" PRINT CR_COM
+ -1 0 ALLIGN_DDR!
+ -1 4 ALLIGN_DDR!
+ 0x1234 3 DDRW!
+ 0 ALLIGN_DDR@ HEX32->COM TAB_COM
+ 4 ALLIGN_DDR@ HEX32->COM CR_COM
+ CR_COM
+
+ " 12. Read word (offset = 0)" PRINT CR_COM
+ -1 0 ALLIGN_DDR!
+ -1 4 ALLIGN_DDR!
+ 0x1234 0 DDRW!
+ 0 DDRW@ HEX32->COM CR_COM
+ CR_COM
+
+ " 13. Read word (offset = 1)" PRINT CR_COM
+ -1 0 ALLIGN_DDR!
+ -1 4 ALLIGN_DDR!
+ 0x1234 1 DDRW!
+ 1 DDRW@ HEX32->COM CR_COM
+ CR_COM
+
+ " 14. Read word (offset = 2)" PRINT CR_COM
+ -1 0 ALLIGN_DDR!
+ -1 4 ALLIGN_DDR!
+ 0x1234 2 DDRW!
+ 2 DDRW@ HEX32->COM CR_COM
+ CR_COM
+
+ " 15. Read word (offset = 3)" PRINT CR_COM
+ -1 0 ALLIGN_DDR!
+ -1 4 ALLIGN_DDR!
+ 0x1234 3 DDRW!
+ 3 DDRW@ HEX32->COM CR_COM
+ CR_COM
+
+ " 16. Write byte (offset = 0)" PRINT CR_COM
+ -1 0 ALLIGN_DDR!
+ 0x12 0 DDRC!
+ 0 ALLIGN_DDR@ HEX32->COM CR_COM
+ CR_COM
+
+ " 17. Write byte (offset = 1)" PRINT CR_COM
+ -1 0 ALLIGN_DDR!
+ 0x12 1 DDRC!
+ 0 ALLIGN_DDR@ HEX32->COM CR_COM
+ CR_COM
+
+ " 18. Write byte (offset = 2)" PRINT CR_COM
+ -1 0 ALLIGN_DDR!
+ 0x12 2 DDRC!
+ 0 ALLIGN_DDR@ HEX32->COM CR_COM
+ CR_COM
+
+ " 19. Write byte (offset = 3)" PRINT CR_COM
+ -1 0 ALLIGN_DDR!
+ 0x12 3 DDRC!
+ 0 ALLIGN_DDR@ HEX32->COM CR_COM
+ CR_COM
+
+ " 20. Read byte (offset = 0)" PRINT CR_COM
+ -1 0 ALLIGN_DDR!
+ 0x12 0 DDRC!
+ 0 DDRC@ HEX32->COM CR_COM
+ CR_COM
+
+ " 21. Read byte (offset = 1)" PRINT CR_COM
+ -1 0 ALLIGN_DDR!
+ 0x12 1 DDRC!
+ 1 DDRC@ HEX32->COM CR_COM
+ CR_COM
+
+ " 22. Read byte (offset = 2)" PRINT CR_COM
+ -1 0 ALLIGN_DDR!
+ 0x12 2 DDRC!
+ 2 DDRC@ HEX32->COM CR_COM
+ CR_COM
+
+ " 23. Read byte (offset = 3)" PRINT CR_COM
+ -1 0 ALLIGN_DDR!
+ 0x12 3 DDRC!
+ 3 DDRC@ HEX32->COM CR_COM
+ CR_COM
+
+ " DEPTH " PRINT TAB_COM DEPTH HEX32->COM CR_COM
+;
+
+ARRAY TestArray 2048
+
+: ClearTestArray
+ 0 TestArray
+ 1600 0 DO
+  OVER OVER !
+  1 +
+ LOOP
+ DROP DROP
+;
+
+VARIABLE line
+{ 0 line ! }
+: TestArrayToDDR
+ 5 0 DO
+  I J!
+  8 0 DO
+   line @ 800 J * 800 __ToDDR
+   line @ 800 4 * + line !
+  LOOP
+  2 0 DO
+   line @ 0 800 __FillDDR
+   line @ 800 4 * + line !
+  LOOP
+ LOOP
+;
+
+: _TestArrayToDDR
+ SYSTIMER_LOW
+ 900 0 DO
+  line @ 0 800 __ToDDR
+  line @ 800 4 * + line !
+ LOOP
+ BEGIN DDRIsReady UNTIL
+ SYSTIMER_LOW SWAP - HEX32->COM
+;
+
+
+// : TestArrayToDDR
+//  line @ 0 800 __ToDDR
+//  line @ 800 4 * + line !
+// ;
+
+: CLS
+ SYSTIMER_LOW
+ 0 0 720000 __FillDDR
+ BEGIN DDRIsReady UNTIL
+ SYSTIMER_LOW SWAP - HEX32->COM CR_COM
+;
+
+: CopyMemoryTest
+ USCOUNTER
+ 200 0 DO
+  TestArray 100 I + 800 * 200 SHR + 4 * 400 __FromDDR
+  500 I + 800 * 700 SHR + 4 * TestArray 400 __ToDDR
+ LOOP
+ BEGIN DDRIsReady UNTIL
+ USCOUNTER SWAP - HEX32->COM CR_COM
+
+ 499 800 * 1500 102 - SHR + 4 * 0xF800F800 102 SHR __FillDDR
+// 499 800 * 1500 64 - 32 - SHR + 4 * 0xFFFFFFFF 16 __FillDDR
+;
+
+: CopyScreenTest
+ USCOUNTER
+ 0
+ 900 0 DO
+  TestArray OVER 800 __FromDDR
+//  8388608 OVER + TestArray 800 __ToDDR
+  3200 +
+ LOOP
+ DROP
+ BEGIN DDRIsReady UNTIL
+ USCOUNTER SWAP - HEX32->COM CR_COM
+;
+
+: TestWriteToDDR
+ 512 0 DO
+  I 1 AND NOT IF
+   0xFFFF0000
+  ELSE
+   0x00000000
+  THEN
+  TestArray I + !
+ LOOP
+ 400 0 DO
+  I 800 * 4 * TestArray 512 __ToDDR
+ LOOP
+;
+
+: TestCopy_TB
+ 256 0 DO
+  I 1 AND IF
+   0xFFFF0000
+  ELSE
+   0x00000000
+  THEN
+  TestArray I + !
+ LOOP
+ 0 TestArray 256 __ToDDR
+ 0 TestArray 256 __FromDDR
+;
+
+
+MAIN:
+
+0x3E80 addr !
+
+800 x !
+450 y !
+
+8 CpuBaseAddr 38 + OUTPORT
+0 CpuBaseAddr 39 + OUTPORT
+
+// CLS
+
+// 0
+// BEGIN
+//  DUP HEX32->COM TAB_COM 1 +
+//  0 line !
+//  TestArrayToDDR
+//  TAB_COM p0_wr_underrun HEX->COM CR_COM
+// AGAIN
+
+BEGIN
+ CHECKCOM IF
+  GETCOMDATA
+  COMDATA @ 0x37 = IF StatusReport THEN
+  COMDATA @ 0x31 = IF 0 WriteDataInt StatusReport THEN
+  COMDATA @ 0x32 = IF WriteToDDR addr @ 4 + addr ! StatusReport THEN
+  COMDATA @ 0x33 = IF x @ y @ 0xF800 PIXEL x @ 1 + x ! THEN
+  COMDATA @ 0x34 = IF DDRTest THEN
+  COMDATA @ 0x35 = IF CLS 0 line ! THEN
+  COMDATA @ 0x36 = IF TestArrayToDDR StatusReport THEN
+  COMDATA @ 0x38 = IF TestWriteToDDR StatusReport THEN
+  COMDATA @ 0x39 = IF CopyScreenTest THEN
+ THEN
+AGAIN
