@@ -7,7 +7,7 @@ uses
   Dialogs, ActnList, ComCtrls, Menus, Grids, StdCtrls, ExtCtrls,
   ToolWin, ImgList, uForthCompiler, Gauges, UnitSyntaxMemo, uStyleEditor, Buttons, uRecordList, uSimulator, uGlobal,
   ShellAPI, uBrainfuckCompiler, uDownloadCom, uCommonFunctions, uProteusCompiler, uQuarkCompiler, uKf7Compiler,
-  TabNotBk, ActnMan, ActnCtrls;
+  TabNotBk, ActnMan, ActnCtrls, uStringStack;
 
 type
   TfMain = class(TForm)
@@ -33,7 +33,6 @@ type
     bNew: TToolButton;
     bOpen: TToolButton;
     bSave: TToolButton;
-    ToolButton4: TToolButton;
     bCompile: TToolButton;
     bCompileAndDownload: TToolButton;
     ToolButton8: TToolButton;
@@ -481,7 +480,7 @@ begin
 
   LineNum := 0;
   PageIndex := fMain.Tabs.PageIndex;
-  uGlobal.FilePath := ExtractFilePath(FileName[PageIndex]);
+  uGlobal.FilePath := FileName[PageIndex];
 
   if compiler.hasEvaluate then
   begin
@@ -1277,6 +1276,8 @@ begin
     OpenKfFile(ParamStr(1));
 
   SetFormName;
+
+  FilesStack := TStringStack.Create();
 end;
 
 procedure TfMain.changeCompilerToQuarkClick(Sender: TObject);

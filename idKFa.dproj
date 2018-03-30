@@ -118,6 +118,7 @@
 				<Form>fKf7Downloader</Form>
 			</DCCReference>
 			<DCCReference Include="src\compiler\kf7\uKf7SoftDebuger.pas"/>
+			<DCCReference Include="src\core\uStringStack.pas"/>
 			<RcItem Include="bmp\CloseBtn.bmp">
 				<ResourceType>Bitmap</ResourceType>
 				<ResourceId>CloseBtnBmp</ResourceId>
@@ -160,7 +161,7 @@
 						<Parameters Name="UseLauncher">False</Parameters>
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
-						<Parameters Name="RunParams">kf7xx_test.kf</Parameters>
+						<Parameters Name="RunParams">test/load_test.kf</Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
@@ -168,7 +169,7 @@
 						<VersionInfo Name="MajorVer">1</VersionInfo>
 						<VersionInfo Name="MinorVer">0</VersionInfo>
 						<VersionInfo Name="Release">1</VersionInfo>
-						<VersionInfo Name="Build">107</VersionInfo>
+						<VersionInfo Name="Build">108</VersionInfo>
 						<VersionInfo Name="Debug">True</VersionInfo>
 						<VersionInfo Name="PreRelease">False</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -180,7 +181,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">Measurement systems</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">1.0.1.107</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">1.0.1.108</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>

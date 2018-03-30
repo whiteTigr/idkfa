@@ -75,15 +75,8 @@ object fMain: TfMain
       Top = 0
       Action = Save
     end
-    object ToolButton4: TToolButton
-      Left = 69
-      Top = 0
-      Width = 8
-      Caption = 'ToolButton4'
-      Style = tbsSeparator
-    end
     object bCompile: TToolButton
-      Left = 77
+      Left = 69
       Top = 0
       Hint = 'Compile'
       Action = Compile
@@ -91,7 +84,7 @@ object fMain: TfMain
       ShowHint = True
     end
     object bDownload: TToolButton
-      Left = 100
+      Left = 92
       Top = 0
       Hint = 'Download'
       Action = GotoDownload
@@ -99,19 +92,19 @@ object fMain: TfMain
       ShowHint = True
     end
     object bCompileAndDownload: TToolButton
-      Left = 123
+      Left = 115
       Top = 0
       Action = CompileAndDownload
     end
     object ToolButton8: TToolButton
-      Left = 146
+      Left = 138
       Top = 0
       Width = 8
       Caption = 'ToolButton8'
       Style = tbsSeparator
     end
     object eFindWhat: TEdit
-      Left = 154
+      Left = 146
       Top = 0
       Width = 121
       Height = 22
@@ -119,19 +112,19 @@ object fMain: TfMain
       Text = 'Find what?'
     end
     object bFind: TToolButton
-      Left = 275
+      Left = 267
       Top = 0
       Action = ActFind
     end
     object ToolButton10: TToolButton
-      Left = 298
+      Left = 290
       Top = 0
       Width = 8
       Caption = 'ToolButton10'
       Style = tbsSeparator
     end
     object bLoadCommandSystem: TToolButton
-      Left = 306
+      Left = 298
       Top = 0
       Hint = 'Settings'
       Caption = 'GotoSettings'
@@ -141,19 +134,19 @@ object fMain: TfMain
       OnClick = bLoadCommandSystemClick
     end
     object ToolButton13: TToolButton
-      Left = 329
+      Left = 321
       Top = 0
       Width = 8
       Caption = 'ToolButton13'
       Style = tbsSeparator
     end
     object bRunSimulator: TToolButton
-      Left = 337
+      Left = 329
       Top = 0
       Action = RunSimulator
     end
     object ToolButton1: TToolButton
-      Left = 360
+      Left = 352
       Top = 0
       Width = 8
       Caption = 'ToolButton1'
@@ -423,7 +416,7 @@ object fMain: TfMain
     Left = 224
     Top = 416
     Bitmap = {
-      494C010116001800240010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101160018002C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000006000000001002000000000000060
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

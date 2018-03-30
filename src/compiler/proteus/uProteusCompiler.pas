@@ -1592,9 +1592,9 @@ var
 begin
   fileName := GetLastString;
 
-  if FilePath <> '' then
+  if FilesStack.Top() <> '' then
   begin
-    str := FilePath + fileName;
+    str := FilesStack.Top() + fileName;
     if not FileExists(str) then
       str := '';
   end;
@@ -1609,6 +1609,7 @@ begin
     end;
   end;
 
+  FilesStack.Push(str);
   lineNumber := 1;
   AssignFile(inputFile, str);
   Reset(inputFile);
@@ -1622,10 +1623,11 @@ begin
 
     if (LastError <> 0) then
     begin
-      ErrorComment := format('at line %d in file %s', [lineNumber, fileName]);
+      ErrorComment := ErrorComment + format('at line %d in file %s ', [lineNumber, fileName]);
     end;
   finally
     CloseFile(inputFile);
+    FilesStack.Pop();
   end;
 end;
 
@@ -2029,6 +2031,9 @@ var
   procStructure: TProc;
 begin
   inherited;
+
+  FilesStack.Clear();
+  FilesStack.Push(FilePath);
 
   FError := 0;
   ErrorComment := '';

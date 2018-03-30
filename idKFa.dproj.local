@@ -51,6 +51,7 @@
     <File Path="src\core\uGlobal.pas"/>
     <File Path="src\core\UnitSyntaxMemo.pas"/>
     <File Path="src\core\uRecordList.pas"/>
+    <File Path="src\core\uStringStack.pas"/>
     <File Path="src\forms"/>
     <File Path="src\forms\AboutWindow.pas"/>
     <File Path="src\forms\AboutWindow.dfm"/>
@@ -79,5 +80,7 @@
     <Transaction>2013.07.12 16:26:43.890.BMP,D:\Zzz\ABORT.BMP=</Transaction>
     <Transaction>2016.05.16 14:36:09.639.pas,D:\git\idkfa\src\compiler\kf7\uKf7ComModel.pas=</Transaction>
     <Transaction>2016.05.16 14:36:09.639.dfm,D:\git\idkfa\src\compiler\kf7\uKf7ComModel.dfm=</Transaction>
+    <Transaction>2018.03.30 11:59:54.102.pas,D:\git\idkfa\Unit1.pas=D:\git\idkfa\src\core\StringStack.pas</Transaction>
+    <Transaction>2018.03.30 12:00:04.528.pas,D:\git\idkfa\src\core\StringStack.pas=D:\git\idkfa\src\core\uStringStack.pas</Transaction>
   </Transactions>
 </BorlandProject>

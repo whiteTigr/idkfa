@@ -3,7 +3,7 @@ unit uGlobal;
 interface
 
 uses
-  Windows, Messages, Sysutils, Classes, uRecordList;
+  Windows, Messages, Sysutils, Classes, uRecordList, uStringStack;
 
 const
   MaxCode = 1024 * 128;
@@ -181,7 +181,9 @@ var
   SynLightWords: TStringList = nil;
 
   ExePath: string;
+
   FilePath: string;
+  FilesStack: TStringStack = nil;
 
 procedure AddSynlightWord(name: string; _type: integer);
 

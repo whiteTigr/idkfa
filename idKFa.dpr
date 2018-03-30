@@ -40,7 +40,8 @@ uses
   uKf7Device in 'src\compiler\kf7\uKf7Device.pas' {fKf7Device},
   uKf7DeviceCore in 'src\compiler\kf7\uKf7DeviceCore.pas',
   uKf7Downloader in 'src\compiler\kf7\uKf7Downloader.pas' {fKf7Downloader},
-  uKf7SoftDebuger in 'src\compiler\kf7\uKf7SoftDebuger.pas';
+  uKf7SoftDebuger in 'src\compiler\kf7\uKf7SoftDebuger.pas',
+  uStringStack in 'src\core\uStringStack.pas';
 
 // {fProteusDownloader},
 //  uComTerminal in 'src\forms\uComTerminal.pas' {fComTerminal};
