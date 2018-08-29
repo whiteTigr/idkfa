@@ -678,11 +678,11 @@ procedure TProteusCompiler.InitBasicCommands;
 begin
   AddForthToken('NOP', cmdNOP);
   AddForthToken('NOT', cmdNOT);
-  AddCmd2Token ('@', cmdFETCH);
+  AddCmd3Token ('@', cmdFETCH);
   AddForthToken('SHL', cmdSHL);
   AddForthToken('SHR', cmdSHR);
   AddForthToken('SHRA', cmdSHRA);
-  AddCmd2Token ('INPORT', cmdFETCH);
+  AddCmd3Token ('INPORT', cmdFETCH);
   AddForthToken('FP', cmdFP);
   AddForthToken('SWAP', cmdSWAP);
   AddForthToken('DUP', cmdDUP);
@@ -880,7 +880,14 @@ begin
     curChar := UpCase(instr[i]);
     curDigit := ord(curChar) - ord('0');
     if curDigit > 9 then
+    begin
       curDigit := curDigit - ord('A') + ord('9') + 1;
+      if curDigit < 10 then
+      begin
+        Result := false;
+        Exit;
+      end;
+    end;
     if (curDigit < 0) or (curDigit > base) then
     begin
       Result := false;

@@ -11,5 +11,13 @@
 #MaxCode= 65536
 #MaxData= 65536
 
-" folder1/f1t1.lib" L
+CREATE arr 1 , 2 , 3 , 4 , 5 ,
+MAIN:
+123<1>123
+arr
+5 0 DO
+  DUP @
+  1 +
+LOOP
+DROP
 
