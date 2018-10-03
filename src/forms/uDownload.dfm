@@ -320,7 +320,6 @@ object FormDownload: TFormDownload
     Top = 24
     Width = 97
     Height = 21
-    Style = csDropDownList
     ItemIndex = 0
     TabOrder = 1
     Text = 'COM1'

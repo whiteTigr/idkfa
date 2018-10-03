@@ -1,6 +1,6 @@
 // for Proteus compiler
                  // «апись программы
-#COM 3           // по нужному COM-порту
+#COM 123           // по нужному COM-порту
 #BAUDRATE 115200 // с нужной скоростью
 #PACKSIZE= 1     // пакетами по PACKSIZE байт
 #WAITCOEF= 2     // с задержкой, вычисл€емой по формуле
@@ -13,7 +13,7 @@
 
 CREATE arr 1 , 2 , 3 , 4 , 5 ,
 MAIN:
-123<1>123
+
 arr
 5 0 DO
   DUP @

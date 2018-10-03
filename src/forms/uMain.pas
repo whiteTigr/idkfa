@@ -417,13 +417,14 @@ var
 begin
   comIndex := CompilerParseInt;
 
-  if (comIndex < 1) or (comIndex > 19) then
-  begin
-    ShowMessage('Ќеверный индекс com-порта (должен быть от 1 до 19)');
-    Exit;
-  end;
+//  if (comIndex < 1) or (comIndex > 19) then
+//  begin
+//    ShowMessage('Ќеверный индекс com-порта (должен быть от 1 до 19)');
+//    Exit;
+//  end;
 
-  FormDownload.cbComName.ItemIndex := comIndex - 1;
+//  FormDownload.cbComName.ItemIndex := comIndex - 1;
+  FormDownload.cbComName.Text := 'COM' + IntToStr(comIndex);
 end;
 
 procedure TfMain.ForthBaudrate;
