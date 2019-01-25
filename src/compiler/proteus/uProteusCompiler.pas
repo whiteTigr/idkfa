@@ -332,7 +332,7 @@ const
   sBEGIN = 2;
   sDO = 3;
 
-  RJmpSize = 2;
+  RJmpSize = 4;
 
 function TokenWord(name: string; tag: integer; immediate: boolean; proc: TProc; memory: pointer): TTokenWord;
 begin
