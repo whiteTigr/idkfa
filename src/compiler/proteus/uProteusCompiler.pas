@@ -223,13 +223,17 @@ type
     procedure _WriteCode;
     procedure _ALLOT;
 
-    procedure _STRUCT;
-    procedure _CompileSTRUCT;
+    procedure _STRUCT;    
     procedure _ENDSTRUCT;
     procedure _StructElement;
     function GetLastStructureElement: PStructCell;
     function GetStructureSize(_cell: PStructCell): integer;
+    procedure _CompilePointerSTRUCT;
+    procedure CompilePointerStruct(_cell: PStructCell);
+    procedure _CompileSTRUCT;
     procedure CompileStruct(_cell: PStructCell);
+    procedure _CompileReferenceSTRUCT;
+    procedure CompileReferenceStruct(_cell: PStructCell);
     procedure FreeStructMemory(_cell: PStructCell);
   public
     procedure BeginInitCommandSystem;
@@ -1703,7 +1707,9 @@ begin
   rootElement.root := true;
   rootElement.nested := nil;
   rootElement.next := nil;
+  AddImmToken(Parser.token + '*', _CompilePointerSTRUCT, 0, rootElement);
   AddImmToken(Parser.token, _CompileSTRUCT, 0, rootElement);
+  AddImmToken(Parser.token + '@', _CompileReferenceSTRUCT, 0, rootElement);
 end;
 
 procedure TProteusCompiler._StructElement;
@@ -1749,7 +1755,7 @@ begin
   end;
 end;
 
-procedure TProteusCompiler._CompileSTRUCT;
+procedure TProteusCompiler._CompilePointerSTRUCT;
 var
   size: integer;
 begin
@@ -1769,8 +1775,64 @@ begin
     if StructureRoot <> nil then
     begin
       Evaluate(format('VARIABLE p%s', [StructureName]));
-      Evaluate(format(': %s p%s @ ; INLINE', [StructureName, StructureName]));
       Evaluate(format(': sizeof(%s) %d ; INLINE', [StructureName, size]));
+      Evaluate(format(': %s.size() %d ; INLINE', [StructureName, size]));
+      Evaluate(format(': %s.Size() %d ; INLINE', [StructureName, size]));
+      Evaluate(format(': %s p%s @ ; INLINE', [StructureName, StructureName]));
+      if StructureRoot.next <> nil then
+        CompilePointerStruct(StructureRoot.next);
+    end;
+  end;
+end;
+
+procedure TProteusCompiler.CompilePointerStruct(_cell: PStructCell);
+var
+  PrefixStore: AnsiString;
+  cell: PStructCell;
+begin
+  cell := _cell;
+  while cell <> nil do
+  begin
+    if not cell.root then
+    begin
+      Evaluate(format(': %s.%s p%s @ %d + ; INLINE', [StructurePrefix, cell.name, StructureName, StructureOffset]));
+      inc(StructureOffset, cell.size);
+      if cell.nested <> nil then
+      begin
+        PrefixStore := StructurePrefix;
+        StructurePrefix := StructurePrefix + '.' + cell.name;
+        CompilePointerStruct(cell.nested);
+        StructurePrefix := PrefixStore;
+      end;
+    end;
+    cell := cell.next;
+  end;
+end;
+
+procedure TProteusCompiler._CompileSTRUCT;
+var
+  size: integer;
+begin
+  if isStructure then
+  begin
+    CompileNumber(integer(Token.memory));
+    CompileNumber($80000000);
+  end
+  else
+  begin
+    ParseToken;
+    StructureRoot := Token.memory;
+    StructureName := Parser.Token;
+    StructureOffset := DP;
+    StructurePrefix := Parser.Token;
+    size := GetStructureSize(StructureRoot);
+    if StructureRoot <> nil then
+    begin
+      Evaluate(format('CREATE %s[] %d ALLOT', [StructureName, size]));
+      Evaluate(format(': sizeof(%s) %d ; INLINE', [StructureName, size]));
+      Evaluate(format(': %s.size() %d ; INLINE', [StructureName, size]));
+      Evaluate(format(': %s.Size() %d ; INLINE', [StructureName, size]));
+      Evaluate(format(': %s %d ; INLINE', [StructureName, StructureOffset]));
       if StructureRoot.next <> nil then
         CompileStruct(StructureRoot.next);
     end;
@@ -1787,13 +1849,72 @@ begin
   begin
     if not cell.root then
     begin
-      Evaluate(format(': %s.%s p%s @ %d + ; INLINE', [StructurePrefix, cell.name, StructureName, StructureOffset]));
+      Evaluate(format(': %s.%s %d ; INLINE', [StructurePrefix, cell.name, StructureOffset]));
       inc(StructureOffset, cell.size);
       if cell.nested <> nil then
       begin
         PrefixStore := StructurePrefix;
         StructurePrefix := StructurePrefix + '.' + cell.name;
         CompileStruct(cell.nested);
+        StructurePrefix := PrefixStore;
+      end;
+    end;
+    cell := cell.next;
+  end;
+end;
+
+procedure TProteusCompiler._CompileReferenceSTRUCT;
+var
+  size: integer;
+begin
+  if isStructure then
+  begin
+    CompileNumber(integer(Token.memory));
+    CompileNumber($80000000);
+  end
+  else
+  begin
+    ParseToken;
+    StructureRoot := Token.memory;
+    StructureName := Parser.Token;
+    StructureOffset := 0;
+    StructurePrefix := Parser.Token;
+    size := GetStructureSize(StructureRoot);
+    if StructureRoot <> nil then
+    begin
+      Evaluate(format('VARIABLE p%s', [StructureName]));
+      Evaluate(format(': sizeof(%s) %d ; INLINE', [StructureName, size]));
+      Evaluate(format(': %s.size() %d ; INLINE', [StructureName, size]));
+      Evaluate(format(': %s.Size() %d ; INLINE', [StructureName, size]));
+      Evaluate(format(': %s p%s @ ; INLINE', [StructureName, StructureName]));
+      if StructureRoot.next <> nil then
+        CompileReferenceStruct(StructureRoot.next);
+    end;
+  end;
+end;
+
+procedure TProteusCompiler.CompileReferenceStruct(_cell: PStructCell);
+var
+  PrefixStore: AnsiString;
+  cell: PStructCell;
+  deref: string;
+begin
+  cell := _cell;
+  while cell <> nil do
+  begin
+    if not cell.root then
+    begin      
+      if cell.nested <> nil then
+        deref := ''
+      else
+        deref := '@';
+        Evaluate(format(': %s.%s p%s @ %d + %s ; INLINE', [StructurePrefix, cell.name, StructureName, StructureOffset, deref]));
+      inc(StructureOffset, cell.size);
+      if cell.nested <> nil then
+      begin
+        PrefixStore := StructurePrefix;
+        StructurePrefix := StructurePrefix + '.' + cell.name;
+        CompileReferenceStruct(cell.nested);
         StructurePrefix := PrefixStore;
       end;
     end;
@@ -1870,8 +1991,15 @@ end;
 
 procedure TProteusCompiler.Evaluate(const tib: string);
 begin
-//  writeln(LogFile, tib);
-//  Flush(LogFile);
+  try
+    if (TTextRec(LogFile).Mode = 55218) then // file is open
+    begin
+      writeln(LogFile, tib);
+      Flush(LogFile);
+    end;
+  except on E: Exception do
+  end;
+  
   inc(LineCount);
   Parser.tib := tib;
   while (FError = errOk) and Parser.NextWord do
@@ -2039,6 +2167,9 @@ var
 begin
   inherited;
 
+  AssignFile(LogFile, 'ProteusCompiler.log');
+  Rewrite(LogFile);
+
   FilesStack.Clear();
   FilesStack.Push(FilePath);
 
@@ -2076,6 +2207,8 @@ procedure TProteusCompiler.EndCompile;
 begin
   WritePredefinedVariables;
   Compiled := FError = 0;
+
+  CloseFile(LogFile);
 end;
 
 function TProteusCompiler.LastError: integer;
@@ -2144,8 +2277,7 @@ end;
 
 
 initialization
-//  AssignFile(LogFile, 'ProteusCompiler.log');
-//  Rewrite(LogFile);
+
 finalization
-//  CloseFile(LogFile);
+
 end.

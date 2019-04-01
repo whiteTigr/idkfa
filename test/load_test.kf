@@ -1,6 +1,6 @@
 // for Proteus compiler
                  // «апись программы
-#COM 123           // по нужному COM-порту
+#COM 1           // по нужному COM-порту
 #BAUDRATE 115200 // с нужной скоростью
 #PACKSIZE= 1     // пакетами по PACKSIZE байт
 #WAITCOEF= 2     // с задержкой, вычисл€емой по формуле
@@ -11,13 +11,37 @@
 #MaxCode= 65536
 #MaxData= 65536
 
-CREATE arr 1 , 2 , 3 , 4 , 5 ,
-MAIN:
+STRUCT TA
+  1 -- a
+  1 -- b
+END-STRUCT
 
-arr
-5 0 DO
-  DUP @
-  1 +
-LOOP
-DROP
+STRUCT TB
+  1 -- a
+  1 -- b
+  TA -- c
+  TA -- d
+END-STRUCT
+
+
+TB* test
+
+TB test2
+
+TB@ test3
+TA@ test4
+
+TB data
+TB@ data_ref
+TA@ sub_ref
+
+MAIN:
+data[] pdata_ref !
+data.c psub_ref !
+
+123 data.c.a !
+sub_ref.a
+
+BEGIN
+AGAIN
 
