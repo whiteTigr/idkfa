@@ -1695,6 +1695,11 @@ begin
   end;
 end;
 
+const
+  structPointer: integer = 0;
+  structRegular: integer = 1;
+  structDereference: integer = 2;    
+
 procedure TProteusCompiler._STRUCT;
 var
   rootElement: PStructCell;
@@ -1707,9 +1712,9 @@ begin
   rootElement.root := true;
   rootElement.nested := nil;
   rootElement.next := nil;
-  AddImmToken(Parser.token + '*', _CompilePointerSTRUCT, 0, rootElement);
-  AddImmToken(Parser.token, _CompileSTRUCT, 0, rootElement);
-  AddImmToken(Parser.token + '@', _CompileReferenceSTRUCT, 0, rootElement);
+  AddImmToken(Parser.token + '*', _CompilePointerSTRUCT, structPointer, rootElement);
+  AddImmToken(Parser.token, _CompileSTRUCT, structRegular, rootElement);
+  AddImmToken(Parser.token + '@', _CompileReferenceSTRUCT, structDereference, rootElement);
 end;
 
 procedure TProteusCompiler._StructElement;
@@ -1822,7 +1827,7 @@ begin
   begin
     ParseToken;
     StructureRoot := Token.memory;
-    StructureName := Parser.Token;
+    StructureName := Parser.Token;    
     StructureOffset := DP;
     StructurePrefix := Parser.Token;
     size := GetStructureSize(StructureRoot);
@@ -1904,11 +1909,8 @@ begin
   begin
     if not cell.root then
     begin      
-      if cell.nested <> nil then
-        deref := ''
-      else
-        deref := '@';
-        Evaluate(format(': %s.%s p%s @ %d + %s ; INLINE', [StructurePrefix, cell.name, StructureName, StructureOffset, deref]));
+      Evaluate(format(': &%s.%s p%s @ %d + ; INLINE', [StructurePrefix, cell.name, StructureName, StructureOffset]));    
+      Evaluate(format(': %s.%s p%s @ %d + @ ; INLINE', [StructurePrefix, cell.name, StructureName, StructureOffset]));
       inc(StructureOffset, cell.size);
       if cell.nested <> nil then
       begin
