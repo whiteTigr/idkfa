@@ -1887,11 +1887,11 @@ begin
     size := GetStructureSize(StructureRoot);
     if StructureRoot <> nil then
     begin
-      Evaluate(format('VARIABLE p%s', [StructureName]));
+      Evaluate(format('VARIABLE %s', [StructureName]));
       Evaluate(format(': sizeof(%s) %d ; INLINE', [StructureName, size]));
       Evaluate(format(': %s.size() %d ; INLINE', [StructureName, size]));
       Evaluate(format(': %s.Size() %d ; INLINE', [StructureName, size]));
-      Evaluate(format(': %s p%s @ ; INLINE', [StructureName, StructureName]));
+      Evaluate(format(': %s %s @ ; INLINE', [StructureName, StructureName]));
       if StructureRoot.next <> nil then
         CompileReferenceStruct(StructureRoot.next);
     end;
@@ -1909,8 +1909,8 @@ begin
   begin
     if not cell.root then
     begin      
-      Evaluate(format(': &%s.%s p%s @ %d + ; INLINE', [StructurePrefix, cell.name, StructureName, StructureOffset]));    
-      Evaluate(format(': %s.%s p%s @ %d + @ ; INLINE', [StructurePrefix, cell.name, StructureName, StructureOffset]));
+      Evaluate(format(': &%s.%s %s @ %d + ; INLINE', [StructurePrefix, cell.name, StructureName, StructureOffset]));    
+      Evaluate(format(': %s.%s %s @ %d + @ ; INLINE', [StructurePrefix, cell.name, StructureName, StructureOffset]));
       inc(StructureOffset, cell.size);
       if cell.nested <> nil then
       begin
