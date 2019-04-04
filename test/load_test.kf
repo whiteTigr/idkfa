@@ -35,9 +35,11 @@ TB data
 TB@ data_ref
 TA@ sub_ref
 
+TB.NoAllot test5
+
 MAIN:
-data[] pdata_ref !
-data.c psub_ref !
+data data_ref !
+data.c sub_ref !
 
 123 data.c.a !
 sub_ref.a

@@ -1699,6 +1699,7 @@ const
   structPointer: integer = 0;
   structRegular: integer = 1;
   structDereference: integer = 2;    
+  structRegularWithoutAllot: integer = 3;
 
 procedure TProteusCompiler._STRUCT;
 var
@@ -1715,6 +1716,7 @@ begin
   AddImmToken(Parser.token + '*', _CompilePointerSTRUCT, structPointer, rootElement);
   AddImmToken(Parser.token, _CompileSTRUCT, structRegular, rootElement);
   AddImmToken(Parser.token + '@', _CompileReferenceSTRUCT, structDereference, rootElement);
+  AddImmToken(Parser.token + '.NoAllot', _CompileSTRUCT, structRegularWithoutAllot, rootElement);  
 end;
 
 procedure TProteusCompiler._StructElement;
@@ -1779,11 +1781,10 @@ begin
     size := GetStructureSize(StructureRoot);
     if StructureRoot <> nil then
     begin
-      Evaluate(format('VARIABLE p%s', [StructureName]));
+      Evaluate(format('VARIABLE %s', [StructureName]));
       Evaluate(format(': sizeof(%s) %d ; INLINE', [StructureName, size]));
       Evaluate(format(': %s.size() %d ; INLINE', [StructureName, size]));
       Evaluate(format(': %s.Size() %d ; INLINE', [StructureName, size]));
-      Evaluate(format(': %s p%s @ ; INLINE', [StructureName, StructureName]));
       if StructureRoot.next <> nil then
         CompilePointerStruct(StructureRoot.next);
     end;
@@ -1800,7 +1801,7 @@ begin
   begin
     if not cell.root then
     begin
-      Evaluate(format(': %s.%s p%s @ %d + ; INLINE', [StructurePrefix, cell.name, StructureName, StructureOffset]));
+      Evaluate(format(': %s.%s %s @ %d + ; INLINE', [StructurePrefix, cell.name, StructureName, StructureOffset]));
       inc(StructureOffset, cell.size);
       if cell.nested <> nil then
       begin
@@ -1833,11 +1834,14 @@ begin
     size := GetStructureSize(StructureRoot);
     if StructureRoot <> nil then
     begin
-      Evaluate(format('CREATE %s[] %d ALLOT', [StructureName, size]));
+      Evaluate(format('CREATE %s', [StructureName]));
+      if (Token.tag <> structRegularWithoutAllot) then
+      begin
+        Evaluate(format('%d ALLOT', [size]));      
+      end;
       Evaluate(format(': sizeof(%s) %d ; INLINE', [StructureName, size]));
       Evaluate(format(': %s.size() %d ; INLINE', [StructureName, size]));
       Evaluate(format(': %s.Size() %d ; INLINE', [StructureName, size]));
-      Evaluate(format(': %s %d ; INLINE', [StructureName, StructureOffset]));
       if StructureRoot.next <> nil then
         CompileStruct(StructureRoot.next);
     end;
@@ -1891,7 +1895,6 @@ begin
       Evaluate(format(': sizeof(%s) %d ; INLINE', [StructureName, size]));
       Evaluate(format(': %s.size() %d ; INLINE', [StructureName, size]));
       Evaluate(format(': %s.Size() %d ; INLINE', [StructureName, size]));
-      Evaluate(format(': %s %s @ ; INLINE', [StructureName, StructureName]));
       if StructureRoot.next <> nil then
         CompileReferenceStruct(StructureRoot.next);
     end;
