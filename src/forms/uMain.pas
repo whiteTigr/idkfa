@@ -501,9 +501,9 @@ begin
 
   if compiler.LastError <> 0 then
   begin
-    Console.Lines.Add('Error ' + IntToStr(compiler.LastError) +
-      ' (' + compiler.LastErrorMessage + ')' +
-      ' in the line ' + IntToStr(LineNum) + ' ==> ' + compiler.LastToken);
+    Console.Lines.Add('[Error ' + IntToStr(compiler.LastError) + ']'
+      + ' in the line ' + IntToStr(LineNum) + ' ==> ' + compiler.LastToken +#13#10
+      + '  ' + compiler.LastErrorMessage);
     AddSynlightWord(compiler.LastToken, tokErrorDict);
     if LineNum > 0 then
       mmCode[PageIndex].Range.PosY := LineNum - 1;

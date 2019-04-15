@@ -1634,7 +1634,8 @@ begin
 
     if (LastError <> 0) then
     begin
-      ErrorComment := ErrorComment + format('at line %d in file %s ', [lineNumber, fileName]);
+      dec(lineNumber);
+      ErrorComment := ErrorComment + #13#10 + format('  at line %d in file "%s"', [lineNumber, fileName]);
     end;
   finally
     CloseFile(inputFile);
@@ -1995,6 +1996,9 @@ begin
 end;
 
 procedure TProteusCompiler.Evaluate(const tib: string);
+var
+  save_parser_tib: string;
+  save_parser_pos: integer;
 begin
   try
     if (TTextRec(LogFile).Mode = 55218) then // file is open
@@ -2004,7 +2008,10 @@ begin
     end;
   except on E: Exception do
   end;
-  
+
+  save_parser_tib := Parser.tib;
+  save_parser_pos := Parser.tibPos;
+
   inc(LineCount);
   Parser.tib := tib;
   while (FError = errOk) and Parser.NextWord do
@@ -2027,6 +2034,9 @@ begin
       end;
     end;
   end;
+
+  Parser.tib := save_parser_tib;
+  Parser.tibPos := save_parser_pos;
 end;
 
 function TProteusCompiler.Code(pos: integer): integer;

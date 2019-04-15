@@ -1,0 +1,24 @@
+STRUCT sub_type
+  1 -- a
+  1 -- b
+END-STRUCT
+
+STRUCT test_type
+  1 -- a
+  1 -- b
+  sub_type -- c
+END-STRUCT
+
+test_type@ test
+CREATE test[]
+1 , 2 , // a b
+3 , 4 , // c.a c.b
+{ test[] test ! }
+
+sub_type@ sub { &test.c sub ! }
+
+MAIN:
+
+BEGIN
+
+AGAIN
