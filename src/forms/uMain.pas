@@ -77,7 +77,6 @@ type
     Tabs: TTabbedNotebook;
     ToolButton1: TToolButton;
     CloseCurrentTab: TAction;
-    SpeedButton1: TSpeedButton;
     changeCompilerToKf7: TMenuItem;
     procedure CompileExecute(Sender: TObject);
     procedure GotoDownloadExecute(Sender: TObject);
@@ -94,8 +93,7 @@ type
     procedure SaveAsExecute(Sender: TObject);
     procedure CompileAndDownloadExecute(Sender: TObject);
 
-    procedure mmCodeParseWord(Sender: TObject; Word: String; Pos,
-      Line: Integer; var Token: TToken);
+    procedure mmCodeParseWord(Sender: TObject; Word: String; Pos, Line: Integer; var Token: TToken);
     procedure mmCodeKeyPress(Sender: TObject; var Key: Char);
     procedure mmCodeWordInfo(Sender: TMPCustomSyntaxMemo; const X, Y, WordIndex, Row: Integer; Showing: Boolean);
 
@@ -109,12 +107,11 @@ type
     procedure changeCompilerToQuarkClick(Sender: TObject);
     procedure changeCompilerToKf7Click(Sender: TObject);
 
-    procedure ChangeCompilerTo(newCompiler: TCompilerType; NeedCreateNewFile: boolean = false);
+    procedure ChangeCompilerTo(newCompiler: TCompilerType; NeedCreateNewFile: Boolean = false);
 
     procedure ToLog(Sender: TObject; LogStr: string);
     procedure CloseTabClick(Sender: TObject);
-    procedure TabsChange(Sender: TObject; NewTab: Integer;
-      var AllowChange: Boolean);
+    procedure TabsChange(Sender: TObject; NewTab: Integer; var AllowChange: Boolean);
     procedure CloseCurrentTabExecute(Sender: TObject);
     procedure ExportRawExecute(Sender: TObject);
     procedure CloseBtnMouseEnter(Sender: TObject);
@@ -133,48 +130,34 @@ type
 
 type
   TStyleCell = record
-    id: integer; // -1 - not exist
+    id: Integer; // -1 - not exist
     TokenStyle: TTokenStyle;
   end;
 
 const
-  FilterExt: array[0..4] of string = ('.kf', '.coe', '.cmd', '.lib', '');
+  FilterExt: array [0 .. 4] of string = ('.kf', '.coe', '.cmd', '.lib', '');
 
-  StyleConsts: array[0..21] of record
-    id: integer;
-    str: string;
-  end =
-  ((id: tokString;       str: 'sString'),
-   (id: tokStringEnd;    str: 'sStringEnd'),
-   (id: tokChar;         str: 'sChar'),
-   (id: tokCharEnd;      str: 'sCharEnd'),
-   (id: tokHexValue;     str: 'sHexValue'),
-   (id: tokInteger;      str: 'sInteger'),
-   (id: tokFloat;        str: 'sFloat'),
-   (id: tokILCompDir;    str: 'sILCompDir'),
-   (id: tokMLCompDirBeg; str: 'sMLCompDirBeg'),
-   (id: tokILComment;    str: 'sILComment'),
-   (id: tokMLCommentBeg; str: 'sMLCommentBeg'),
-   (id: tokMLCommentEnd; str: 'sMLCommentEnd'),
-   (id: tokELCommentBeg; str: 'sELCommentBeg'),
-   (id: tokELCommentEnd; str: 'sELCommentEnd'),
-   (id: tokParenBeg;     str: 'sParenBeg'),
-   (id: tokParenEnd;     str: 'sParenEnd'),
-   (id: tokBrackedBeg;   str: 'sBrackedBeg'),
-   (id: tokBracketEnd;   str: 'sBracketEnd'),
-   (id: tokImmediate;    str: 'sImmediate'),
-   (id: tokAlfaBet;      str: 'sAlfaBet'),
-   (id: tokVar;          str: 'sVar'),
-   (id: tokErrorDict;    str: 'sErrorDict')
-  );
+StyleConsts :
+array [0 .. 21] of record id: Integer;
+str :
+string;
+end
+= ((id: tokString; str: 'sString'), (id: tokStringEnd; str: 'sStringEnd'), (id: tokChar; str: 'sChar'),
+  (id: tokCharEnd; str: 'sCharEnd'), (id: tokHexValue; str: 'sHexValue'), (id: tokInteger; str: 'sInteger'),
+  (id: tokFloat; str: 'sFloat'), (id: tokILCompDir; str: 'sILCompDir'), (id: tokMLCompDirBeg; str: 'sMLCompDirBeg'),
+  (id: tokILComment; str: 'sILComment'), (id: tokMLCommentBeg; str: 'sMLCommentBeg'), (id: tokMLCommentEnd;
+    str: 'sMLCommentEnd'), (id: tokELCommentBeg; str: 'sELCommentBeg'), (id: tokELCommentEnd; str: 'sELCommentEnd'),
+  (id: tokParenBeg; str: 'sParenBeg'), (id: tokParenEnd; str: 'sParenEnd'), (id: tokBrackedBeg; str: 'sBrackedBeg'),
+  (id: tokBracketEnd; str: 'sBracketEnd'), (id: tokImmediate; str: 'sImmediate'), (id: tokAlfaBet; str: 'sAlfaBet'),
+  (id: tokVar; str: 'sVar'), (id: tokErrorDict; str: 'sErrorDict'));
 
 var
   fMain: TfMain;
-  FileName : array of string;
-  FileChanged: array of boolean;
+  FileName: array of string;
+  FileChanged: array of Boolean;
   mmCode: array of TMPSyntaxMemo;
   CloseBtns: array of TSpeedButton;
-  Compiled : boolean;
+  Compiled: Boolean;
 
   TimerInit: TTimer;
   fLog: TextFile;
@@ -182,17 +165,15 @@ var
 implementation
 
 uses uDownload, AboutWindow, StrUtils;
-
 {$R *.dfm}
-
 procedure RunOptimize; forward;
 function GetVersion: string; forward;
 function GetBuild: string; forward;
 procedure OpenKfFile(_fileName: string); forward;
 
-procedure RecalcCloseButtonsSize(ActiveTab: integer);
+procedure RecalcCloseButtonsSize(ActiveTab: Integer);
 var
-  i: integer;
+  i: Integer;
   TabRect: TRect;
 begin
   for i := 0 to Length(mmCode) - 1 do
@@ -208,7 +189,7 @@ begin
     end;
 end;
 
-procedure SetTabName(Index: integer);
+procedure SetTabName(Index: Integer);
 var
   s: string;
 begin
@@ -222,18 +203,19 @@ begin
 
   s := s + '    '; // some spaces for close button
 
-  if fMain.Tabs.Pages.Strings[Index] <> s then;
-    fMain.Tabs.Pages.Strings[Index] := s;
+  if fMain.Tabs.Pages.Strings[Index] <> s then
+    ;
+  fMain.Tabs.Pages.Strings[Index] := s;
 end;
 
-procedure SetFileName(Index: integer; NewFileName: string);
+procedure SetFileName(Index: Integer; NewFileName: string);
 begin
   FileName[Index] := NewFileName;
   SetTabName(Index);
   RecalcCloseButtonsSize(Index);
 end;
 
-procedure SetFileChanged(Index: integer; Value: boolean);
+procedure SetFileChanged(Index: Integer; Value: Boolean);
 begin
   FileChanged[Index] := Value;
   SetTabName(Index);
@@ -264,7 +246,7 @@ begin
   Result.tsStyle := tsStyle;
 end;
 
-function StyleCell(id: integer; TokenStyle: TTokenStyle): TStyleCell;
+function StyleCell(id: Integer; TokenStyle: TTokenStyle): TStyleCell;
 begin
   Result.id := id;
   Result.TokenStyle := TokenStyle;
@@ -287,21 +269,20 @@ begin
     Application.Title := s;
 end;
 
-procedure TfMain.mmCodeParseWord(Sender: TObject; Word: String; Pos,
-    Line: Integer; var Token: TToken);
+procedure TfMain.mmCodeParseWord(Sender: TObject; Word: String; Pos, Line: Integer; var Token: TToken);
 var
-  n: integer;
+  n: Integer;
 begin
   if (SynLightWords <> nil) and (SynLightWords.Find(Word, n)) then
     Token := TToken(SynLightWords.Objects[n])
-  else if (Copy(word, 1, 2) = '0b') or (Copy(word, 1, 2) = '0d')
-       or (Copy(word, 1, 2) = '0o') or (Copy(word, 1, 2) = '0x') then
+  else if (Copy(Word, 1, 2) = '0b') or (Copy(Word, 1, 2) = '0d') or (Copy(Word, 1, 2) = '0o') or
+    (Copy(Word, 1, 2) = '0x') then
     Token := tokInteger
   else
     Token := tokErroneous;
 end;
 
-function GetTextWidth(s: string): integer;
+function GetTextWidth(s: string): Integer;
 var
   StoredFont: TFont;
 begin
@@ -321,9 +302,9 @@ begin
     GutterWidth := GetTextWidth(IntToStr(Lines.Count)) + 10;
 end;
 
-procedure ParseAll(Index: integer);
+procedure ParseAll(Index: Integer);
 var
-  i: integer;
+  i: Integer;
   s: string;
 begin
   if not Assigned(mmCode[Index]) then
@@ -331,7 +312,7 @@ begin
 
   with mmCode[Index] do
   begin
-    for i := 0 to Lines.Count-1 do
+    for i := 0 to Lines.Count - 1 do
       Lines.Parser[i].NeedReparse := true;
     // todo: какая то заглушка :(
     s := Lines.Strings[0];
@@ -342,7 +323,7 @@ begin
   end;
 end;
 
-//-------
+// -------
 procedure TfMain.mmCodeKeyPress(Sender: TObject; var Key: Char);
 begin
   if not FileChanged[Tabs.PageIndex] then
@@ -360,10 +341,10 @@ begin
     end;
 end;
 
-function FileSaveAndReturnCanClose(Index: integer): boolean;
+function FileSaveAndReturnCanClose(Index: Integer): Boolean;
 var
-  res: integer;
-  canClose: boolean;
+  res: Integer;
+  CanClose: Boolean;
   FileStr: string;
 begin
   if FileChanged[Index] then
@@ -373,9 +354,7 @@ begin
     else
       FileStr := '';
 
-    res := MessageBox(0,
-      pchar('Файл ' + FileStr + ' изменен, но не сохранен. Сохранить?'),
-      pchar(fMain.Caption),
+    res := MessageBox(0, pchar('Файл ' + FileStr + ' изменен, но не сохранен. Сохранить?'), pchar(fMain.Caption),
       MB_YESNOCANCEL or MB_ICONQUESTION);
     if res = mrYes then
     begin
@@ -385,18 +364,18 @@ begin
         mmCode[Index].Lines.SaveToFile(FileName[Index]);
     end;
 
-    canClose := not (res = mrCancel);
+    CanClose := not(res = mrCancel);
 
-    if canClose then
+    if CanClose then
       FileChanged[Index] := false;
 
-    Result := canClose;
+    Result := CanClose;
   end
   else
     Result := true;
 end;
 
-function CompilerParseInt: integer;
+function CompilerParseInt: Integer;
 begin
   Result := 0;
   if currentCompiler = compilerForth then
@@ -413,23 +392,23 @@ end;
 
 procedure TfMain.ForthCom;
 var
-  comIndex: integer;
+  comIndex: Integer;
 begin
   comIndex := CompilerParseInt;
 
-//  if (comIndex < 1) or (comIndex > 19) then
-//  begin
-//    ShowMessage('Неверный индекс com-порта (должен быть от 1 до 19)');
-//    Exit;
-//  end;
+  // if (comIndex < 1) or (comIndex > 19) then
+  // begin
+  // ShowMessage('Неверный индекс com-порта (должен быть от 1 до 19)');
+  // Exit;
+  // end;
 
-//  FormDownload.cbComName.ItemIndex := comIndex - 1;
+  // FormDownload.cbComName.ItemIndex := comIndex - 1;
   FormDownload.cbComName.Text := 'COM' + IntToStr(comIndex);
 end;
 
 procedure TfMain.ForthBaudrate;
 var
-  baudrate: integer;
+  baudrate: Integer;
 begin
   baudrate := CompilerParseInt;
 
@@ -438,7 +417,7 @@ end;
 
 procedure TfMain.ForthPackSize;
 var
-  int: integer;
+  int: Integer;
 begin
   int := CompilerParseInt;
 
@@ -447,7 +426,7 @@ end;
 
 procedure TfMain.ForthWaitCoef;
 var
-  int: integer;
+  int: Integer;
 begin
   int := CompilerParseInt;
 
@@ -459,22 +438,23 @@ var
   forthCompiler: TForthCompiler absolute compiler;
 begin
   forthCompiler.ParseToken;
-  if forthCompiler.LastError <> 0 then Exit;
+  if forthCompiler.LastError <> 0 then
+    Exit;
 
-  if (Length(forthCompiler.LastToken) > 1)
-    or ((forthCompiler.LastToken[1] < 'A') or (forthCompiler.LastToken[1] > 'Z')) then
+  if (Length(forthCompiler.LastToken) > 1) or ((forthCompiler.LastToken[1] < 'A') or (forthCompiler.LastToken[1] > 'Z')
+    ) then
   begin
     ShowMessage('#Core. Неверный индекс ядра (должен быть буквой от A до Z)');
     Exit;
   end;
-  FormDownload.cbCore.ItemIndex := ord(forthCompiler.LastToken[1]) - ord('A') ;
+  FormDownload.cbCore.ItemIndex := ord(forthCompiler.LastToken[1]) - ord('A');
   AddSynlightWord(forthCompiler.LastToken, tokDict);
 end;
 
 procedure TfMain.CompileExecute(Sender: TObject);
 var
-  PageIndex: integer;
-  LineNum : integer;
+  PageIndex: Integer;
+  LineNum: Integer;
 begin
   Console.Lines.Clear;
   Console.Lines.Add('Starting cross compilation');
@@ -501,9 +481,8 @@ begin
 
   if compiler.LastError <> 0 then
   begin
-    Console.Lines.Add('[Error ' + IntToStr(compiler.LastError) + ']'
-      + ' in the line ' + IntToStr(LineNum) + ' ==> ' + compiler.LastToken +#13#10
-      + '  ' + compiler.LastErrorMessage);
+    Console.Lines.Add('[Error ' + IntToStr(compiler.LastError) + ']' + ' in the line ' + IntToStr(LineNum)
+        + ' ==> ' + compiler.LastToken + #13#10 + '  ' + compiler.LastErrorMessage);
     AddSynlightWord(compiler.LastToken, tokErrorDict);
     if LineNum > 0 then
       mmCode[PageIndex].Range.PosY := LineNum - 1;
@@ -515,21 +494,23 @@ begin
   if compiler.LastError = 0 then
   begin
     Console.Lines.Add('Complete.');
-    Console.Lines.Add(format('Code: %d / %d (%.0f%%)', [compiler.CodeCount, compiler.MaxCode, compiler.CodeCount * 100 / compiler.MaxCode]));
-    Console.Lines.Add(format('Data: %d / %d (%.0f%%)', [compiler.DataCount, compiler.MaxData, compiler.DataCount * 100 / compiler.MaxData]));
+    Console.Lines.Add(format('Code: %d / %d (%.0f%%)', [compiler.CodeCount, compiler.MaxCode,
+        compiler.CodeCount * 100 / compiler.MaxCode]));
+    Console.Lines.Add(format('Data: %d / %d (%.0f%%)', [compiler.DataCount, compiler.MaxData,
+        compiler.DataCount * 100 / compiler.MaxData]));
   end
   else
     Console.Lines.Add('There are errors!');
 
-  compiled := (compiler.LastError = 0);
+  Compiled := (compiler.LastError = 0);
 
-  if compiled and Optimization1.Checked then
+  if Compiled and Optimization1.Checked then
     RunOptimize;
 
-  bDownload.Enabled := compiled;
+  bDownload.Enabled := Compiled;
   mmCode[PageIndex].SetFocus;
 
-  if compiled then
+  if Compiled then
     uSimulator.Prepare;
 end;
 
@@ -540,58 +521,64 @@ end;
 
 procedure TfMain.ExportCoeExecute(Sender: TObject);
 var
-  i : integer;
-  f : textfile;
+  i: Integer;
+  f: TextFile;
   fn: string;
 begin
   SaveDialog1.FilterIndex := 2;
   if SaveDialog1.Execute then
   begin
     fn := SaveDialog1.FileName;
-    if RightStr(fn, 3) = '.kf' then fn := LeftStr(fn, length(fn)-3);
-    if RightStr(fn, 4) <> '.coe' then fn := fn + '.coe';
+    if RightStr(fn, 3) = '.kf' then
+      fn := LeftStr(fn, Length(fn) - 3);
+    if RightStr(fn, 4) <> '.coe' then
+      fn := fn + '.coe';
     if FileExists(fn) then
-      if MessageBox(0, pchar('Файл "' + fn + '" уже существует. Заменить?'), pchar(fMain.Caption), MB_YESNO or MB_ICONQUESTION) = mrNo then
+      if MessageBox(0, pchar('Файл "' + fn + '" уже существует. Заменить?'), pchar(fMain.Caption),
+        MB_YESNO or MB_ICONQUESTION) = mrNo then
         Exit;
     AssignFile(f, fn);
     Rewrite(f);
     Writeln(f, 'MEMORY_INITIALIZATION_RADIX=10;');
     Writeln(f, 'MEMORY_INITIALIZATION_VECTOR=');
-    for i := 0 to compiler.CodeCount-1 do
+    for i := 0 to compiler.CodeCount - 1 do
     begin
       Write(f, IntToStr(compiler.Code(i)));
-      if i <> compiler.CodeCount-1 then
+      if i <> compiler.CodeCount - 1 then
         Writeln(f, ',')
       else
         Writeln(f, ';');
     end;
-     CloseFile(f);
+    CloseFile(f);
   end;
 end;
 
 procedure TfMain.ExportDataCoe1Click(Sender: TObject);
 var
-  i : integer;
-  f : textfile;
+  i: Integer;
+  f: TextFile;
   fn: string;
 begin
   SaveDialog1.FilterIndex := 2;
   if SaveDialog1.Execute then
   begin
     fn := SaveDialog1.FileName;
-    if RightStr(fn, 3) = '.kf' then fn := LeftStr(fn, length(fn)-3);
-    if RightStr(fn, 4) <> '.coe' then fn := fn + '.coe';
+    if RightStr(fn, 3) = '.kf' then
+      fn := LeftStr(fn, Length(fn) - 3);
+    if RightStr(fn, 4) <> '.coe' then
+      fn := fn + '.coe';
     if FileExists(fn) then
-      if MessageBox(0, pchar('Файл "' + fn + '" уже существует. Заменить?'), pchar(fMain.Caption), MB_YESNO or MB_ICONQUESTION) = mrNo then
+      if MessageBox(0, pchar('Файл "' + fn + '" уже существует. Заменить?'), pchar(fMain.Caption),
+        MB_YESNO or MB_ICONQUESTION) = mrNo then
         Exit;
     AssignFile(f, fn);
     Rewrite(f);
     Writeln(f, 'MEMORY_INITIALIZATION_RADIX=10;');
     Writeln(f, 'MEMORY_INITIALIZATION_VECTOR=');
-    for i := 0 to compiler.DataCount-1 do
+    for i := 0 to compiler.DataCount - 1 do
     begin
       Write(f, IntToStr(compiler.Data(i)));
-      if i <> compiler.DataCount-1 then
+      if i <> compiler.DataCount - 1 then
         Writeln(f, ',')
       else
         Writeln(f, ';');
@@ -602,23 +589,26 @@ end;
 
 procedure TfMain.ExportRawExecute(Sender: TObject);
 var
-  i : integer;
-  f : textfile;
+  i: Integer;
+  f: TextFile;
   fn: string;
 begin
   SaveDialog1.FilterIndex := 2;
   if SaveDialog1.Execute then
   begin
     fn := SaveDialog1.FileName;
-    if RightStr(fn, 3) = '.kf' then fn := LeftStr(fn, length(fn)-3);
-    if RightStr(fn, 4) <> '.coe' then fn := fn + '.coe';
+    if RightStr(fn, 3) = '.kf' then
+      fn := LeftStr(fn, Length(fn) - 3);
+    if RightStr(fn, 4) <> '.coe' then
+      fn := fn + '.coe';
     if FileExists(fn) then
-      if MessageBox(0, pchar('Файл "' + fn + '" уже существует. Заменить?'), pchar(fMain.Caption), MB_YESNO or MB_ICONQUESTION) = mrNo then
+      if MessageBox(0, pchar('Файл "' + fn + '" уже существует. Заменить?'), pchar(fMain.Caption),
+        MB_YESNO or MB_ICONQUESTION) = mrNo then
         Exit;
     AssignFile(f, fn);
     Rewrite(f);
     Writeln(f, 'signal program : TProgramMem := (');
-    for i := 0 to compiler.CodeCount-1 do
+    for i := 0 to compiler.CodeCount - 1 do
     begin
       Writeln(f, '  ', i, ' => conv_std_logic_vector(', compiler.Code(i), ', CODEWIDTH),');
     end;
@@ -642,13 +632,13 @@ begin
 end;
 
 procedure TfMain.CloseBtnMouseEnter(Sender: TObject);
-begin
-  (Sender as TSpeedButton).Glyph.LoadFromResourceName(HInstance, 'CloseBtnFocusedBmp');
+begin (Sender as TSpeedButton)
+  .Glyph.LoadFromResourceName(HInstance, 'CloseBtnFocusedBmp');
 end;
 
 procedure TfMain.CloseBtnMouseLeave(Sender: TObject);
-begin
-  (Sender as TSpeedButton).Glyph.LoadFromResourceName(HInstance, 'CloseBtnBmp');
+begin (Sender as TSpeedButton)
+  .Glyph.LoadFromResourceName(HInstance, 'CloseBtnBmp');
 end;
 
 procedure TfMain.AboutExecute(Sender: TObject);
@@ -672,10 +662,10 @@ begin
     BackColor[tokVar] := clWhite;
     FontStyle[tokVar] := [];
 
-// todo: Снести без сожаления, или раскоментировать и вынести в настройки StyleEditor'а
-//    FontColor[tokDict] := RGB(100, 0, 0);
-//    BackColor[tokDict] := clWhite;
-//    FontStyle[tokDict] := [];
+    // todo: Снести без сожаления, или раскоментировать и вынести в настройки StyleEditor'а
+    // FontColor[tokDict] := RGB(100, 0, 0);
+    // BackColor[tokDict] := clWhite;
+    // FontStyle[tokDict] := [];
 
     FontColor[tokErrorDict] := clRed;
     BackColor[tokErrorDict] := clWhite;
@@ -688,7 +678,7 @@ end;
 
 procedure CreateNewTab;
 var
-  ix: integer;
+  ix: Integer;
 begin
   ix := Length(mmCode);
 
@@ -708,7 +698,7 @@ begin
     Parent := fMain.Tabs;
     Flat := true;
     Tag := ix;
-    Glyph.LoadFromResourceName(hInstance, 'CloseBtnBmp');
+    Glyph.LoadFromResourceName(HInstance, 'CloseBtnBmp');
     OnClick := fMain.CloseTabClick;
     OnMouseEnter := fMain.CloseBtnMouseEnter;
     OnMouseLeave := fMain.CloseBtnMouseLeave;
@@ -747,12 +737,13 @@ end;
 
 procedure TfMain.Font1Click(Sender: TObject);
 var
-  i: integer;
+  i: Integer;
 begin
   if Length(mmCode) > 0 then
   begin
     FontDialog1.Font := mmCode[0].Font;
-    if not FontDialog1.Execute then Exit;
+    if not FontDialog1.Execute then
+      Exit;
     for i := 0 to Length(mmCode) - 1 do
       mmCode[i].Font := FontDialog1.Font;
   end;
@@ -761,77 +752,77 @@ end;
 procedure TfMain.CompileAndDownloadExecute(Sender: TObject);
 begin
   CompileExecute(fMain);
-  if compiler.LastError <> 0 then Exit;
+  if compiler.LastError <> 0 then
+    Exit;
   FormDownload.ProcessDownloadExecute(fMain);
 end;
 
 procedure RunOptimize;
 begin
   fMain.Console.Lines.Add('Начало оптимизации...');
-  fMain.Console.Lines.Add('Размер кода до оптимизации: ' + inttostr(compiler.CodeCount));
+  fMain.Console.Lines.Add('Размер кода до оптимизации: ' + IntToStr(compiler.CodeCount));
   fMain.Console.Lines.Add('Оптимизация...');
   compiler.Optimize;
-  fMain.Console.Lines.Add('Размер кода после оптимизации: ' + inttostr(compiler.CodeCount));
+  fMain.Console.Lines.Add('Размер кода после оптимизации: ' + IntToStr(compiler.CodeCount));
 end;
 
 procedure TfMain.bLoadCommandSystemClick(Sender: TObject);
 var
-  fileName: string;
+  FileName: string;
 begin
   OpenDialog1.FilterIndex := 3;
   if OpenDialog1.Execute then
-    fileName := OpenDialog1.FileName
+    FileName := OpenDialog1.FileName
   else
-    fileName := '';
-  if compiler is TForthCompiler then
-    (compiler as TForthCompiler).LoadCommandSystem(fileName);
+    FileName := '';
+  if compiler is TForthCompiler then (compiler as TForthCompiler)
+    .LoadCommandSystem(FileName);
 end;
 
 function GetBuild: string;
 var
-  pos: integer;
+  Pos: Integer;
   s: string;
 begin
   s := GetVersion;
   Result := '';
   Pos := Length(s);
-  while (Pos >= 1) and (s[pos] <> '.') do
+  while (Pos >= 1) and (s[Pos] <> '.') do
   begin
-    Result := s[pos] + result;
-    dec(pos);
+    Result := s[Pos] + Result;
+    dec(Pos);
   end;
 end;
 
 function GetVersion: string;
 var
   dump: DWORD;
-  size: integer;
-  buffer: PChar;
-  VersionPointer, TransBuffer: PChar;
-  Temp: integer;
+  size: Integer;
+  buffer: pchar;
+  VersionPointer, TransBuffer: pchar;
+  Temp: Integer;
   CalcLangCharSet: string;
   NameApp: string;
 begin
   NameApp := paramstr(0);
 
-  size := GetFileVersionInfoSize(PChar(NameApp), dump);
-  buffer := StrAlloc(size+1);
+  size := GetFileVersionInfoSize(pchar(NameApp), dump);
+  buffer := StrAlloc(size + 1);
   try
-    GetFileVersionInfo(PChar(NameApp), 0, size, buffer);
+    GetFileVersionInfo(pchar(NameApp), 0, size, buffer);
 
-    VerQueryValue(buffer, '\VarFileInfo\Translation', pointer(TransBuffer),
-    dump);
+    VerQueryValue(buffer, '\VarFileInfo\Translation', pointer(TransBuffer), dump);
     if dump >= 4 then
     begin
-      temp:=0;
-      StrLCopy(@temp, TransBuffer, 2 div sizeof(char));
-      CalcLangCharSet:=IntToHex(temp, 4);
-      StrLCopy(@temp, TransBuffer + 2 div sizeof(char), 2 div sizeof(char));
-      CalcLangCharSet := CalcLangCharSet+IntToHex(temp, 4);
+      Temp := 0;
+      StrLCopy(@Temp, TransBuffer, 2 div sizeof(Char));
+      CalcLangCharSet := IntToHex(Temp, 4);
+      StrLCopy(@Temp, TransBuffer + 2 div sizeof(Char), 2 div sizeof(Char));
+      CalcLangCharSet := CalcLangCharSet + IntToHex(Temp, 4);
     end;
 
-    VerQueryValue(buffer, pchar('\StringFileInfo\'+CalcLangCharSet+
-    '\'+'FileVersion'), pointer(VersionPointer), dump);
+    VerQueryValue(buffer, pchar('\StringFileInfo\' + CalcLangCharSet + '\' + 'FileVersion'), pointer(VersionPointer),
+      dump);
     if (dump > 1) then
     begin
       Result := VersionPointer;
@@ -839,13 +830,13 @@ begin
     else
       Result := '0.0.0.0';
   finally
-    StrDispose(Buffer);
+    StrDispose(buffer);
   end;
 end;
 
 procedure TfMain.NewExecute(Sender: TObject);
 var
-  linesCount: integer;
+  linesCount: Integer;
 begin
   CreateNewTab;
 
@@ -858,7 +849,7 @@ begin
       Lines.Add('');
 
     linesCount := Lines.Count;
-    Navigate(length(Lines.Strings[linesCount-1]), linesCount-1);
+    Navigate(Length(Lines.Strings[linesCount - 1]), linesCount - 1);
   end;
 
   SetFileName(Tabs.PageIndex, '');
@@ -868,22 +859,19 @@ end;
 
 procedure OpenKfFile(_fileName: string);
 var
-  Index: integer;
-  res: integer;
+  Index: Integer;
+  res: Integer;
 begin
   Index := 0;
-  while (Index < Length(FileName)) and (FileName[Index] <> _FileName) do
-    inc(Index);
+  while (Index < Length(FileName)) and (FileName[Index] <> _fileName) do
+    Inc(Index);
 
   if (Index < Length(FileName)) then
   begin
     if FileChanged[Index] then
     begin
-      res := MessageBox(0,
-        pchar('Файл "' + _FileName + '" уже открыт.' +#13#10+
-              'Повторно открыть его (изменения будут потеряны)?'),
-        'Вопрос',
-        MB_ICONQUESTION or MB_YESNO);
+      res := MessageBox(0, pchar('Файл "' + _fileName + '" уже открыт.' + #13#10 +
+            'Повторно открыть его (изменения будут потеряны)?'), 'Вопрос', MB_ICONQUESTION or MB_YESNO);
       if res = mrYes then
       begin
         mmCode[Index].Lines.LoadFromFile(_fileName);
@@ -905,7 +893,7 @@ end;
 
 procedure TfMain.OpenExecute(Sender: TObject);
 var
-  kfprj_file: textfile;
+  kfprj_file: TextFile;
   s: string;
 begin
   OpenDialog1.FilterIndex := 5;
@@ -914,23 +902,23 @@ begin
     OpenKfFile(OpenDialog1.FileName);
     if extractfileext(OpenDialog1.FileName) = '.kfprj' then
     begin
-      assignfile(kfprj_file, OpenDialog1.FileName);
+      AssignFile(kfprj_file, OpenDialog1.FileName);
       reset(kfprj_file);
       while not eof(kfprj_file) do
       begin
         readln(kfprj_file, s);
-        OpenKfFile(extractfilepath(OpenDialog1.FileName)+'\'+s);
+        OpenKfFile(ExtractFilePath(OpenDialog1.FileName) + '\' + s);
       end;
-      closefile(kfprj_file);
+      CloseFile(kfprj_file);
     end;
   end;
 end;
 
-procedure CloseTab(Index: integer);
+procedure CloseTab(Index: Integer);
 var
-  CanClose: boolean;
-  TabsCount: integer;
-  i: integer;
+  CanClose: Boolean;
+  TabsCount: Integer;
+  i: Integer;
 begin
   TabsCount := Length(mmCode);
 
@@ -975,8 +963,8 @@ end;
 
 procedure CloseAllTabs;
 var
-  i: integer;
-  TabsCount: integer;
+  i: Integer;
+  TabsCount: Integer;
 begin
   TabsCount := Length(mmCode);
   for i := TabsCount - 1 downto 0 do
@@ -992,7 +980,7 @@ end;
 procedure TfMain.SaveAsExecute(Sender: TObject);
 var
   fn: string;
-//  ext: string;
+  // ext: string;
 begin
   // нет ни одной вкладки
   if Length(mmCode) = 0 then
@@ -1002,11 +990,12 @@ begin
   if SaveDialog1.Execute then
   begin
     fn := SaveDialog1.FileName;
-    if ExtractFileExt(fn) = '' then
+    if extractfileext(fn) = '' then
       fn := fn + FilterExt[SaveDialog1.FilterIndex - 1];
     SetFileChanged(Tabs.PageIndex, false);
     if FileExists(fn) then
-      if MessageBox(0, pchar('Файл "' + fn + '" уже существует. Заменить?'), pchar(fMain.Caption), MB_YESNO or MB_ICONQUESTION) = mrNo then
+      if MessageBox(0, pchar('Файл "' + fn + '" уже существует. Заменить?'), pchar(fMain.Caption),
+        MB_YESNO or MB_ICONQUESTION) = mrNo then
         Exit;
     SetFileName(Tabs.PageIndex, fn);
     mmCode[Tabs.PageIndex].Lines.SaveToFile(fn);
@@ -1033,8 +1022,7 @@ begin
   DeleteFile('~temp.kfs');
 end;
 
-procedure TfMain.TabsChange(Sender: TObject; NewTab: Integer;
-  var AllowChange: Boolean);
+procedure TfMain.TabsChange(Sender: TObject; NewTab: Integer; var AllowChange: Boolean);
 begin
   if mmCode[NewTab] <> nil then
   begin
@@ -1045,7 +1033,7 @@ end;
 
 procedure TfMain.ToLog(Sender: TObject; LogStr: string);
 begin
-  writeln(fLog, LogStr);
+  Writeln(fLog, LogStr);
   Flush(fLog);
 end;
 
@@ -1074,8 +1062,8 @@ end;
 
 procedure TfMain.ActFindExecute(Sender: TObject);
 var
-  FoundAt: integer;
-  StartPos: integer;
+  FoundAt: Integer;
+  StartPos: Integer;
 begin
   if (Length(mmCode) = 0) or (Tabs.PageIndex < 0) then
     Exit;
@@ -1097,8 +1085,7 @@ begin
   end;
 end;
 
-procedure TfMain.mmCodeWordInfo(Sender: TMPCustomSyntaxMemo; const X, Y,
-  WordIndex, Row: Integer; Showing: Boolean);
+procedure TfMain.mmCodeWordInfo(Sender: TMPCustomSyntaxMemo; const X, Y, WordIndex, Row: Integer; Showing: Boolean);
 var
   Word, WordComment: string;
 begin
@@ -1203,14 +1190,14 @@ begin
   end;
 end;
 
-procedure TfMain.ChangeCompilerTo(newCompiler: TCompilerType; NeedCreateNewFile: boolean = false);
+procedure TfMain.ChangeCompilerTo(newCompiler: TCompilerType; NeedCreateNewFile: Boolean = false);
 begin
   if newCompiler = currentCompiler then
     Exit;
 
-//  CloseAllTabs;
-//  if Length(mmCode) > 0 then
-//    Exit;
+  // CloseAllTabs;
+  // if Length(mmCode) > 0 then
+  // Exit;
 
   CloseCurrentCompiler;
 
@@ -1219,11 +1206,16 @@ begin
 
   currentCompiler := newCompiler;
   case currentCompiler of
-    compilerForth: ForthInit;
-    compilerBrainfuck: BrainfuckInit;
-    compilerProteus: ProteusInit;
-    compilerQuark: QuarkInit;
-    compilerKf7: Kf7Init;
+    compilerForth:
+      ForthInit;
+    compilerBrainfuck:
+      BrainfuckInit;
+    compilerProteus:
+      ProteusInit;
+    compilerQuark:
+      QuarkInit;
+    compilerKf7:
+      Kf7Init;
   end;
 
   if NeedCreateNewFile then
@@ -1254,7 +1246,6 @@ begin
   ChangeCompilerTo(compilerProteus);
 end;
 
-
 procedure DownloadComInit;
 var
   downloadCom: TDownloaderCom absolute downloader;
@@ -1274,7 +1265,7 @@ begin
   changeCompilerToProteusClick(Sender);
 
   if ParamCount > 0 then
-    OpenKfFile(ParamStr(1));
+    OpenKfFile(paramstr(1));
 
   SetFormName;
 
@@ -1288,9 +1279,12 @@ begin
 end;
 
 initialization
-  DownloadComInit;
-//  Assign(fLog, 'UnitSyntaxMemo.log');
-//  Rewrite(fLog);
+
+DownloadComInit;
+
+// Assign(fLog, 'UnitSyntaxMemo.log');
+// Rewrite(fLog);
 finalization
-//  CloseFile(fLog);
+
+// CloseFile(fLog);
 end.

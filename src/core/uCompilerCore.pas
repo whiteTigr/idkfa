@@ -36,7 +36,7 @@ type
     FToken: string;
   public
     property tib: string read FTib write SetTib;
-    property tibPos: integer read FTibPos;
+    property tibPos: integer read FTibPos write FTibPos;
     function IncTibPos: boolean;
     property separators: string read FSeparators write SetSeparators;
     property token: string read FToken;
