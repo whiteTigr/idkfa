@@ -20,12 +20,11 @@ object fMain: TfMain
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 0
-    Top = 392
+    Top = 449
     Width = 743
     Height = 3
     Cursor = crVSplit
     Align = alBottom
-    ExplicitTop = 449
   end
   object SpeedButton1: TSpeedButton
     Left = 392
@@ -35,7 +34,7 @@ object fMain: TfMain
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 395
+    Top = 555
     Width = 743
     Height = 19
     Panels = <
@@ -52,7 +51,6 @@ object fMain: TfMain
       item
         Width = 50
       end>
-    ExplicitTop = 555
   end
   object ToolBar1: TToolBar
     Left = 0
@@ -158,35 +156,33 @@ object fMain: TfMain
   end
   object Panel1: TPanel
     Left = 0
-    Top = 414
+    Top = 452
     Width = 743
-    Height = 160
+    Height = 103
     Align = alBottom
     TabOrder = 3
     object Console: TMemo
       Left = 1
       Top = 1
       Width = 741
-      Height = 158
+      Height = 101
       Align = alClient
       ScrollBars = ssBoth
       TabOrder = 0
-      ExplicitHeight = 101
     end
   end
   object Panel3: TPanel
     Left = 0
     Top = 29
     Width = 743
-    Height = 363
+    Height = 420
     Align = alClient
     TabOrder = 0
-    ExplicitHeight = 420
     object Tabs: TTabbedNotebook
       Left = 1
       Top = 1
       Width = 741
-      Height = 361
+      Height = 418
       Align = alClient
       TabFont.Charset = DEFAULT_CHARSET
       TabFont.Color = clBtnText
@@ -195,12 +191,10 @@ object fMain: TfMain
       TabFont.Style = []
       TabOrder = 0
       OnChange = TabsChange
-      ExplicitHeight = 418
       object TTabPage
         Left = 4
         Top = 24
         Caption = 'Default'
-        ExplicitHeight = 390
       end
     end
   end
@@ -422,7 +416,7 @@ object fMain: TfMain
     Left = 224
     Top = 416
     Bitmap = {
-      494C010116001800340010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101160018002C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000006000000001002000000000000060
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
