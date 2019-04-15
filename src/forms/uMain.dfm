@@ -20,12 +20,12 @@ object fMain: TfMain
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 0
-    Top = 449
+    Top = 383
     Width = 743
     Height = 3
     Cursor = crVSplit
     Align = alBottom
-    ExplicitTop = 300
+    ExplicitTop = 377
   end
   object StatusBar1: TStatusBar
     Left = 0
@@ -151,33 +151,35 @@ object fMain: TfMain
   end
   object Panel1: TPanel
     Left = 0
-    Top = 452
+    Top = 386
     Width = 743
-    Height = 103
+    Height = 169
     Align = alBottom
     TabOrder = 3
     object Console: TMemo
       Left = 1
       Top = 1
       Width = 741
-      Height = 101
+      Height = 167
       Align = alClient
       ScrollBars = ssBoth
       TabOrder = 0
+      ExplicitHeight = 101
     end
   end
   object Panel3: TPanel
     Left = 0
     Top = 29
     Width = 743
-    Height = 420
+    Height = 354
     Align = alClient
     TabOrder = 0
+    ExplicitHeight = 316
     object Tabs: TTabbedNotebook
       Left = 1
       Top = 1
       Width = 741
-      Height = 418
+      Height = 352
       Align = alClient
       TabFont.Charset = DEFAULT_CHARSET
       TabFont.Color = clBtnText
@@ -186,10 +188,12 @@ object fMain: TfMain
       TabFont.Style = []
       TabOrder = 0
       OnChange = TabsChange
+      ExplicitHeight = 418
       object TTabPage
         Left = 4
         Top = 24
         Caption = 'Default'
+        ExplicitHeight = 390
       end
     end
   end
