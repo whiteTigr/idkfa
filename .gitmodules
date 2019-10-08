@@ -1,0 +1,3 @@
+[submodule "idKFa_bin"]
+	path = idKFa_bin
+	url = ssh://git@msyst.ddns.net:2220/msyst/idKFa_bin.git
