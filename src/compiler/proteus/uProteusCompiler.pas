@@ -1634,8 +1634,7 @@ begin
 
     if (LastError <> 0) then
     begin
-      dec(lineNumber);
-      ErrorComment := ErrorComment + #13#10 + format('  at line %d in file "%s"', [lineNumber, fileName]);
+      ErrorComment := ErrorComment + #13#10 + format('  at line %d in file "%s"', [lineNumber+1, fileName]);
     end;
   finally
     CloseFile(inputFile);
@@ -1709,6 +1708,7 @@ begin
   ParseToken;
   isStructure := true;
   rootElement := AllocMem(sizeof(TStructCell));
+  StructureRoot := rootElement;
   rootElement.name := Parser.token;
   rootElement.size := 0;
   rootElement.root := true;
@@ -1971,8 +1971,8 @@ var
   size: integer;
 begin
   isStructure := false;
-  size := GetStructureSize(PStructCell(FVocabulary[VP-1].memory));
-  Evaluate(format(': %s.Size %d ; INLINE', [FVocabulary[VP-1].name, size]));
+  size := GetStructureSize(StructureRoot);
+  Evaluate(format(': %s.Size %d ; INLINE', [StructureRoot.name, size]));
 end;
 
 function TProteusCompiler.GetCmdColor(cmd: integer): cardinal;

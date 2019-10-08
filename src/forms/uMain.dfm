@@ -164,7 +164,6 @@ object fMain: TfMain
       Align = alClient
       ScrollBars = ssBoth
       TabOrder = 0
-      ExplicitHeight = 101
     end
   end
   object Panel3: TPanel
@@ -174,7 +173,6 @@ object fMain: TfMain
     Height = 354
     Align = alClient
     TabOrder = 0
-    ExplicitHeight = 316
     object Tabs: TTabbedNotebook
       Left = 1
       Top = 1
@@ -188,12 +186,10 @@ object fMain: TfMain
       TabFont.Style = []
       TabOrder = 0
       OnChange = TabsChange
-      ExplicitHeight = 418
       object TTabPage
         Left = 4
         Top = 24
         Caption = 'Default'
-        ExplicitHeight = 390
       end
     end
   end
@@ -415,7 +411,7 @@ object fMain: TfMain
     Left = 224
     Top = 416
     Bitmap = {
-      494C010116001800300010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010116001800340010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000006000000001002000000000000060
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
