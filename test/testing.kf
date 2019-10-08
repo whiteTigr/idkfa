@@ -17,6 +17,15 @@ CREATE test[]
 
 sub_type@ sub { &test.c sub ! }
 
+test_type* test_pointer
+
+test_type test_allot
+
+test_type.NoAllot test_noallot
+
+test_type@ test_deref
+
+
 MAIN:
 
 BEGIN

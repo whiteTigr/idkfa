@@ -1835,11 +1835,11 @@ begin
     size := GetStructureSize(StructureRoot);
     if StructureRoot <> nil then
     begin
-      Evaluate(format('CREATE %s', [StructureName]));
       if (Token.tag <> structRegularWithoutAllot) then
       begin
-        Evaluate(format('%d ALLOT', [size]));      
+        Evaluate(format('%d ALLOT', [size]));
       end;
+      Evaluate(format('CREATE %s', [StructureName]));
       Evaluate(format(': sizeof(%s) %d ; INLINE', [StructureName, size]));
       Evaluate(format(': %s.size() %d ; INLINE', [StructureName, size]));
       Evaluate(format(': %s.Size() %d ; INLINE', [StructureName, size]));
