@@ -1819,6 +1819,7 @@ end;
 procedure TProteusCompiler._CompileSTRUCT;
 var
   size: integer;
+  struct_type: integer;
 begin
   if isStructure then
   begin
@@ -1835,11 +1836,12 @@ begin
     size := GetStructureSize(StructureRoot);
     if StructureRoot <> nil then
     begin
-      if (Token.tag <> structRegularWithoutAllot) then
+      struct_type = Token.tag;
+      Evaluate(format('CREATE %s', [StructureName]));
+      if (struct_type <> structRegularWithoutAllot) then
       begin
         Evaluate(format('%d ALLOT', [size]));
       end;
-      Evaluate(format('CREATE %s', [StructureName]));
       Evaluate(format(': sizeof(%s) %d ; INLINE', [StructureName, size]));
       Evaluate(format(': %s.size() %d ; INLINE', [StructureName, size]));
       Evaluate(format(': %s.Size() %d ; INLINE', [StructureName, size]));
