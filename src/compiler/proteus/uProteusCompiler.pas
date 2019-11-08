@@ -358,15 +358,11 @@ end;
 procedure TProteusCompiler.CodeAllot(value: integer);
 begin
   inc(CP, value);
-  if value > UserMaxCode then
-    Error(errCodeMemoryIsFull);
 end;
 
 procedure TProteusCompiler.DataAllot(value: integer);
 begin
   inc(DP, value);
-  if value > UserMaxData then
-    Error(errDataMemoryIsFull);
 end;
 
 procedure TProteusCompiler.Compile(code: integer; ToTempCode: boolean = false);
@@ -1836,7 +1832,7 @@ begin
     size := GetStructureSize(StructureRoot);
     if StructureRoot <> nil then
     begin
-      struct_type = Token.tag;
+      struct_type := Token.tag;
       Evaluate(format('CREATE %s', [StructureName]));
       if (struct_type <> structRegularWithoutAllot) then
       begin
@@ -2223,6 +2219,12 @@ end;
 procedure TProteusCompiler.EndCompile;
 begin
   WritePredefinedVariables;
+
+  if CP > UserMaxCode then
+    Error(errCodeMemoryIsFull);
+  if DP > UserMaxData then
+    Error(errDataMemoryIsFull);
+
   Compiled := FError = 0;
 
   CloseFile(LogFile);
