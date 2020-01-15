@@ -1894,6 +1894,7 @@ begin
       Evaluate(format(': sizeof(%s) %d ; INLINE', [StructureName, size]));
       Evaluate(format(': %s.size() %d ; INLINE', [StructureName, size]));
       Evaluate(format(': %s.Size() %d ; INLINE', [StructureName, size]));
+      Evaluate(format(': &%s %s @ ; INLINE', [StructureName, StructureName]));
       if StructureRoot.next <> nil then
         CompileReferenceStruct(StructureRoot.next);
     end;
